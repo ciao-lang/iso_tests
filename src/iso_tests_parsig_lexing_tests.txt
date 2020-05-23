@@ -1,0 +1,895 @@
+PASSED: 2 3 261 4 7 8 9 10 23 24 25 26 222 28 29 30 31 32 33 34 35 203 36 37 38 179 178 39 40 41 42 43 44 45 46 47 48 49 50 51 204 220 52 53 54 56 57 58 59 60 61 62 63 180 64 136 139 218 140 184 185 188 189 190 191 192 249 55 65 66 257 67 68 69 71 75 79 80 81 93 94 95 96 97 99 100 101 103 108 114 115 116 195 205 196 118 119 206 207 209 256 208 262 123 124 125 127 128 129 130 212 214 126 131 132 133 137 138 141 142 143 144 221 258 145 146 244 245 246 147 149 150 151 152 153 154 155 156 157 158 159 201 202 160 163 164 165 166 167 168 194 170 172 174 175 176 217 181 186 187 198 199 200 224 226 227 231 232 233 234 236 251 263 252 253 254 255 265 267 270 
+TEST: 1
+Input  : <string>writeq('\n').</string>
+Output : <string>'\n'</string>
+TEST: 2
+Input  : <string>'</string>
+Output : <syntax_err>
+TEST: 3
+Input  : <string>)</string>
+Output : <waits/>
+TEST: 261
+Input  : <string>)
+'
+</string>
+Output : <syntax_err>
+TEST: 4
+Input  : <string>.</string>
+Output : <syntax_err>
+TEST: 5
+Input  : <string>writeq('	'). % horiz. tab</string>
+Output : <syntax_err>
+TEST: 177
+Input  : <string>0'\t=0'	. % horiz. tab</string>
+Output : <syntax_err>
+TEST: 6
+Input  : <string>writeq('
+').</string>
+Output : <syntax_err>
+TEST: 7
+Input  : <string>writeq('\
+'). % "\\\n"</string>
+Output : <string>''</string>
+TEST: 8
+Input  : <string>writeq('\
+a'). % "\\\na"</string>
+Output : <string>a</string>
+TEST: 9
+Input  : <string>writeq('a\
+b'). % "a\\\nb"</string>
+Output : <string>ab</string>
+TEST: 10
+Input  : <string>writeq('a\
+ b'). % "a\\\n b"</string>
+Output : <string>'a b'</string>
+TEST: 11
+Input  : <string>writeq('\ ').</string>
+Output : <syntax_err>
+TEST: 193
+Input  : <string>writeq('\ 
+'). % "\\ \n"</string>
+Output : <syntax_err>
+TEST: 12
+Input  : <string>writeq('\	'). % "\\\t"</string>
+Output : <syntax_err>
+TEST: 13
+Input  : <string>writeq('\t').</string>
+Output : <string>'\t'</string>
+TEST: 14
+Input  : <string>writeq('\a').</string>
+Output : <string>'\a'</string>
+TEST: 15
+Input  : <string>writeq('\7\').</string>
+Output : <string>'\a'</string>
+TEST: 16
+Input  : <string>writeq('\ca').</string>
+Output : <syntax_err>
+TEST: 241
+Input  : <string>writeq('\d').</string>
+Output : <syntax_err>
+TEST: 17
+Input  : <string>writeq('\e').</string>
+Output : <syntax_err>
+TEST: 18
+Input  : <string>writeq('\033\').</string>
+Output : <string>'\33\'</string>
+TEST: 19
+Input  : <string>char_code('\e',C).</string>
+Output : <syntax_err>
+TEST: 21
+Input  : <string>char_code('\d',C).</string>
+Output : <syntax_err>
+TEST: 22
+Input  : <string>writeq('\u1').</string>
+Output : <syntax_err>
+TEST: 23
+Input  : <string>X = 0'\u1.</string>
+Output : <syntax_err>
+TEST: 24
+Input  : <string>writeq('</string>
+Output : <syntax_err>
+TEST: 25
+Input  : <string>writeq(.</string>
+Output : <syntax_err>
+TEST: 26
+Input  : <string>'\
+''.</string>
+Output : <syntax_err>
+TEST: 210
+Input  : <string>X = 0'\.</string>
+Output : <syntax_err>
+TEST: 211
+Input  : <string>X = 0'\. .</string>
+Output : <syntax_err>
+TEST: 222
+Input  : <string>writeq((-)-(-)).</string>
+Output : <string>(-)-(-)</string>
+TEST: 223
+Input  : <string>writeq(((:-):-(:-))).</string>
+Output : <string>(:-):-(:-)</string>
+TEST: 27
+Input  : <string>writeq((*)=(*)).</string>
+Output : <string>(*)=(*)</string>
+TEST: 28
+Input  : <string>writeq([:-,-]).</string>
+Output : <string>[:-,-]</string>
+TEST: 29
+Input  : <string>writeq(f(*)).</string>
+Output : <string>f(*)</string>
+TEST: 30
+Input  : <string>writeq(a*(b+c)).</string>
+Output : <string>a*(b+c)</string>
+TEST: 31
+Input  : <string>writeq(f(;,'|',';;')).</string>
+Output : <string>f(;,'|',';;')</string>
+TEST: 32
+Input  : <string>writeq([.,.(.,.,.)]).</string>
+Output : <string>['.','.'('.','.','.')]</string>
+TEST: 33
+Input  : <string>writeq((a :- b,c)).</string>
+Output : <string>a:-b,c</string>
+TEST: 34
+Input  : <string>write_canonical([a]).</string>
+Output : <string>'.'(a,[])</string>
+TEST: 35
+Input  : <string>writeq('/*').</string>
+Output : <string>'/*'</string>
+TEST: 203
+Input  : <string>writeq(//*).</string>
+Output : <string>//*</string>
+TEST: 36
+Input  : <string>writeq('/**').</string>
+Output : <string>'/**'</string>
+TEST: 37
+Input  : <string>writeq('*/').</string>
+Output : <string>*/</string>
+TEST: 38
+Input  : <string>"\'\`\"" = "'`""". % "</string>
+Output : <succeeds>
+TEST: 179
+Input  : <string>"\'\"" = "'""". % "</string>
+Output : <succeeds>
+TEST: 178
+Input  : <string>"\`" = "`".</string>
+Output : <succeeds>
+TEST: 39
+Input  : <string>'\'\`\"' = '''`"'.</string>
+Output : <succeeds>
+TEST: 40
+Input  : <string>writeq('\'\`\"\"').</string>
+Output : <string>'''`""'</string>
+TEST: 41
+Input  : <string>('\\') = (\).</string>
+Output : <succeeds>
+TEST: 42
+Init   : <string>op(1,xf,xf1).</string>
+Input  : <string>1xf1 = xf1(1).</string>
+Output : <succeeds>
+TEST: 43
+Input  : <string>X = 0X1.</string>
+Output : <syntax_err>
+TEST: 44
+Input  : <string>float(.0).</string>
+Output : <syntax_err>
+TEST: 45
+Init   : <string>op(100,xfx,.).</string>
+Input  : <string>functor(3 .2,F,A).</string>
+Output : <string> A = 2, F = '.'</string>
+TEST: 46
+Input  : <string>float(- .0).</string>
+Output : <syntax_err>
+TEST: 47
+Input  : <string>float(1E9).</string>
+Output : <syntax_err>
+TEST: 48
+Input  : <string>integer(1e).</string>
+Output : <syntax_err>
+TEST: 49
+Init   : <string>op(9,xf,e9).</string>
+Input  : <string>1e9 = e9(1).</string>
+Output : <succeeds>
+TEST: 50
+Init   : <string>op(9,xf,e).</string>
+Input  : <string>1e-9 = -(e(1),9).</string>
+Output : <succeeds>
+TEST: 51
+Init   : <string>op(9,xf,e).</string>
+Input  : <string>1.0e- 9 = -(e(1.0),9).</string>
+Output : <succeeds>
+TEST: 204
+Init   : <string>op(9,xf,e).</string>
+Input  : <string>writeq(1e).</string>
+Output : <string>1 e</string>
+TEST: 220
+Init   : <string>op(9,xf,e).</string>
+Input  : <string>writeq(1.0e).</string>
+Output : <string>1.0 e</string>
+TEST: 52
+Init   : <string>op(9,xfy,e).</string>
+Input  : <string>1.2e 3 = e(X,Y).</string>
+Output : <string> X = 1.2, Y = 3</string>
+TEST: 53
+Input  : <string>writeq(1.0e100).</string>
+Output : <string>1.0e100</string>
+TEST: 54
+Input  : <string>float(1.0ee9).</string>
+Output : <syntax_err>
+TEST: 56
+Input  : <string>integer(- 1).</string>
+Output : <succeeds>
+TEST: 57
+Input  : <string>integer('-'1).</string>
+Output : <succeeds>
+TEST: 58
+Input  : <string>integer('-' 1).</string>
+Output : <succeeds>
+TEST: 59
+Input  : <string>integer(- /**/1).</string>
+Output : <succeeds>
+TEST: 60
+Input  : <string>integer(-/**/1).</string>
+Output : <syntax_err>
+TEST: 61
+Input  : <string>integer('-'/**/1).</string>
+Output : <succeeds>
+TEST: 62
+Input  : <string>atom(-/**/-).</string>
+Output : <succeeds>
+TEST: 63
+Input  : <string>op(0,fy,-).</string>
+Output : <succeeds>
+TEST: 180
+Input  : <string> /**/ integer(-1).</string>
+Output : <succeeds>
+TEST: 64
+Input  : <string> /**/ integer(- 1).</string>
+Output : <succeeds>
+TEST: 135
+Input  : <string>writeq(-(1)).</string>
+Output : <string>- (1)</string>
+TEST: 136
+Input  : <string>op(0,fy,-),writeq(-(1)).</string>
+Output : <string>-(1)</string>
+TEST: 182
+Input  : <string>writeq(-(-1)).</string>
+Output : <string>- -1</string>
+TEST: 183
+Input  : <string>writeq(-(1^2)).</string>
+Output : <string>- (1^2)</string>
+TEST: 260
+Input  : <string>writeq(-(a^2)).</string>
+Output : <string>- (a^2)</string>
+TEST: 139
+Input  : <string>writeq(-((a,b))).</string>
+Output : <string>- (a,b)</string>
+TEST: 218
+Input  : <string>writeq(-(1*2)).</string>
+Output : <string>- (1*2)</string>
+TEST: 140
+Input  : <string>writeq(-a).</string>
+Output : <string>-a</string>
+TEST: 184
+Input  : <string>writeq(-(-)).</string>
+Output : <string>- (-)</string>
+TEST: 185
+Input  : <string>writeq(-[-]).</string>
+Output : <string>-[-]</string>
+TEST: 188
+Input  : <string>writeq(-p(c)).</string>
+Output : <string>-p(c)</string>
+TEST: 189
+Input  : <string>writeq(-{}).</string>
+Output : <string>-{}</string>
+TEST: 190
+Input  : <string>writeq(-{a}).</string>
+Output : <string>-{a}</string>
+TEST: 191
+Input  : <string>writeq(-(-a)).</string>
+Output : <string>- -a</string>
+TEST: 192
+Input  : <string>writeq(-(-(-a))).</string>
+Output : <string>- - -a</string>
+TEST: 216
+Input  : <string>writeq(-(-(1))).</string>
+Output : <string>- - (1)</string>
+TEST: 215
+Init   : <string>op(100,yfx,~).</string>
+Input  : <string>writeq(-(1~2~3)).</string>
+Output : <string>- (1~2~3) or
+ - (1)~2~3</string>
+TEST: 248
+Init   : <string>op(100,yfx,~).</string>
+Input  : <string>writeq(- (1~2)).</string>
+Output : <string>- (1~2) or - (1)~2</string>
+TEST: 249
+Init   : <string>op(100,yfx,~).</string>
+Input  : <string>writeq(1~2).</string>
+Output : <string>1~2</string>
+TEST: 55
+Init   : <string>op(1,yf,yf1).</string>
+Input  : <string>{-1 yf1}={yf1(X)}.</string>
+Output : <string> X = -1</string>
+TEST: 65
+Input  : <string>compound(+1).</string>
+Output : <succeeds>
+TEST: 66
+Input  : <string>compound(+ 1).</string>
+Output : <succeeds>
+TEST: 257
+Input  : <string>writeq([+{a},+[]]).</string>
+Output : <string>[+{a},+[]]</string>
+TEST: 67
+Init   : <string>op(0,fy,+).</string>
+Input  : <string>compound(+1).</string>
+Output : <syntax_err>
+TEST: 68
+Input  : <string>[(:-)|(:-)]=[:-|:-].</string>
+Output : <succeeds>
+TEST: 69
+Input  : <string>X=[a|b,c].</string>
+Output : <syntax_err>
+TEST: 70
+Input  : <string>op(1000,xfy,',').</string>
+Output : <string>p._e.(m.,o.,',')</string>
+TEST: 71
+Input  : <string>catch(op(1001,xfy,','), E, true).</string>
+Output : <string> E = error(permission_error(modify,operator,','),op/3)</string>
+TEST: 72
+Input  : <string>op(999,xfy,'|').</string>
+Output : <string>p._e.(c., o.,'|')</string>
+TEST: 73
+Init   : <string>op(999,xfy,'|').</string>
+Input  : <string>X=[a|b].</string>
+Output : <string> X=[a|b].</string>
+TEST: 219
+Init   : <string>op(999,xfy,'|').</string>
+Input  : <string>[a|[]]=[a].</string>
+Output : <succeeds>
+TEST: 74
+Init   : <string>op(999,xfy,'|').</string>
+Input  : <string> X=[a|b|c].</string>
+Output : <syntax_err>
+TEST: 75
+Input  : <string>var(a:-b).</string>
+Output : <syntax_err>
+TEST: 76
+Input  : <string>:- = :- .</string>
+Output : <syntax_err>
+TEST: 77
+Input  : <string>- = - .</string>
+Output : <syntax_err>
+TEST: 78
+Input  : <string>* = * .</string>
+Output : <syntax_err>
+TEST: 79
+Input  : <string>current_op(200,fy,-).</string>
+Output : <succeeds>
+TEST: 80
+Input  : <string>current_op(200,fy,+).</string>
+Output : <succeeds>
+TEST: 81
+Input  : <string>{- - c}={-(-(c))}.</string>
+Output : <succeeds>
+TEST: 82
+Input  : <string>(- -) = -(-).</string>
+Output : <syntax_err>
+TEST: 83
+Input  : <string>(- - -) = -(-(-)).</string>
+Output : <syntax_err>
+TEST: 84
+Input  : <string>(- - - -) = -(-(-(-))).</string>
+Output : <syntax_err>
+TEST: 85
+Input  : <string>{:- :- c} = {:-(:-,c)}.</string>
+Output : <syntax_err>
+TEST: 86
+Input  : <string>{- = - 1}={(-(=)) - 1}.</string>
+Output : <syntax_err>
+TEST: 87
+Input  : <string>write_canonical((- = - 1)).</string>
+Output : <syntax_err>
+TEST: 88
+Input  : <string>write_canonical((- = -1)).</string>
+Output : <syntax_err>
+TEST: 89
+Input  : <string>write_canonical((-;)).</string>
+Output : <syntax_err>
+TEST: 90
+Input  : <string>write_canonical((-;-)).</string>
+Output : <syntax_err>
+TEST: 91
+Input  : <string>write_canonical((:-;-)).</string>
+Output : <syntax_err>
+TEST: 92
+Input  : <string>[:- -c] = [(:- -c)].</string>
+Output : <syntax_err>
+TEST: 93
+Input  : <string>writeq([a,b|,]).</string>
+Output : <syntax_err>
+TEST: 94
+Input  : <string>X ={,}.</string>
+Output : <syntax_err>
+TEST: 95
+Input  : <string>{1} = {}(1).</string>
+Output : <succeeds>
+TEST: 96
+Input  : <string>write_canonical({1}).</string>
+Output : <string>{}(1)</string>
+TEST: 97
+Input  : <string>'[]'(1) = [ ](X).</string>
+Output : <string> X = 1</string>
+TEST: 98
+Input  : <string>X = [] (1).</string>
+Output : <syntax_err>
+TEST: 99
+Input  : <string>catch(op(100,yfy,op), E, true).</string>
+Output : <string> E = error(domain_error(operator_specifier,yfy),</string>
+TEST: 100
+Input  : <string>'''' = '\''.</string>
+Output : <succeeds>
+TEST: 101
+Input  : <string>a = '\141\'.</string>
+Output : <succeeds>
+TEST: 102
+Input  : <string>a = '\141'.</string>
+Output : <syntax_err>
+TEST: 103
+Input  : <string>X = '\141\141'.</string>
+Output : <string> X = a141</string>
+TEST: 104
+Input  : <string>X = '\9'.</string>
+Output : <syntax_err>
+TEST: 105
+Input  : <string>X = '\N'.</string>
+Output : <syntax_err>
+TEST: 106
+Input  : <string>X = '\\' .</string>
+Output : <syntax_err>
+TEST: 107
+Input  : <string>X = '\77777777777\'.</string>
+Output : <string>syntax/repr. err.</string>
+TEST: 108
+Input  : <string>a = '\x61\'.</string>
+Output : <succeeds>
+TEST: 109
+Input  : <string>atom_codes('\xG\',Cs).</string>
+Output : <string>syntax err./waits</string>
+TEST: 110
+Input  : <string>atom_codes('\xG1\',Cs).</string>
+Output : <string>syntax err./waits</string>
+TEST: 111
+Input  : <string>atom(`).</string>
+Output : <syntax_err>
+TEST: 112
+Input  : <string>atom(`+).</string>
+Output : <syntax_err>
+TEST: 113
+Input  : <string>X = `a`.</string>
+Output : <string>syntax err./succ.</string>
+TEST: 114
+Input  : <string>integer(0'\').</string>
+Output : <succeeds>
+TEST: 115
+Input  : <string>integer(0''').</string>
+Output : <succeeds>
+TEST: 116
+Input  : <string>0''' = 0'\'.</string>
+Output : <succeeds>
+TEST: 117
+Input  : <string>integer(0'').</string>
+Output : <syntax_err>
+TEST: 195
+Input  : <string>op(100,xf,'').</string>
+Output : <succeeds>
+TEST: 205
+Init   : <string>op(100,xf,'').</string>
+Input  : <string>(0 '') = ''(X).</string>
+Output : <string> X = 0</string>
+TEST: 196
+Init   : <string>op(100,xf,'').</string>
+Input  : <string>writeq(0 '').</string>
+Output : <string>0 ''</string>
+TEST: 197
+Init   : <string>op(100,xf,'').</string>
+Input  : <string>writeq(0'').</string>
+Output : <string>0 ''</string>
+TEST: 118
+Input  : <string>op(100,xfx,'').</string>
+Output : <succeeds>
+TEST: 119
+Init   : <string>op(100,xfx,'').</string>
+Input  : <string>functor(0 ''1, F, A).</string>
+Output : <string> A = 2, F = ''</string>
+TEST: 120
+Init   : <string>op(100,xfx,'').</string>
+Input  : <string>functor(0''1, F, A).</string>
+Output : <string> F = (''), A = 2.</string>
+TEST: 206
+Init   : <string>op(100,xf,f).</string>
+Input  : <string>writeq(0'f').</string>
+Output : <syntax_err>
+TEST: 207
+Init   : <string>op(100,xf,f).</string>
+Input  : <string>writeq(0'f'f').</string>
+Output : <string>102 f</string>
+TEST: 209
+Init   : <string>op(100,xf,f).</string>
+Input  : <string>writeq(0'ff).</string>
+Output : <string>102 f</string>
+TEST: 256
+Init   : <string>op(100,xf,f).</string>
+Input  : <string>writeq(0f).</string>
+Output : <string>0 f</string>
+TEST: 208
+Init   : <string>op(100,xf,'f ').</string>
+Input  : <string>writeq(0 'f ').</string>
+Output : <string>0 'f '</string>
+TEST: 121
+Input  : <string> X = 2'1.</string>
+Output : <syntax_err>
+TEST: 122
+Init   : <string>op(100,xfx,'1').</string>
+Input  : <string>functor(2'1'y, F, A).</string>
+Output : <string> A = 2, F = '1'</string>
+TEST: 262
+Init   : <string>op(100,xfx,'1').</string>
+Input  : <string>functor(2 '1'y, F, A).</string>
+Output : <string> A = 2, F = '1'</string>
+TEST: 123
+Input  : <string>X =0'\x41\ .</string>
+Output : <string> X = 65</string>
+TEST: 124
+Input  : <string>X =0'\x41\.</string>
+Output : <string> X = 65</string>
+TEST: 125
+Input  : <string>X =0'\x1\.</string>
+Output : <string> X = 1</string>
+TEST: 127
+Input  : <string>X is 16'mod'2.</string>
+Output : <string> X = 0</string>
+TEST: 128
+Input  : <string>X is 37'mod'2.</string>
+Output : <string> X = 1</string>
+TEST: 129
+Input  : <string>X is 0'mod'1.</string>
+Output : <syntax_err>
+TEST: 130
+Input  : <string>X is 1'+'1.</string>
+Output : <string> X = 2</string>
+TEST: 212
+Input  : <string>X is 1'\
++'1.</string>
+Output : <string> X = 2</string>
+TEST: 213
+Input  : <string>X is 0'\
++'1.</string>
+Output : <string> X = 1</string>
+TEST: 259
+Input  : <string>X = 0'\
++'/*'. %*/1.</string>
+Output : <string> X = 0+1</string>
+TEST: 214
+Input  : <string>X is 0'\</string>
+Output : <waits/>
+TEST: 126
+Input  : <string>X = 0'\
+.\</string>
+Output : <waits/>
+TEST: 131
+Input  : <string>op(100,fx,' op').</string>
+Output : <succeeds>
+TEST: 132
+Init   : <string>op(100,fx,' op').</string>
+Input  : <string>writeq(' op' '1').</string>
+Output : <string>' op' '1'</string>
+TEST: 133
+Init   : <string>op(100,fx,' op').</string>
+Input  : <string>writeq(' op'[]).</string>
+Output : <string>' op'[]</string>
+TEST: 134
+Init   : <string>op(1,xf,xf1).</string>
+Input  : <string>writeq({- =xf1}).</string>
+Output : <syntax_err>
+TEST: 137
+Input  : <string>writeq(- (a*b)).</string>
+Output : <string>- (a*b)</string>
+TEST: 138
+Input  : <string>writeq(\ (a*b)).</string>
+Output : <string>\ (a*b)</string>
+TEST: 141
+Input  : <string>current_op(P,xfy,.).</string>
+Output : <fails>
+TEST: 142
+Input  : <string>op(400,xfy,.).</string>
+Output : <succeeds>
+TEST: 143
+Init   : <string>op(400,xfy,.).</string>
+Input  : <string>writeq(1 .2).</string>
+Output : <string>[1|2]</string>
+TEST: 144
+Init   : <string>op(400,xfy,.).</string>
+Input  : <string>writeq([1]).</string>
+Output : <string>[1]</string>
+TEST: 221
+Init   : <string>op(400,xfy,.).</string>
+Input  : <string>X = 1.e.</string>
+Output : <string> X = [1|e]</string>
+TEST: 258
+Init   : <string>op(400,xfy,.).</string>
+Input  : <string>%writeq(ok).%
+1 = X.</string>
+Output : <string> X = 1</string>
+TEST: 145
+Input  : <string>write_canonical('$VAR'(0)).</string>
+Output : <string>'$VAR'(0)</string>
+TEST: 146
+Input  : <string>write_term('$VAR'(0),[]).</string>
+Output : <string>$VAR(0)</string>
+TEST: 244
+Input  : <string>writeq('$VAR'(0)).</string>
+Output : <string>A</string>
+TEST: 245
+Input  : <string>writeq('$VAR'(-1)).</string>
+Output : <string>'$VAR'(-1)</string>
+TEST: 246
+Input  : <string>writeq('$VAR'(-2)).</string>
+Output : <string>'$VAR'(-2)</string>
+TEST: 247
+Input  : <string>writeq('$VAR'(x)).</string>
+Output : <string>'$VAR'(x)</string>
+TEST: 147
+Init   : <string>op(9,fy,fy),op(9,yf,yf).</string>
+Input  : <string>write_canonical(fy 1 yf).</string>
+Output : <string>fy(yf(1))</string>
+TEST: 148
+Init   : <string>op(9,fy,fy),op(9,yf,yf).</string>
+Input  : <string>write_canonical(fy yf).</string>
+Output : <syntax_err>
+TEST: 149
+Init   : <string>op(9,fy,fy),op(9,yf,yf).</string>
+Input  : <string>writeq(fy(yf(1))).</string>
+Output : <string>fy 1 yf</string>
+TEST: 150
+Init   : <string>op(9,fy,fy),op(9,yf,yf).</string>
+Input  : <string>writeq(yf(fy(1))).</string>
+Output : <string>(fy 1)yf</string>
+TEST: 151
+Init   : <string>op(9,fy,fy),op(9,yfx,yfx).</string>
+Input  : <string>write_canonical(fy 1 yfx 2).</string>
+Output : <string>fy(yfx(1,2))</string>
+TEST: 152
+Init   : <string>op(9,fy,fy),op(9,yfx,yfx).</string>
+Input  : <string>writeq(fy(yfx(1,2))).</string>
+Output : <string>fy 1 yfx 2</string>
+TEST: 153
+Init   : <string>op(9,fy,fy),op(9,yfx,yfx).</string>
+Input  : <string>writeq(yfx(fy(1),2)).</string>
+Output : <string>(fy 1)yfx 2</string>
+TEST: 154
+Init   : <string>op(9,yf,yf),op(9,xfy,xfy).</string>
+Input  : <string>write_canonical(1 xfy 2 yf).</string>
+Output : <string>xfy(1,yf(2))</string>
+TEST: 155
+Init   : <string>op(9,yf,yf),op(9,xfy,xfy).</string>
+Input  : <string>writeq(xfy(1,yf(2))).</string>
+Output : <string>1 xfy 2 yf</string>
+TEST: 156
+Init   : <string>op(9,yf,yf),op(9,xfy,xfy).</string>
+Input  : <string>writeq(yf(xfy(1,2))).</string>
+Output : <string>(1 xfy 2)yf</string>
+TEST: 157
+Init   : <string>op(0,xfy,:-).</string>
+Input  : <string>current_op(P,xfx,:-).</string>
+Output : <fails>
+TEST: 158
+Input  : <string>catch(op(0,xfy,','), E, true).</string>
+Output : <string> E = error(permission_error(modify,operator,','),op/3)</string>
+TEST: 159
+Init   : <string>op(9,fy,f),op(9,yf,f).</string>
+Input  : <string>write_canonical(f f 0).</string>
+Output : <string>f(f(0))</string>
+TEST: 201
+Init   : <string>op(9,fy,f),op(9,yf,f).</string>
+Input  : <string>writeq(f(f(0))).</string>
+Output : <string>0 f f</string>
+TEST: 202
+Init   : <string>op(9,fy,f),op(9,yf,f).</string>
+Input  : <string>write_canonical(f 0 f).</string>
+Output : <string>f(f(0))</string>
+TEST: 160
+Init   : <string>op(9,fy,f),op(9,yf,f).</string>
+Input  : <string>write_canonical(0 f f).</string>
+Output : <string>f(f(0))</string>
+TEST: 161
+Init   : <string>op(9,fy,f),op(9,yf,f).</string>
+Input  : <string>write_canonical(f f).</string>
+Output : <syntax_err>
+TEST: 162
+Init   : <string>op(9,fy,p),op(9,yfx,p).</string>
+Input  : <string>write_canonical(1 p p p 2).</string>
+Output : <syntax_err>
+TEST: 163
+Init   : <string>op(9,fy,p),op(9,xfy,p).</string>
+Input  : <string>write_canonical(1 p p p 2).</string>
+Output : <string>p(1,p(p(2)))</string>
+TEST: 164
+Init   : <string>op(7,fy,p),op(9,yfx,p).</string>
+Input  : <string>write_canonical(1 p p p 2).</string>
+Output : <string>p(1,p(p(2)))</string>
+TEST: 165
+Input  : <string>atom('.''-''.').</string>
+Output : <succeeds>
+TEST: 166
+Input  : <string>op(0,xfy,'|').</string>
+Output : <succeeds>
+TEST: 167
+Init   : <string>op(0,xfy,'|').</string>
+Input  : <string>writeq((a|b)).</string>
+Output : <syntax_err>
+TEST: 168
+Input  : <string>op(9,yf,.).</string>
+Output : <succeeds>
+TEST: 169
+Init   : <string>op(9,yf,.).</string>
+Input  : <string>writeq(.(.)).</string>
+Output : <string>('.')'.'</string>
+TEST: 194
+Input  : <string>writeq((.)+(.)).</string>
+Output : <string>'.'+'.'</string>
+TEST: 170
+Input  : <string>set_prolog_flag(double_quotes,chars).</string>
+Output : <succeeds>
+TEST: 171
+Init   : <string>set_prolog_flag(double_quotes,chars).</string>
+Input  : <string>writeq("a").</string>
+Output : <string>[a]</string>
+TEST: 229
+Init   : <string>set_prolog_flag(double_quotes,chars).</string>
+Input  : <string>writeq("\z").</string>
+Output : <syntax_err>
+TEST: 172
+Input  : <string>X is 10.0** -323, writeq(X).</string>
+Output : <string>1.0e-323</string>
+TEST: 173
+Input  : <string>1.0e-323=:=10.0** -323.</string>
+Output : <succeeds>
+TEST: 174
+Input  : <string>-1 = -0x1.</string>
+Output : <succeeds>
+TEST: 175
+Input  : <string>T = t(0b1,0o1,0x1).</string>
+Output : <string> T = t(1,1,1)</string>
+TEST: 176
+Input  : <string>X is 0b1mod 2.</string>
+Output : <string> X = 1</string>
+TEST: 217
+Input  : <string>op(1105,xfy,'|').</string>
+Output : <succeeds>
+TEST: 181
+Init   : <string>op(1105,xfy,'|').</string>
+Input  : <string>writeq((a-->b,c|d)).</string>
+Output : <string>a-->b,c | d</string>
+TEST: 186
+Input  : <string>X/* /*/=7.</string>
+Output : <string> X = 7</string>
+TEST: 187
+Input  : <string>X/*/*/=7.</string>
+Output : <string> X = 7</string>
+TEST: 198
+Input  : <string>atom($-).</string>
+Output : <succeeds>
+TEST: 199
+Input  : <string>atom(-$).</string>
+Output : <succeeds>
+TEST: 200
+Init   : <string>op(900, fy, [$]).</string>
+Input  : <string>write_canonical($a+b).</string>
+Output : <string>$(+(a,b))</string>
+TEST: 224
+Input  : <string>catch(\ , E, true).</string>
+Output : <string> E = error(existence_error(procedure,</string>
+TEST: 225
+Input  : <string>char_code(C,0), writeq(C).</string>
+Output : <string>'\0\' or rep._e.</string>
+TEST: 250
+Input  : <string>writeq('\0\').</string>
+Output : <string>rep._e. or '\0\'</string>
+TEST: 226
+Input  : <string>write_canonical(_+_).</string>
+Output : <string>+(_5043,_5056)</string>
+TEST: 227
+Input  : <string>write_canonical(B+B).</string>
+Output : <string>+(_5043,_5043)</string>
+TEST: 228
+Input  : <string>writeq(0'\z).</string>
+Output : <syntax_err>
+TEST: 230
+Input  : <string>char_code('\^',X).</string>
+Output : <syntax_err>
+TEST: 231
+Input  : <string>writeq(0'\c).</string>
+Output : <syntax_err>
+TEST: 232
+Input  : <string>writeq(0'\ ).</string>
+Output : <syntax_err>
+TEST: 233
+Input  : <string>writeq(nop (1)).</string>
+Output : <syntax_err>
+TEST: 234
+Init   : <string>op(400,fx,f).</string>
+Input  : <string>writeq(f/**/(1,2)).</string>
+Output : <string>f (1,2)</string>
+TEST: 235
+Init   : <string>op(400,fx,f).</string>
+Input  : <string>writeq(1 = f).</string>
+Output : <syntax_err>
+TEST: 236
+Input  : <string>write_canonical(a- - -b).</string>
+Output : <string>-(a,-(-(b)))</string>
+TEST: 237
+Input  : <string>op(699,xf,>).</string>
+Output : <string>p._e.(c.,op,>)</string>
+TEST: 238
+Init   : <string>op(699,xf,>).</string>
+Input  : <string>writeq(>(>(a),b)).</string>
+Output : <string>>(a)>b</string>
+TEST: 239
+Init   : <string>op(699,xf,>).</string>
+Input  : <string>write_canonical(a> >b).</string>
+Output : <syntax_err>
+TEST: 242
+Init   : <string>op(699,xf,>).</string>
+Input  : <string>write_canonical(a> =b).</string>
+Output : <syntax_err>
+TEST: 243
+Init   : <string>op(699,xf,>).</string>
+Input  : <string>write_canonical((a>,b)).</string>
+Output : <syntax_err>
+TEST: 240
+Init   : <string>op(699,xf,>).</string>
+Input  : <string>write_canonical(a>).</string>
+Output : <syntax_err>
+TEST: 251
+Init   : <string>op(9,yfx,[bop,bo,b,op,xor]).</string>
+Input  : <string>writeq(0bop 2).</string>
+Output : <string>0 bop 2</string>
+TEST: 263
+Init   : <string>op(9,yfx,[bop,bo,b,op,xor]).</string>
+Input  : <string>writeq(0 bop 2).</string>
+Output : <string>0 bop 2</string>
+TEST: 252
+Init   : <string>op(9,yfx,[bop,bo,b,op,xor]).</string>
+Input  : <string>writeq(0bo 2).</string>
+Output : <string>0 bo 2</string>
+TEST: 253
+Init   : <string>op(9,yfx,[bop,bo,b,op,xor]).</string>
+Input  : <string>writeq(0b 2).</string>
+Output : <string>0 b 2</string>
+TEST: 254
+Init   : <string>op(9,yfx,[bop,bo,b,op,xor]).</string>
+Input  : <string>writeq(0op 2).</string>
+Output : <string>0 op 2</string>
+TEST: 255
+Init   : <string>op(9,yfx,[bop,bo,b,op,xor]).</string>
+Input  : <string>writeq(0xor 2).</string>
+Output : <string>0 xor 2</string>
+TEST: 264
+Input  : <string>writeq('^`').</string>
+Output : <string>'^`'</string>
+TEST: 265
+Init   : <string>op(9,yf,[b2,o8]).</string>
+Input  : <string>writeq(0b2).</string>
+Output : <string>0 b2</string>
+TEST: 267
+Init   : <string>op(9,yf,[b2,o8]).</string>
+Input  : <string>writeq(0o8).</string>
+Output : <string>0 o8</string>
+TEST: 268
+Input  : <string>op(500, xfy, {}).</string>
+Output : <string>p._e.(c.,o.,{})</string>
+TEST: 269
+Input  : <string>writeq('\a\b\r\f\t\n').</string>
+Output : <string>'\a\b\r\f\t\n'</string>
+TEST: 270
+Input  : <string>Finis ().</string>
+Output : <syntax_err>
