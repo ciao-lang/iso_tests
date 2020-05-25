@@ -1,7 +1,7 @@
-:- module(iso_tests_common, _, []).
+:- module(iso_tests_common, _, [iso]).
 
-:- use_module(library(streams)).
-:- use_module(library(write)).
+%:- use_module(library(streams)).
+%:- use_module(library(write)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Predicates from Stdprolog that allow the different kind of writings

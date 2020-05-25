@@ -2,7 +2,9 @@
 
 % TODO: rewrite with use test modules?
 :- reexport(engine(runtime_control)).
-:- reexport(library(streams)).
+%:- reexport(library(streams)).
+:- reexport(library(streams), [current_input/1, current_output/1, open/3, get_code/1]).
+:- reexport(library(iso_incomplete)).
 :- reexport(library(read)).
 :- reexport(library(write)).
 :- reexport(library(operators)).

@@ -10,7 +10,7 @@
 
 :- reexport(iso_tests(iso_tests_common)).
 :- reexport(library(read)).
-:- reexport(library(streams)).
+:- reexport(library(streams), [open/3, close/1]).
 :- reexport(engine(runtime_control)).
 
 % ===========================================================================
