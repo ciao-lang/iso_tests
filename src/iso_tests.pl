@@ -5,10 +5,22 @@
 %:- reexport(library(streams)).
 :- reexport(library(streams), [current_input/1, current_output/1, open/3, get_code/1]).
 :- reexport(library(iso_incomplete)).
-:- reexport(library(read)).
-:- reexport(library(write)).
+:- reexport(library(read), [
+    read/1,
+    read_term/2
+]).
+:- reexport(library(write), [
+    write_term/2,
+    write/1, writeq/1,
+    write_canonical/1
+]).
 :- reexport(library(operators)).
-:- reexport(library(iso_char)).
+:- reexport(library(iso_char), [
+    char_code/2, atom_chars/2, number_chars/2,char_codes/2,
+    get_char/1,
+    peek_char/1,
+    put_char/1
+]).
 :- reexport(library(iso_incomplete)).
 :- reexport(library(compiler)).
 %:- reexport(library(dynamic)).
@@ -3189,10 +3201,6 @@ getbyte_test13 :- get_byte(_), get_byte(_).
 
 % ===========================================================================
 %% 8.13.2.4 These tests are specified in page 97 of the ISO standard. %%%
-
-% TODO: peek_byte/1 peek_byte/2 are not implemented.
-:- impl_defined(peek_byte/1).
-:- impl_defined(peek_byte/2).
 
 %test 1 
 :- test peekbyte_test1(Byte) :
