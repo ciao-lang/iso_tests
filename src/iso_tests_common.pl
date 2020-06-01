@@ -62,6 +62,7 @@ my_list_of(N, A, [A|L]) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This predicate open a file and write in it the content of String 
 open_and_write(File, Mode, S, Ops, Type, String) :-
+    display(user_error, open_and_write(File, Mode, S, Ops, Type, String)), nl(user_error),
     open(File, Mode, S, Ops),
     write_contents(Type, String, S).
 
