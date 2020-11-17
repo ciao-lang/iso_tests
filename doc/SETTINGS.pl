@@ -2,7 +2,7 @@
 
 %! \title Config for iso_tests reference manual
 
-:- include(core_docsrc(common/'LPDOCCOMMON')).
+:- include(core_docsrc(docpaths)).
 
 filepath := at_bundle(ciaodbg, 'lib').
 filepath := ~ciaofilepath_common.
