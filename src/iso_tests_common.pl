@@ -1,4 +1,4 @@
-:- module(iso_tests_common, _, [iso]).
+:- module(iso_tests_common, _, [iso_strict]).
 
 %:- use_module(library(streams)).
 %:- use_module(library(write)).

@@ -1,4 +1,4 @@
-:- module(iso_tests_basic_term, _, [assertions, nativeprops, unittestdecls, iso]).
+:- module(iso_tests_basic_term, _, [assertions, nativeprops, unittestdecls, iso_strict]).
 
 :- doc(title, "ISO tests for terms operations").
 :- doc(author, "Lorea Galech").

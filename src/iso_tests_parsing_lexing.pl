@@ -1,4 +1,4 @@
-:- module(_, _, [dcg, iso, datafacts]).
+:- module(_, _, [dcg, iso_strict, datafacts]).
 
 :- use_module(library(stream_utils), [file_to_string/2]).
 :- use_module(library(toplevel_proc)).
@@ -127,7 +127,7 @@ test(Id, Inits, Input, EOutput):-
 %       message(user, 'start ciao'),    
     toplevel_proc:start(TL),
 %       message(user, 'start test'),
-    exec_test(TL, ["use_package(iso)."|Inits], Input, Output), 
+    exec_test(TL, ["use_package(iso_strict)."|Inits], Input, Output), 
     toplevel_proc:kill(TL),
     compare_output(Id, Input, EOutput, Output, _).
 

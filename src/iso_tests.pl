@@ -1,4 +1,4 @@
-:- module(iso_tests, _, [assertions, nativeprops, unittestdecls, iso, dynamic]).
+:- module(iso_tests, _, [assertions, nativeprops, unittestdecls, iso_strict, dynamic]).
 
 % TODO: rewrite with use test modules?
 :- reexport(engine(runtime_control)).

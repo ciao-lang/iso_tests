@@ -1,4 +1,4 @@
-:- module(iso_tests_syntax, _, [assertions, nativeprops, unittestdecls, iso]).
+:- module(iso_tests_syntax, _, [assertions, nativeprops, unittestdecls, iso_strict]).
 
 :- doc(title, "ISO tests for syntax").
 :- doc(author, "Lorea Galech").
