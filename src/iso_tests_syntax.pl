@@ -331,7 +331,7 @@ list_test3(T) :- read(T).
         close(Stream),
         open_to_read('/tmp/tmp.in', read, Sc, Sn, []) )
     => (T={a}, close_instreams(Sc, Sn))
-# "[ISO] {}/1 notation: expected(succeed)".
+# "[ISO] @{@}/1 notation: expected(succeed)".
 
 curly_test1(T) :- read(T).
 
@@ -342,7 +342,7 @@ curly_test1(T) :- read(T).
         close(Stream),
         open_to_read('/tmp/tmp.in', read, Sc, Sn, []) )
     => (T={a, b}, close_instreams(Sc, Sn))
-# "[ISO] {}/1 notation: expected(succeed)".
+# "[ISO] @{@}/1 notation: expected(succeed)".
 
 curly_test2(T) :- read(T).
 

@@ -39,7 +39,7 @@ Each one of the tests developed comes with a brief explanation, which should
 be useful to understand the relevance of the tests.
 
 If the results that Ciao gets through `Stdprolog` are compared to the results
-obtanied by Ciao with this new battery of tests, we can observe that Ciao gets
+obtained by Ciao with this new battery of tests, we can observe that Ciao gets
 much better results with the second one, even when both applications execute
 the same tests over the same predicates. This is because a  multitude of tests in
 `Stdprolog` fail due to reasons external to the test in question (for example,
