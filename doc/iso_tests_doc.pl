@@ -74,9 +74,12 @@ should be changed by the target:
  
 **Type error**:
 
-    call_test14,call_test15, asserta_test5,
-    asserta_test6, assertz_test5, assertz_test6, open_test11,
-    atomchars_test13, numberchars_test16 
+    -Cases for control constructs(Higher-order support; iso_tests.pl): call_test14, call_test15.
+
+    -Cases for clause creation and destruction(Dynamic predicates; iso_tests.pl): asserta_test5, asserta_test6, assertz_test5,
+    assertz_test6.
+    
+    -Cases for atomic term processing(Classic Prolog predicates; iso_tests.pl): atomchars_test13, numberchars_test16. 
 
  - Predicate call/1 (pag 44 standard)
 
@@ -134,13 +137,19 @@ should be changed by the target:
    
 **Permission error**:
 
-   clause_test9,clause_test10,setinput_test5,setoutput_test5,
-   flush_output_test5,getchar_test11,getchar_test12, getchar_test18,
-   getcode_test29,getcode_test31, peekchar_test12, peekcode_test13,
-   peekchar_test19,peekcode_test29, peekcode_test31, nl_test12,
-   putchar_test16,putcode_test21, getbyte_test5, getbyte_test11,
-   getbyte_test13,peekbyte_test5, peekbyte_test11,
-   peekbyte_test13,putbyte_test8,read_test15,read_test20,write_test20
+   -Cases for clause retrieval and information(Dynamic predicates; iso_tests.pl): clause_test9, clause_test10.
+
+   -Cases for stream selection and control(ISO Prolog compatibility layer; iso_tests.pl): setinput_test5, setoutput_test5,
+   flush_output_test5.  
+   
+   -Cases for character input/output(Classic Prolog predicates, ISO Prolog compatibility layer; iso_tests.pl): getchar_test11,
+   getchar_test12, getchar_test18, getcode_test29, getcode_test31, peekchar_test12, peekcode_test13, peekchar_test19,
+   peekcode_test29, peekcode_test31, nl_test12, putchar_test16, putcode_test21.
+ 
+   -Cases for byte input/output(ISO Prolog compatibility layer; iso_tests.pl): getbyte_test5, getbyte_test11, getbyte_test13,
+   peekbyte_test5, peekbyte_test11, peekbyte_test13, putbyte_test8.
+
+   -Cases for term input/output(Classic Prolog predicates; iso_tests.pl): read_test15, read_test20, write_test20.
 
  - Predicate clause/2 (pag 77 standard) when the predicate
         indicator Pred of Head is that of a private procedure:
@@ -222,7 +231,7 @@ should be changed by the target:
 
 **Domain error**:
 
-   currentinput_test2, currentoutput_test2
+   -Cases of stream selection and control: currentinput_test2, currentoutput_test2.
 
  - Predicate current_input/2 (pag 86 standard) when the target
         stream is neither a variable nor a stream.
@@ -238,42 +247,49 @@ should be changed by the target:
 # Case 2
 
 There are several tests in which an error is expected but in
-Ciao the execution of the test just fails. These tests are:
+Ciao the execution of the test just fails. Can be grouped into:
 
-    call_test13, functor_test12, functor_test13,functor_test14,
-    functor_test15, functor_test16, functor_test17, functor_test18,
-    argument_test8, argument_test9, argument_test10, argument_test11,
-    argument_test13, argument_test14, argument_test16, univ_test7,
-    univ_test8, univ_test9, univ_test10, univ_test11, univ_test12,
-    univ_test13, univ_test14, univ_test16, univ_test17, univ_test18,
-    is_test6, arithmetic_comparision_test19, arithmetic_comparision_test20,
-    arithmetic_comparision_test21, arithmetic_comparision_test22,
-    arithmetic_comparision_test23, arithmetic_comparision_test24,
-    clause_test7, clause_test8, clause_test12, currentpredicate_test6,
-    currentpredicate_test7, currentpredicate_test8, retract_test9,
-    retract_test10, abolish_test2, abolish_test3, abolish_test4,
-    abolish_test8, abolish_test10, abolish_test11, abolish_test12,
-    abolish_test13, abolish_test14, findall_test9, setof_test29,
-    currentinput_test4, currentoutput_test4, stream_property_test3,
-    stream_property_test4, peekcode_test24, peekcode_test25, peekcode_test26,
-    getbyte_test7, getbyte_test8, peekbyte_test8, current_op_test2,
-    current_op_test3, current_op_test4, current_op_test5, atomlength_test8,
-    subatom_test10, subatom_test11, subatom_test12, subatom_test13,
-    subatom_test14, subatom_test15, subatom_test16, atomchars_test12,
-    charcode_test6, charcode_test8, numberchars_test8, numberchars_test15,
-    numberchars_test22, numberchars_test23, numberchars_test24,
-    numberchars_test25, numberchars_test26, numberchars_test27,
-    numbercodes_test21, setflag_test2, setflag_test3, setflag_test4,
-    setflag_test5, setflag_test6, currentflag_test3, currentflag_test7,
-    currentflag_test8, eval_test4, eval_test5, eval_test9, eval_test10,
-    eval_test14, eval_test15, eval_test19, eval_test20, eval_test27,
-    eval_test28, eval_test33, eval_test34, eval_test42, eval_test45,
-    eval_test49, eval_test50, eval_test54, eval_test55, power_test4,
-    power_test5, sin_test2, sin_test4, cos_test2, cos_test4, atan_test3,
-    atan_test5, exp_test3, exp_test5, log_test3, log_test5, sqrt_test4,
-    sqrt_test6, bit_rl_test4, bit_rl_test5, bit_lr_test4, bit_lr_test5,
-    bit_and_test5, bit_and_test6, bit_or_test5, bit_or_test6, bit_not_test4,
-    bit_not_test5,putchar_test8,getcode_test24.
+    -Arithmetic cases(Basic data types and properties, Arithmetic; iso_tests.pl: eval_test5, eval_test10, eval_test15, eval_test20,
+    eval_test28, eval_test34, eval_test45,eval_test50, eval_test55, power_test5,
+    sin_test4, cos_test4, atan_test5, exp_test5, log_test5, sqrt_test6.
+
+    -Cases for term creation(Basic term manipulation; iso_tests_basic_term.pl): functor_test12, functor_test13, functor_test14,
+    functor_test15, functor_test16, functor_test17, functor_test18, argument_test8, argument_test9, argument_test10, argument_test11,
+    argument_test13, argument_test14, argument_test16.
+
+    -Cases for clause creation and destruction(Dynamic predicates; iso_tests.pl): retract_test9, retract_test10, abolish_test2,
+    abolish_test3, abolish_test4, abolish_test8, abolish_test10, abolish_test11, abolish_test12, abolish_test13, abolish_test14.
+
+    -Cases for atomic term processing(Conversion between constants and strings, Classic Prolog predicates; iso_tests.pl): atomlength_test8,
+    subatom_test10, subatom_test11, subatom_test12, subatom_test13, subatom_test14, subatom_test15, subatom_test16, atomchars_test12,
+    charcode_test6, numberchars_test8, numberchars_test15, numberchars_test22, numberchars_test23, numberchars_test24,
+    numberchars_test25, numberchars_test26, numberchars_test27, numbercodes_test21.
+
+    -Cases for clause retrieval and information(Dynamic predicates; iso_tests.pl): clause_test7, clause_test8,
+    clause_test12, currentpredicate_test6, currentpredicate_test7, currentpredicate_test8.
+
+    -Cases for stream selection and control(Stream handling and operations, ISO Prolog compatibility layer; iso_tests.pl): currentinput_test4, currentoutput_test4,
+    stream_property_test3, stream_property_test4.
+
+    -Cases for character input/output(Classic Prolog predicates, ISO Prolog compatibility layer; iso_tests.pl): peekcode_test24, peekcode_test25, peekcode_test26,
+     putchar_test8, getcode_test24.
+
+    -Cases for byte input/output(ISO Prolog compatibility layer; iso_tests.pl): getbyte_test7, getbyte_test8, peekbyte_test8. 
+
+    -Cases for Term input/output(Classic Prolog predicates; iso_tests.pl): current_op_test2, current_op_test3, current_op_test4,
+    current_op_test5.
+
+    -Cases for implementation defined hooks(iso_tests.pl): setflag_test2, setflag_test3, setflag_test4,
+    setflag_test5, setflag_test6, currentflag_test3, currentflag_test7, currentflag_test8.
+
+    -Cases for bitwise functors(Evaluable functors; iso_tests.pl): bit_rl_test4, bit_rl_test5, bit_lr_test5,
+    bit_and_test6, bit_or_test6.
+
+    -Cases for control constructs(Higher-order support; iso_tests.pl): call_test13.
+
+    -Cases for all solutions(Aggregates: gathering predicate solutions; iso_tests.pl): findall_test9, setof_test29.
+
+    -Cases for arithmetic comparison(Arithmetic; iso_tests.pl, iso_tests_arithmetic): arithmetic_comparision_test20.
 
 # Case 3
 
@@ -282,10 +298,13 @@ by the standard. According to the ISO standard, when more than one error
 condition is satisfied, the error that is reported by the Prolog processor is
 implementation dependent.
 
-    asserta_test4, assertz_test4,open_test8,open_test10,
-    close_test2,peekchar_test22, putcode_test23, op_test3,
-    atomcodes_test10, atomcodes_test11, charcode_test9,
-    numbercodes_test13, numbercodes_test14, write_test20,read_test21
+    -Cases for clause creation and destruction(Dynamic predicates; iso_tests.pl): asserta_test4, assertz_test4.
+
+    -Cases for stream selection and control(ISO Prolog compatibility layer; iso_tests.pl): open_test8, open_test10, close_test2.
+
+    -Cases for character input/output(Classic Prolog predicates; iso_tests.pl): peekchar_test22.
+
+    -Cases for term input/output(Packages and language extension, Classic Prolog predicates; iso_tests.pl): op_test3, write_test20, read_test21.
 
  - Predicate asserta/1
           According to the ISO standard, when the head of the clause is a
@@ -433,23 +452,32 @@ implementation dependent.
 The execution of a predicate that according to the standard should succeed,
 fails in Ciao. 
 
-    clause_test1, clause_test2, retract_test3, retract_test4,
-    retract_test8, stream_property_test5, stream_property_test6,
-    atomchars_test15, numberchars_test7, numberchars_test9,
-    numberchars_test10, numberchars_test19, numberchars_test20,
-    numberchars_test21, numbercodes_test6, numbercodes_test7,
-    numbercodes_test8, numbercodes_test17, numbercodes_test18,
-    numbercodes_test19, currentflag_test1, currentflag_test6
+    -Cases for clause retrieval and information(Dynamic predicates; iso_tests.pl): clause_test1, clause_test2.
+
+    -Cases for clause creation and destruction(Dynamic predicates; iso_tests.pl): retract_test3, retract_test4,
+    retract_test8.
+
+    -Cases for stream selection and control(ISO Prolog compatibility layer; iso_tests.pl): stream_property_test5, stream_property_test6.
+
+    -Cases for  atomic term processing(Classic Prolog predicates, Conversion between constants and strings; iso_tests.pl): numberchars_test7, numberchars_test9,
+    numberchars_test10, numberchars_test19, numberchars_test20, numberchars_test21, numbercodes_test6, numbercodes_test7,
+    numbercodes_test8, numbercodes_test17, numbercodes_test18, numbercodes_test19.
+     
+    -Cases for implementation defined hooks(iso_tests.pl): currentflag_test1, currentflag_test6.
 
 # Case 5
 
 The execution of a predicate should raise an error but the execution of the
 test succeeds.
 
-    abolish_test5, abolish_test9, open_test7, open_test14,op_test10,
-    op_test12, op_test13, op_test18,op_test19,eval_test29, eval_test35,
-    log_test4, log_test6,sqrt_test5,bit_rl_test6, bit_lr_test6, bit_and_test7,
-    bit_or_test7, bit_not_test6
+    -Cases for clause creation and destruction(Dynamic predicates; iso_tests.pl): abolish_test5, abolish_test9.
+
+    -Cases for stream selection and control(ISO Prolog compatibility layer; iso_tests.pl): open_test7, open_test14. 
+
+    -Cases for term input/output(Packages and language extension; iso_tests.pl): op_test10, op_test12, op_test13, op_test19, 
+
+    -Arithmetic cases(Arithmetic; iso_tests.pl): log_test4, log_test6, sqrt_test5.
+      
 
   - Predicate abolish(Pred)
          According to the ISO standard, when the predicate indicator Pred
@@ -577,15 +605,15 @@ ISO standard is needed, but this predicate is either not implementated
 or does not fulfill the whole funcionality established for it in the
 standard. This is the case in the following predicates:
 
-   current_prolog_flag/2, at_end_of_stream_test1, at_end_of_stream_test2,
-   at_end_of_stream_test3, at_end_of_stream_test4, at_end_of_stream_test5,
-   at_end_of_stream_test6, at_end_of_stream_test7, set_stream_position_test1,
-   set_stream_position_test2, set_stream_position_test3,
-   char_conversion_test1, char_conversion_test2,char_conversion_test3,
-   char_conversion_test4, char_conversion_test5, char_conversion_test6,
-   char_conversion_test7, char_conversion_test8,char_conversion_test9,
-   char_conversion_test10, char_conversion_test11, char_conversion_test12,
-   current_char_conversion_test1
+   -Cases for stream selection and control(ISO Prolog compatibility layer; iso_tests.pl): at_end_of_stream_test1, at_end_of_stream_test2,
+   at_end_of_stream_test3, at_end_of_stream_test4, at_end_of_stream_test5, at_end_of_stream_test6, at_end_of_stream_test7, set_stream_position_test1,
+   set_stream_position_test2, set_stream_position_test3.
+
+   -Cases for Term input/output(Stricter ISO-Prolog package; iso_tests.pl): char_conversion_test1, char_conversion_test2, char_conversion_test3,
+   char_conversion_test4, char_conversion_test5, char_conversion_test6, char_conversion_test7, char_conversion_test8, char_conversion_test9,
+   char_conversion_test10, char_conversion_test11, char_conversion_test12, current_char_conversion_test.
+
+   -Cases for implementation defined hooks(Runtime system control and flags; iso_tests.pl): current_prolog_flag/2. 
 
 # Case 7
 
@@ -594,12 +622,9 @@ that the standard considers.
 
 This is the case of the following tests:
 
-    clause_test3
-    clause_test4
-    clause_test5 
-    asserta_test7
-    assertz_test7
-    retract_test11
+    -Cases for clause retrieval and information(Dynamic predicates; iso_tests.pl): clause_test3, clause_test4, clause_test5.
+
+    -Cases for clause creation and destruction(Dynamic predicates; iso_tests.pl): asserta_test7, assertz_test7, retract_test11.
 
 For example, the postcondition of the following tests is expecting
 that the variable Body is equal to insect(I) where insect(I) is a user
@@ -644,10 +669,11 @@ related to the stream manipulation in the assertions tests:
 
    These tests are:
 
-        currentoutput_test5,setinput_test4,setoutput_test4,
-        putchar_test1, putcode_test3,putchar_test5, putchar_test15,
-        putcode_test20, putbyte_test1, putbyte_test2, putbyte_test7,
-        write_test2, write_test5, write_test19
+        -Cases for character input/output(Classic Prolog predicates, Stream handling and operations; iso_tests.pl): putchar_test1, putcode_test3, putchar_test5.
+
+        -Cases for byte input/output(Stream handling and operations, ISO Prolog compatibility layer; iso_tests.pl): putbyte_test1, putbyte_test2.
+
+        -Cases for term input/output(Classic Prolog predicates; iso_tests.pl): write_test2, write_test5.
 
    For example the following test should raise an error but
    succeeds:
@@ -665,10 +691,7 @@ related to the stream manipulation in the assertions tests:
 
    These tests are:                       
 
-        setoutput_test1, getchar_test17, getcode_test28,
-        peekchar_test18, peekcode_test28, getbyte_test10, 
-        peekbyte_test10, read_test17,write_test10, write_test12,
-        write_test14, write_test15,atomcodes_test12,atomcodes_test13
+      -Cases for atomic term processing(Conversion between constants and strings; iso_tests.pl): atomcodes_test12, atomcodes_test13.
 
    Example: 
     - if the test is expressed as:
@@ -696,8 +719,9 @@ aspect since this one does not establish anything about it. I have chosen to
 leave them among the other tests but may be it would be better just take them away.
 
 These tests are: 
-    atomconcat_test14, subatom_test32, subatom_test33, subatom_test34,
-    atomcodes_test12, atomcodes_test13, atomchars_test14
+
+    -Cases for atomic term processing(Conversion between constants and strings; iso_tests.pl): subatom_test32, subatom_test33, subatom_test34,
+    atomcodes_test12, atomcodes_test13.
 
 Example:
     :- test subatom_test34(Result) => (Result=[[0,2,'Pé'],[1,1,'éc'],[2,0,'cs']]).
@@ -705,9 +729,24 @@ Example:
 
 # Case 11
 
-There are some test that are ignored during their execution, this happens
-because these tests abort the execution of Ciao. The tests are:
-    - eval_test36
+There are some tests that are only executed if UTF-8 is used, otherwise their
+execution is ignored. We can detect these tests by the header: if(defined(fixed_utf8)).
+
+These tests are:
+
+     -Cases for atomic term processing(Conversion between constants and strings, Classic Prolog predicates; iso_tests.pl): atomconcat_test14, subatom_test34, atomchars_test14,
+     atomchars_test15.
+
+Example:
+
+     :- if(defined(fixed_utf8)).
+     %test14 
+     :- test atomconcat_test14(Result)
+	=> ( Result=[['', 'Pécs'], ['P', 'écs'], ['Pé', 'cs'], ['Péc', 's'],
+		['Pécs', '']] )
+    atomconcat_test14(Result) :-
+	findall([T1, T2], atom_concat(T1, T2, 'Pécs'), Result).
+    :- endif.
 
 # Case 12
 
@@ -745,7 +784,7 @@ fail for several reasons:
    Ciao.
 
    This problem occurs in the following tests:
-    - open_test16
+    
     - open_test17   
 
  - Since the stream options with which a file may be opened are ignored
@@ -755,38 +794,16 @@ fail for several reasons:
 
    This problem occurs in the following tests:    
 
-    - open_test2
-    - flush_output_test6
-    - getchar_test3
-    - getcode_test4
-    - getchar_test5
-    - getcode_test6
-    - getchar_test9
-    - getcode_test10
-    - peekchar_test3
-    - peekcode_test4
-    - peekchar_test5
-    - peekcode_test6    
-    - peekchar_test7
-    - peekcode_test8
-    - peekchar_test9
-    - peekcode_test10
-    - peekchar_test11
-    - peekchar_test20
-    - putchar_test2
-    - putchar_test4
-    - putchar_test6
-    - getbyte_test2
-    - getbyte_test3
-    - getbyte_test4
-    - peekbyte_test2
-    - peekbyte_test3
-    - peekbyte_test4
-    - putbyte_test3
-    - read_test2
-    - read_test3
-    - getchar_test7
-    - getcode_test8
+    -Cases for stream selection and control(Stream handling and operations; iso_tests.pl): open_test2, flush_output_test6.
+
+    -Cases for character input/output(Classic Prolog predicates, ISO Prolog compatibility layer; iso_tests.pl) : getchar_test3, getcode_test4, getchar_test5,
+    getcode_test6, getchar_test9, getcode_test10, peekchar_test3, peekcode_test4, peekchar_test5, peekcode_test6, peekchar_test7, peekcode_test8, peekchar_test9,
+    peekcode_test10, peekchar_test11, peekchar_test20, putchar_test2, putchar_test4, putchar_test6, getchar_test7, getcode_test8.
+
+    -Cases for byte input/output(ISO Prolog compatibility layer; iso_tests.pl): getbyte_test2, getbyte_test3, getbyte_test4,
+    peekbyte_test2, peekbyte_test3, peekbyte_test4, putbyte_test3.
+    
+    -Cases for term input/output(Classic Prolog predicates; iso_tests.pl): read_test2, read_test3.
 
 
  - There are side effects because open/4 does the same as open/3;
@@ -799,18 +816,13 @@ fail for several reasons:
 
    This problem occurs in the following tests:
 
-    - getchar_test19
-    - getcode_test30
-    - getcode_test33
-    - peekbyte_test30
-    - peekbyte_test33
-    - putchar_test17
-    - putcode_test22
-    - getbyte_test12
-    - peekbyte_test12
-    - putbyte_test9
-    - read_test18
-    - read_test19
+    -Cases for character input/output(Classic Prolog predicates, ISO Prolog compatibility layer; iso_tests.pl): getchar_test19, getcode_test30, getcode_test33,
+    putchar_test17, putcode_test22.
+
+    -Cases for byte input/output(ISO Prolog compatibility layer; iso_tests.pl): peekbyte_test30, peekbyte_test33, getbyte_test12,
+    peekbyte_test12, putbyte_test9.
+   
+    -Cases for term input/output(Classic Prolog predicates; iso_tests.pl): read_test18, read_test19.
 
  - Another error related with the stream options of the predicate
    open/4 is that the one of these options allow specification of the effect of
@@ -821,8 +833,7 @@ fail for several reasons:
 
    This problem occurs in the following tests:
 
-    - getchar_test21
-    - getcode_test32
+    -Cases os stream selection and control: getchar_test21, getcode_test32.
 
 # Case 14
 
@@ -835,11 +846,8 @@ close/2 does the same as close/1. This fact made that a multitude of test fail:
 
    This problem occurs in the following tests:
 
-        - close_test3
-        - close_test4
-        - close_test5
-        - close_test6
-        - close_test7  
+        -Cases for stream selection and control(ISO Prolog compatibility layer; iso_tests.pl): close_test3, close_test4, close_test5
+        close_test6, close_test7.  
 
 # Case 15
 
@@ -866,9 +874,8 @@ There are two thing that need to be said about it:
    end_of_stream.
 
 This problem occurs in the following tests:
-
-    - peekchar_test21
-    - getchar_test20
+    
+    -Cases for character input/output(Classic Prolog predicates; iso_tests.pl): getchar_test20.
 
 # Case 16
 
@@ -966,18 +973,6 @@ There are some arity mismatch issues.
 This problem occurrs in the following tests:
 
     - currentflag_test1
-    - currentflag_test4
-    - currentflag_test5
-
-For example, the folling test provokes an error due to arity mismatch:
-
-    :- test currentflag_test5 : (set_prolog_flag(unknown,error)) + fails.
-    currentflag_test5 :- current_prolog_flag(unknown,error).
-
-This is similar, but does not provoke the same error:
-
-    :- test currentflag_test5 : (X=unknown,Y=warning,set_prolog_flag(X,Y)) + fails.
-    currentflag_test5 :- current_prolog_flag(unknown,error).
 
 The test op_test1 and op_test9 also provoke an arity mismatch error
 but surprisingly both tests succeed. As this arity mismatch error does
