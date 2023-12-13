@@ -1,5 +1,7 @@
 :- module(iso_tests, _, [assertions, nativeprops, unittestdecls, iso_strict, dynamic]).
 
+% TODO: use a package containing all reexports so the file is cleaner
+
 % TODO: rewrite with use test modules?
 :- reexport(engine(runtime_control)).
 %:- reexport(library(streams)).
@@ -29,6 +31,7 @@
 :- doc(author, "The Ciao Development Team").
 :- doc(author, "Lorea Galech").
 :- doc(author, "Jose F. Morales (simplified)").
+:- doc(author, "Jose Luis Bueno").
 
 :- doc(module, "This module contains a collection of test assertions
 for checking compliance of Ciao with the ISO Prolog standard. The
@@ -71,10 +74,19 @@ and the current status in Ciao:
 % ---------------------------------------------------------------------------
 % TODO: fix
 
+%%Labels:
+%% 
+%%Wrong_vs_iso: Wrong solution
+%%Nothrow_vs_iso: Doesn't throw exception
+%%Diffthrow_vs_iso: Throws a different exception
+%%Label_4: Warnings
+%%Label_5: Nondet
+%%Label_6: Aborted
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The following predicates are not implemented, but here a dummy
 % version is provided in order to avoid compilation errors. -- EMM
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 moose(_) :- fail.
 x :- fail.
 f(_) :- fail.
@@ -111,7 +123,7 @@ current_char_conversion(_, _) :- fail.
 # "[ISO] call/1: expected(succeed)".
 
 call_test1 :- call(!).
-
+ 
 %test 2
 :- test call_test2 + fails
 # "[ISO] call/1: expected(fail)".
@@ -158,7 +170,9 @@ call_test5 :- call(bb(_)).
 
 call_test6 :- call(bb(3)).
 
-
+%% REVIEW:PENDING                ** wrong_vs_iso**
+%%   [gprolog]: it is correct
+%%   [ciao]: returns a different result
 %test 7 
 :- test call_test7(Result) => (Result=[[1, !]])
 # "[ISO] call/1: expected(succeed) bug(wrong_succeed)".
@@ -199,6 +213,9 @@ call_test11 :- call(_).
 
 call_test12 :- call(1).
 
+%% REVIEW:PENDING                                 **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(callable, (fail, 1)),_))
+%%   [ciao]: no throws
 %test 13 
 :- test call_test13
 	+ exception(error(type_error(callable, (fail, 1)), Imp_dep))
@@ -206,6 +223,9 @@ call_test12 :- call(1).
 
 call_test13 :- call((fail, 1)).
 
+%% REVIEW:PENDING                               **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(callable, (write(3), 1)),_))
+%%   [ciao]:  throws exception(error(type_error(callable,1),'in metacall'))
 %test 14
 :- test call_test14
 	+ exception(error(type_error(callable, (write(3), 1)), Imp_dep))
@@ -213,6 +233,9 @@ call_test13 :- call((fail, 1)).
 
 call_test14 :- call((write(3), 1)).
 
+%% REVIEW:PENDING                                **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(callable, (1;true)),_))
+%%   [ciao]:  throws exception(error(type_error(callable,1),'in metacall'))
 %test 15 
 :- test call_test15 + exception(error(type_error(callable, (1;true)), Imp_dep))
 # "[ISO] call/1: expected(error) bug(wrong_error)".
@@ -508,7 +531,10 @@ catch_test2(Z) :- catch(bar(3), Z, true).
 
 catch_test3 :- catch(true, _, 3).
 
-%test4 
+%% REVIEW:PENDING                                **Diffthrow_vs_iso**
+%test4
+%%   [gprolog]: throws exception(bla)
+%%   [ciao]:  throws  exception(bla)
 :- test catch_test4 + exception(error(system_error, Imp_dep))
 # "[ISO] catch: expected(error) bug(wrong_error)".
 
@@ -703,6 +729,9 @@ arithmetic_comparision_test18 :- '=<'(3*2, 7 -1).
 
 arithmetic_comparision_test19(X) :- '=:='(X, 5).
 
+%% REVIEW:PENDING                                **Nothrow_vs_iso**
+%%   [gprolog]: error(instantiation_error,(=\=)/2)
+%%   [ciao]: no throws
 %test 20 
 :- test arithmetic_comparision_test20(X)
 	+ exception(error(instantiation_error, Imp_dep))
@@ -710,6 +739,7 @@ arithmetic_comparision_test19(X) :- '=:='(X, 5).
 
 arithmetic_comparision_test20(X) :- '=\='(X, 5).
 
+%% REVIEW:DONE
 %test 21 
 :- test arithmetic_comparision_test21(X)
 	+ exception(error(instantiation_error, Imp_dep))
@@ -717,6 +747,7 @@ arithmetic_comparision_test20(X) :- '=\='(X, 5).
 
 arithmetic_comparision_test21(X) :- '<'(X, 5).
 
+%% REVIEW:DONE
 %test 22 
 :- test arithmetic_comparision_test22(X)
 	+ exception(error(instantiation_error, Imp_dep))
@@ -724,6 +755,7 @@ arithmetic_comparision_test21(X) :- '<'(X, 5).
 
 arithmetic_comparision_test22(X) :- '>'(X, 5).
 
+%% REVIEW:DONE
 %test 23 
 :- test arithmetic_comparision_test23(X)
 	+ exception(error(instantiation_error, Imp_dep))
@@ -731,6 +763,7 @@ arithmetic_comparision_test22(X) :- '>'(X, 5).
 
 arithmetic_comparision_test23(X) :- '>='(X, 5).
 
+%% REVIEW:DONE
 %test 24 
 :- test arithmetic_comparision_test24(X)
 	+ exception(error(instantiation_error, Imp_dep))
@@ -760,54 +793,75 @@ insect(bee).
 
 % ---------------------------------------------------------------------------
 
+%% REVIEW:PENDING                                           **Label_4**
 %test 1 
 :- test clause_test1
 # "[ISO] clause/2: expected(succeed) bug(fail)".
 
 clause_test1 :- clause(cat, true).
 
+%% REVIEW:PENDING                                    **Label_4**
 %test 2 
 :- test clause_test2
 # "[ISO] clause/2: expected(succeed) bug(fail)".
 
 clause_test2:- clause(dog, true).
 
+%% REVIEW:PENDING                                   ** Wrong_vs_iso**
+%%   [gprolog]: it is correct
+%%   [ciao]: returns a different result
 %test 3 
 :- test clause_test3(I, Body) => (Body=insect(I))
 # "[ISO] clause/2: expected(succeed) bug(fail)".
 
 clause_test3(I, Body) :- clause(legs(I, 6), Body).
 
+%% REVIEW:PENDING                                   ** Wrong_vs_iso**
+%%   [gprolog]: it is correct
+%%   [ciao]: returns a different result
 %test 4 
 :- test clause_test4(C, Body) => (Body=(call(C), call(C)))
 # "[ISO] clause/2: expected(succeed) bug(fail)".
 
 clause_test4(C, Body) :- clause(legs(C, 7), Body).
 
+%% REVIEW:PENDING                                 ** Wrong_vs_iso**
+%%   [gprolog]: it is correct
+%%   [ciao]: returns a different result
 %test 5 
 :- test clause_test5(Result) => (Result=[[ant, true], [bee, true]])
 # "[ISO] clause/2: expected(succeed) bug(fail)".
 
 clause_test5(Result) :- findall([I, T], clause(insect(I), T), Result).
 
-%test 6
+%% REVIEW:PENDING                                    **Label_4**
+%test 6                
 :- test clause_test6(Body) + fails
 # "[ISO] clause/2: expected(fail)".
 
 clause_test6(Body) :- clause(x, Body).
 
+%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantation_error, _))
+%%   [ciao]: no throws
 %test 7 
 :- test clause_test7(B) + exception(error(instantation_error, Imp_dep))
 # "[ISO] clause/2: expected(error) bug(fail)".
 
 clause_test7(B) :- clause(_, B).
 
+%% REVIEW:PENDING                                                 **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(callable, 4), _))
+%%   [ciao]: no throws
 %test 8 
 :- test clause_test8(X) + exception(error(type_error(callable, 4), Imp_dep))
 # "[ISO] clause/2: expected(error) bug(fail)".
 
 clause_test8(X) :- clause(4, X).
 
+%% REVIEW:PENDING                                                 **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(access, private_procedure, elk/1),_))
+%%   [ciao]: throws exception(error(permission_error(modify,static_procedure,'iso_tests:elk'/1),clause/2))
 %test 9
 :- test clause_test9(N, Body)
 	+ exception(error(permission_error(access, private_procedure, elk/1),
@@ -816,6 +870,9 @@ clause_test8(X) :- clause(4, X).
 
 clause_test9(N, Body) :- clause(elk(N), Body).
 
+%% REVIEW:PENDING                                                 **Diffthrow_vs_iso**
+%%   [gprolog]: throws  exception(error(permission_error(access, private_procedure, atom/1),_))
+%%   [ciao]: throws exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),clause/2))
 %test 10
 :- test clause_test10(Body)
 	+ exception(error(permission_error(access, private_procedure, atom/1),
@@ -834,7 +891,9 @@ clause_test11 :- clause(legs(A, 6), insect(f(A))).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
-
+%% REVIEW:PENDING                                    **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(callable, 5), _))
+%%   [ciao]: throws exception(error(permission_error(modify,static_procedure,'iso_tests:f'/1),clause/2))
 %test 12 
 :- test clause_test12
 	+ exception(error(type_error(callable, 5), Imp_dep))
@@ -867,12 +926,14 @@ currentpredicate_test2 :- current_predicate(current_predicate/0).
 
 currentpredicate_test3(Arity) :- current_predicate(elk/Arity).
 
-
+%% REVIEW:PENDING                                                    **Label_5**
+%%   [gprolog]: nondet
+%%   [ciao]: succeed
 %test 4
 :- test currentpredicate_test4(A) + fails
 # "[ISO] current_predicate/2: expected(fail)".
 
-currentpredicate_test4(A) :- current_predicate(foo/A).
+currentpredicate_test4(A) :- current_predicate(foo_undefined/A).
 
 %test 5
 :- test currentpredicate_test5(Result)
@@ -882,7 +943,9 @@ currentpredicate_test4(A) :- current_predicate(foo/A).
 currentpredicate_test5(Result) :-
 	findall(Name, current_predicate(Name/1), Result).
 
-
+%% REVIEW:PENDING                                                      **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(predicate_indicator, 4),_))
+%%   [ciao]: no throws 
 %test 6 
 :- test currentpredicate_test6
 	+ exception(error(type_error(predicate_indicator, 4), Imp_dep))
@@ -893,6 +956,9 @@ currentpredicate_test6 :- current_predicate(4).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
+%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%%   [gprolog]: throw exception(error(type_error(predicat_indicator, 0/dog), _))
+%%   [ciao]: no throws 
 %test 7 
 :- test currentpredicate_test7(X) : (X=dog)
 	+ exception(error(type_error(predicat_indicator, 0/dog), Imp_dep))
@@ -900,6 +966,9 @@ currentpredicate_test6 :- current_predicate(4).
 
 currentpredicate_test7(X) :- current_predicate(X).
 
+%% REVIEW:PENDING                                        **Nothrow_vs_iso**
+%%   [gprolog]: throws exception: error(type_error(atom,0),current_predicate/1)
+%%   [ciao]: no throws 
 %test 8
 :- test currentpredicate_test8(X) : (X=0/dog)
 	+ exception(error(type_error(predicat_indicator, 0/dog), Imp_dep))
@@ -938,27 +1007,36 @@ asserta_test2 :- asserta((legs(A, 4) :- animal(A))).
 
 asserta_test3 :- asserta((foo(A) :- A, call(A))).
 
+%% REVIEW:PENDING                                                         **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error,_))
+%%   [ciao]: throws exception(error(type_error(clause,_),asserta/1-1)) 
 %test 4
 :- test asserta_test4 + exception(error(instantiation_error, Imp_dep))
 # "[ISO] asserta/2: expected(error) bug(wrong_error)".
 
 asserta_test4 :- asserta(_).
 
-
+%% REVIEW:PENDING                                                        **Diffthrow_vs_iso**
+%%   [gprolog]: exception(error(type_error(callable, 4), _))
+%%   [ciao]: throws exception(error(type_error(clause,4),asserta/1-1))
 %test 5
 :- test asserta_test5 + exception(error(type_error(callable, 4), Imp_dep))
 # "[ISO] asserta/2: expected(error) bug(wrong_error)".
 
 asserta_test5 :- asserta(4).
 
-
+%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(callable, 4), _))
+%%   [ciao]: throws exception(error(type_error(clause,('iso_tests:foo':-4)),asserta/1-1))
 %test 6 
 :- test asserta_test6 + exception(error(type_error(callable, 4), Imp_dep))
 # "[ISO] asserta/2: expected(error) bug(wrong_error)".
 
 asserta_test6 :- asserta((foo :- 4)).
 
-
+%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(modify, static_procedure, atom/1), _))
+%%   [ciao]: throws exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),asserta/1))
 %test 7 
 :- test asserta_test7
 	+ exception(error(permission_error(modify, static_procedure, atom/1),
@@ -992,21 +1070,27 @@ assertz_test2 :- assertz((legs(B, 2) :- bird(B))).
 
 assertz_test3 :- assertz((foo(X) :- X -> call(X))).
 
-
+%% REVIEW:PENDING                                                    **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error,_))
+%%   [ciao]: throws exception(error(type_error(clause,_),assertz/1-1))
 %test 4 
 :- test assertz_test4 + exception(error(instantiation_error, Imp_dep))
 # "[ISO] assertz/2: expected(error) bug(wrong_error)".
 
 assertz_test4 :- assertz(_).
 
-
+%% REVIEW:PENDING                                                    **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(callable, 4), _))
+%%   [ciao]: throws exception(error(type_error(clause,4),assertz/1-1))
 %test 5 
 :- test assertz_test5 + exception(error(type_error(callable, 4), Imp_dep))
 # "[ISO] assertz/2: expected(error) bug(wrong_error)".
 
 assertz_test5 :- assertz(4).
 
-
+%% REVIEW:PENDING                                                    **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(callable, 4), _))
+%%   [ciao]: throws exception(error(type_error(clause,('iso_tests:foo':-4)),assertz/1-1))
 %test 6 
 :- test assertz_test6 + exception(error(type_error(callable, 4), Imp_dep))
 # "[ISO] assertz/2: expected(error) bug(wrong_error)".
@@ -1014,6 +1098,9 @@ assertz_test5 :- assertz(4).
 assertz_test6 :- assertz((foo :- 4)).
 
 
+%% REVIEW:PENDING                                                  **Diffthrow_vs_iso**
+%%   [gprolog]: throws  exception(error(permission_error(modify, static_procedure, atom/1),_))
+%%   [ciao]: throws  exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),assertz/1))
 %test 7 
 :- test assertz_test7
 	+ exception(error(permission_error(modify, static_procedure, atom/1),
@@ -1038,12 +1125,18 @@ retract_test1 :- retract(legs(octopus, 8)).
 
 retract_test2 :- retract(legs(spider, 6)).
 
+
+%% REVIEW:PENDING                                                          **Label_4**
 %test 3
 :- test retract_test3(X, T) => (T=bird(X))
 # "[ISO] retract/1: expected(succeed) bug(fail)".
 
 retract_test3(X, T) :- retract((legs(X, 2) :-T)).
 
+
+%% REVIEW:PENDING                                                ** Wrong_vs_iso**
+%%   [gprolog]: does not return what was expected
+%%   [ciao]: does not return what was expected
 %test 4 
 :- test retract_test4(Result)
 	=> (Result=[[_, 4, animal(A)], [_, 6, insect(A)], [spider, 8, true]])
@@ -1067,23 +1160,31 @@ retract_test6(Result) :-
 	findall(I, (retract(insect(I)), write(I), retract(insect(bee))),
 	    Result).
 
+%% REVIEW:PENDING                                               **Label_4**
 %test 7 UNDEFINED but is a bit strange, sometimes succeeds and sometimes fails
 %       Added times(50) to increase the chance the test fails
 :- test retract_test7(A) + times(50).
 retract_test7(A) :- retract((foo(A) :- A, call(A))).
 
+%% REVIEW:PENDING                                                  **Label_4**
 %test 8
 :- test retract_test8(A, B, C) => (A=call(C), B=call(C))
 # "[ISO] retract/1: expected(succeed) bug(fail)".
 
 retract_test8(A, B, C) :- retract((foo(C) :- A -> B)).
 
+%% REVIEW:PENDING                                                  **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error, _))
+%%   [ciao]: no throws
 %test 9 
 :- test retract_test9(X, Y) + exception(error(instantiation_error, Imp_dep))
 # "[ISO] retract/1: expected(error) bug(fail)".
 
 retract_test9(X, Y) :- retract((X :- in_eec(Y))).
 
+%% REVIEW:PENDING                                                  **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(callable, 4), _))
+%%   [ciao]: no throws
 %test 10 
 :- test retract_test10(X)
 	+ exception(error(type_error(callable, 4), Imp_dep))
@@ -1091,6 +1192,9 @@ retract_test9(X, Y) :- retract((X :- in_eec(Y))).
 
 retract_test10(X) :- retract((4 :- X)).
 
+%% REVIEW:PENDING                                             **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(modify, static_procedure, atom/1),_))
+%%   [ciao]:  throws exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),retract/1))
 %test 11 
 :- test retract_test11(X)
 	+ exception(error(permission_error(modify, static_procedure, atom/1),
@@ -1102,12 +1206,15 @@ retract_test11(X) :- retract((atom(X) :- X == '[]')).
 % ===========================================================================
 %% 8.9.4.4 These tests are specified in page 82 of the ISO standard %%%%
 
-%test 1
+%test 1                                                 
 :- test abolish_test1
 # "[ISO] abolish/1: expected(succeed)".
 
 abolish_test1 :- abolish(foo/2).
 
+%% REVIEW:PENDING                                                  **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error, _))
+%%   [ciao]: no throws
 %test 2 
 :- test abolish_test2
 	+ exception(error(instantiation_error, Imp_dep))
@@ -1115,6 +1222,9 @@ abolish_test1 :- abolish(foo/2).
 
 abolish_test2 :- abolish(foo/_).
 
+%% REVIEW:PENDING                                                   **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(predicate_indicator, foo),_))
+%%   [ciao]: no throws
 %test 3 
 :- test abolish_test3
 	+ exception(error(type_error(predicate_indicator, foo), Imp_dep))
@@ -1122,7 +1232,9 @@ abolish_test2 :- abolish(foo/_).
 
 abolish_test3 :- abolish(foo).
 
-
+%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(predicate_indicator, foo(_)),_))
+%%   [ciao]: no throws
 %test 4 
 :- test abolish_test4
 	+ exception(error(type_error(predicate_indicator, foo(_)), Imp_dep))
@@ -1160,14 +1272,18 @@ abolish_test7(Result) :-
 	asserta(insect(bee)), asserta(insect(ant)),
 	findall(X, (insect(X), abolish(insect/1)), Result).
 
-
+%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error, _))
+%%   [ciao]: no throws
 %test 8
 :- test abolish_test8 + exception(error(instantiation_error, Imp_dep))
 # "[Non-ISO] abolish/1: expected(error) bug(fail)".
 
 abolish_test8 :- abolish(foo/_).
 
-
+%% REVIEW:PENDING                                             **Nothrow_vs_iso**
+%%   [gprolog]: no throws
+%%   [ciao]: no throws
 %test 9 
 :- test abolish_test9
 	+ exception(error(permission_error(modify, static_procedure, bar/1),
@@ -1176,7 +1292,9 @@ abolish_test8 :- abolish(foo/_).
 
 abolish_test9 :- abolish(bar/1).
 
-
+%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(integer, a), _))
+%%   [ciao]: no throws
 %test 10  
 :- test abolish_test10
 	+ exception(error(type_error(integer, a), Imp_dep))
@@ -1184,6 +1302,9 @@ abolish_test9 :- abolish(bar/1).
 
 abolish_test10 :- abolish(foo/a).
 
+%% REVIEW:PENDING                                                  **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -1),_))
+%%   [ciao]: no throws
 %test 11 
 :- test abolish_test11
 	+ exception(error(domain_error(not_less_than_zero, -1), Imp_dep))
@@ -1191,6 +1312,9 @@ abolish_test10 :- abolish(foo/a).
 
 abolish_test11 :- abolish(foo /(-1)).
 
+%% REVIEW:PENDING                                                 **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(representation_error(max_arity), _))
+%%   [ciao]: no throws
 %test 12 
 :- test abolish_test12(X)
 	: (current_prolog_flag(max_arity, M), X is M+1)
@@ -1199,14 +1323,20 @@ abolish_test11 :- abolish(foo /(-1)).
 
 abolish_test12(X) :- abolish(foo/X).
 
+%% REVIEW:PENDING                                                   **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(atom, 5), _))
+%%   [ciao]: no throws
 %test 13 
 :- test abolish_test13 + exception(error(type_error(atom, 5), Imp_dep))
 # "[Non-ISO] abolish/1: expected(error) bug(fail)".
 
 abolish_test13 :- abolish(5/a).
 
+%% REVIEW:PENDING                                                  **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(predicate_indicator, insect), _))
+%%   [ciao]: no throws
 %test 14  
-:- test abolish_test14
+:- test abolish_test14            
 	+ exception(error(type_error(predicate_indicator, insect), Imp_dep))
 # "[Non-ISO] abolish/1: expected(error) bug(fail)".
 
@@ -1272,6 +1402,9 @@ findall_test8(X, Result) :- findall(X, 4, Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
+%% REVIEW:PENDING                                                   **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(list, [A|1]), _))
+%%   [ciao]: no throws
 %test 9 
 :- test findall_test9
 	+ exception(error(type_error(list, [A|1]), Imp_dep))
@@ -1356,13 +1489,21 @@ bagof_test8(Result) :- bagof(X, Y^((X=1;Y=1);(X=2, Y=2)), Result).
 
 bagof_test9(Result) :- bagof(X, (Y^(X=1;Y=2) ;X=3), Result).
 
+%% REVIEW:DONE
 %test10
-:- test bagof_test10(Result, Y, Z)
-	=> (Result=[[[_], 1], [[Y, Z], _]] ; Result=[[[Y, Z], _], [[_], 1]])
-# "[ISO] bagof/3: expected(succeed)".
+% Note: results of this test are represented as list of sol/? terms,
+%   capturing both the solution and relevant bindings, so that we can
+%   check the results consistently (due to variable renamings)
+:- test bagof_test10(Sols) =>
+    ( Result=[sol(1,_,[_]), sol(Y2,Z2,[Y2,Z2])]
+    ; Result=[sol(Y1,Z1,[Y1,Z1]), sol(1,_,[_])]
+    ) # "[ISO] bagof/3: expected(succeed)".
 
-bagof_test10(Result, Y, Z) :- findall([L, Y], bagof(X, (X=Y;X=Z;Y=1), L),
-	    Result).
+bagof_test10(Sols) :-
+    findall(sol(Y,Z,L), bagof_test10_(Y,Z,L), Sols).
+
+bagof_test10_(Y,Z,L) :-
+    bagof(X, (X=Y;X=Z;Y=1), L).
 
 %test 11
 :- test bagof_test11(Result, Y) => (Result=[1, 2], Y=f(_))
@@ -1464,6 +1605,9 @@ setof_test7(Result) :- findall([L, Y], setof(1, (Y=2;Y=1), L), Result).
 
 setof_test8(Result) :- setof(f(X, Y), (X=a;Y=b), Result).
 
+%% REVIEW:PENDING                                     ** Wrong_vs_iso**
+%%   [gprolog]: throws exception: error(existence_error(procedure,(^)/2),setof/3)
+%%   [ciao]:   _1=[1]
 %test 9 
 :- test setof_test9(Result) => (Result=[1, 2])
 # "[ISO] setof/3: expected(succeed)".
@@ -1482,13 +1626,21 @@ setof_test10(Result) :- setof(X, Y^((X=1;Y=1);(X=2, Y=2)), Result).
 
 setof_test11(Result, Y) :- setof(X, (Y^(X=1;Y=2) ;X=3), Result).
 
+%% REVIEW:DONE                   
 %test 12 
-:- test setof_test12(Y, Z, Result)
-	=> (Result=[[[_], 1], [[Y, Z], _]] ; Result=[[[Y, Z], _], [[_], 1]])
-# "[ISO] setof/3: expected(succeed)".
+% Note: results of this test are represented as list of sol/? terms,
+%   capturing both the solution and relevant bindings, so that we can
+%   check the results consistently (due to variable renamings)
+:- test setof_test12(Sols) =>
+   ( Result = [sol(1,_,[_]),sol(Y2,Z2,[Y2,Z2])]
+   ; Result = [sol(Y1,Z1,[Y1,Z1]),sol(1,_,[_])]
+   ) # "[ISO] setof/3: expected(succeed)".
 
-setof_test12(Y, Z, Result) :- findall([S, Y], setof(X, (X=Y;X=Z;Y=1), S),
-	    Result).
+setof_test12(Sols) :-
+    findall(sol(Y,Z,S), setof_test12_(Y,Z,S), Sols).
+
+setof_test12_(Y, Z, S) :-
+    setof(X, (X=Y;X=Z;Y=1), S).
 
 %test 13
 :- test setof_test13(Result, Y) => (Result=[1, 2], Y=f(_))
@@ -1510,6 +1662,9 @@ setof_test14(Y, Z, Result) :- setof(X, member_(X, [f(Y, b), f(Z, c)]), Result).
 setof_test15(Y, Z) :- setof(X, member_(X, [f(Y, b), f(Z, c)]),
 	    [f(a, c), f(a, b)]).
 
+%% REVIEW:PENDING                                                ** Wrong_vs_iso**
+%%   [gprolog]:  _1=Y
+%%   [ciao]:  _1=Y
 %test 16
 :- test setof_test16(Result, Y, Z) => (Y=a, Z=a)
 # "[ISO] setof/3: expected(succeed)".
@@ -1600,6 +1755,9 @@ setof_test27(Result) :- setof(_X, Y^Y^1, Result).
 
 setof_test28(A) :- setof(X, X=1, [1|A]).
 
+%% REVIEW:PENDING                      **It's correct in GNU**                                        **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(list, [A|1]), _))
+%%   [ciao]: no throws
 %test 29 
 :- test setof_test29
 	+ exception(error(type_error(list, [A|1]), Imp_dep))
@@ -1619,6 +1777,9 @@ setof_test29 :- setof(X, X=1, [_|1]).
 
 currentinput_test1(S) :- current_input(S).
 
+%% REVIEW:PENDING                                                             **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(stream, foo), _))
+%%   [ciao]:  throws exception(error(domain_error(stream_or_alias,foo),'stream_basic:current_output'/1-1))
 %test2 
 :- test currentinput_test2
 	+ exception(error(domain_error(stream, foo), Imp_dep))
@@ -1632,6 +1793,9 @@ currentinput_test2 :- current_input(foo).
 
 currentinput_test3(S) :- current_input(S).
 
+%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%%   [gprolog]: no throws
+%%   [ciao]: no throws
 %test 4 
 :- test currentinput_test4(S2)
 	: ( open('/tmp/foo', write, S, [type(text)]),
@@ -1660,6 +1824,9 @@ currentinput_test5(S) :- current_input(S).
 
 currentoutput_test1(S) :- current_output(S).
 
+%% REVIEW:PENDING                                                  **Diffthrow_vs_iso**
+%%   [gprolog]: throws  exception(error(domain_error(stream, foo), _))
+%%   [ciao]: no throws
 %test2 
 :- test currentoutput_test2
 	+ exception(error(domain_error(stream, foo), Imp_dep))
@@ -1673,6 +1840,9 @@ currentoutput_test2 :- current_output(foo).
 
 currentoutput_test3(S) :- current_output(S).
 
+%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%%   [gprolog]: no throws
+%%   [ciao]: no throws
 %test4 
 :- test currentoutput_test4(S)
 	: (open('/tmp/foo', write, S, [type(text)]), close(S))
@@ -1723,6 +1893,9 @@ setinput_test3 :- set_input(foo).
 
 setinput_test4(S1) :- set_input(S1).
 
+%% REVIEW:PENDING                                                    **Diffthrow_vs_iso**
+%%   [gprolog]: throws  exception(error(permission_error(input, stream, S), _))
+%%   [ciao]: throws  exception(error(permission_error(access,stream,user_output),'stream_basic:set_input'/1-1))
 %test5 
 :- test setinput_test5(S) : (current_output(S))
 	+ exception(error(permission_error(input, stream, S), Imp_dep))
@@ -1737,8 +1910,8 @@ setinput_test5(S) :- set_input(S).
 %% page 87 of the ISO standard.                                           %%
 
 %test 1 
-%:- test setoutput_test1(S) : (current_output(S)).
-%setoutput_test1(S) :- set_output(S).
+:- test setoutput_test1(S) : (current_output(S)).
+setoutput_test1(S) :- set_output(S).
 
 
 %test2 
@@ -1764,6 +1937,9 @@ setoutput_test3 :- set_output(foo).
 
 setoutput_test4(S) :- set_output(S).
 
+%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws  exception(error(permission_error(output, stream, S), _))
+%%   [ciao]: throws  exception(error(permission_error(modify,stream,user_input),'stream_basic:set_output'/1-1))
 %test5 
 :- test setoutput_test5(S) : (current_input(S))
 	+ exception(error(permission_error(output, stream, S), Imp_dep))
@@ -1774,6 +1950,7 @@ setoutput_test5(S) :- set_output(S).
 
 %% 8.11.5.4 These tests are specified in page 88 of the ISO standard. %%
 
+%% REVIEW:PENDING                                          **Label_6**
 %test1 
 :- test open_test1(Stream) :
 	(open('/tmp/roger data', write, S, [type(binary)]), close(S))
@@ -1782,6 +1959,7 @@ setoutput_test5(S) :- set_output(S).
 
 open_test1(Stream) :- open('/tmp/roger data', read, Stream, [type(binary)]).
 
+%% REVIEW:PENDING                                         **Label_6**
 %test 2 
 :- test open_test2(S)
 	=> (current_output(Sc), set_output(S), close_outstreams(Sc, S))
@@ -1789,7 +1967,7 @@ open_test1(Stream) :- open('/tmp/roger data', read, Stream, [type(binary)]).
 
 open_test2(S) :- open('/tmp/scowen', write, S, [alias(editor)]).
 
-
+%% REVIEW:PENDING                                     **Label_6**
 %test3
 :- test open_test3(Stream) :
 	(open('/tmp/data', write, S, []), close(S))
@@ -1815,18 +1993,27 @@ open_test4 :- open(_, read, _).
 
 open_test5 :- open('/tmp/f', _, _).
 
+%% REVIEW:PENDING                                                      **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error, _))
+%%   [ciao]: no throws
 %test 6 
 :- test open_test6 + exception(error(instantiation_error, Imp_dep))
 # "[Non-ISO] open/4: expected(error)".
 
 open_test6 :- open('/tmp/f', write, _, _).
 
+%% REVIEW:PENDING                                                      **Nothrow_vs_iso**
+%%   [gprolog]: throws  exception(error(instantiation_error,_))
+%%   [ciao]: no throws
 %test 7 .
 :- test open_test7 + exception(error(instantiation_error, Imp_dep))
 # "[Non-ISO] opoen/4: expected(error) bug(succeed)".
 
 open_test7 :- open('/tmp/f', write, _, [type(text)|_]).
 
+%% REVIEW:PENDING                                                       **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error, _))
+%%   [ciao]: throws exception(error(type_error(atom,_),'stream_basic:$open'/4-4))
 %test 8
 :- test open_test8 + exception(error(instantiation_error, Imp_dep))
 # "[Non-ISO] open/4: expected(error) bug(wrong_error)".
@@ -1840,6 +2027,9 @@ open_test8 :- open('/tmp/f', write, _, [type(text), _]).
 
 open_test9 :- open('/tmp/f', 1, _).
 
+%% REVIEW:PENDING                                                         **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(list, type(text)),_))
+%%   [ciao]: no throws
 %test 10 
 :- test open_test10 + exception(error(type_error(list, type(text)), Im_dep))
 # "[Non-ISO] open/4: expected(error) bug(wrong_error)".
@@ -1866,7 +2056,9 @@ open_test12 :- open(foo(1, 2), write, _).
 
 open_test13 :- open('/tmp/foo', red, _).
 
-
+%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(stream_option, bar),_))
+%%   [ciao]: throws exception(error(domain_error(open_option_list,[bar]),open/4-4)
 %test 14 
 :- test open_test14
 	+ exception(error(domain_error(stream_option, bar), Imp_dep))
@@ -1889,6 +2081,9 @@ open_test15 :- open('nonexistent', read, _).
 
 open_test16 :- open('/tmp/bar', write, _, [alias(a)]).
 
+%% REVIEW:PENDING                                                           **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(open, source_sink, reposition(true)), _))
+%%   [ciao]: throws exception(error(domain_error(open_option_list,[reposition(true)]),open/4-4))
 %test 17
 :- test open_test17
 	+ exception(error(permission_error(open, source_sink, reposition(true)
@@ -1909,12 +2104,18 @@ open_test17 :- open('/dev/tty', read, _, [reposition(true)]).
 
 close_test1(S) :- close(S).
 
+%% REVIEW:PENDING                                                           **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error, _))
+%%   [ciao]: throws exception(error(domain_error(stream_or_alias,_),'stream_basic:close'/1-1))
 %test 2 
 :- test close_test2 + exception(error(instantiation_error, Imp_dep))
 # "[Non-ISO] close/1: expected(error) bug(wrong_error)".
 
 close_test2 :- close(_).
 
+%% REVIEW:PENDING                                                         **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error,_))
+%%   [ciao]: no throws
 %test 3 
 :- test close_test3(Sc) : (current_input(Sc))
 	+ exception(error(instantiation_error, Imp_dep))
@@ -1922,6 +2123,9 @@ close_test2 :- close(_).
 
 close_test3(Sc) :- close(Sc, _).
 
+%% REVIEW:PENDING                                                       **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error, _))
+%%   [ciao]: no throws
 %test 4 
 :- test close_test4(Sc) : (current_input(Sc))
 	+ exception(error(instantiation_error, Imp_dep))
@@ -1929,6 +2133,9 @@ close_test3(Sc) :- close(Sc, _).
 
 close_test4(Sc) :- close(Sc, [force(true)|_]).
 
+%% REVIEW:PENDING                                                      **Nothrow_vs_iso**
+%%   [gprolog]: throws  exception(error(instantiation_error, _))
+%%   [ciao]: no throws
 %test 5 
 :- test close_test5(Sc) : (current_input(Sc))
 	+ exception(error(instantiation_error, Imp_dep))
@@ -1936,6 +2143,9 @@ close_test4(Sc) :- close(Sc, [force(true)|_]).
 
 close_test5(Sc) :- close(Sc, [force(true), _]).
 
+%% REVIEW:PENDING                                                          **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(list, foo), _))
+%%   [ciao]: no throws
 %test 6
 :- test close_test6(Sc) : (current_input(Sc))
 	+ exception(error(type_error(list, foo), Imp_dep))
@@ -1943,6 +2153,9 @@ close_test5(Sc) :- close(Sc, [force(true), _]).
 
 close_test6(Sc) :- close(Sc, foo).
 
+%% REVIEW:PENDING                                                        **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(close_option, foo),_))
+%%   [ciao]: no throws
 %test 7 
 :- test close_test7(Sc) : (current_input(Sc))
 	+ exception(error(domain_error(close_option, foo), Imp_dep))
@@ -1957,6 +2170,9 @@ close_test7(Sc) :- close(Sc, [foo]).
 
 close_test8 :- close(foo).
 
+%% REVIEW:PENDING                                                         **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(existence_error(stream, S), _))
+%%   [ciao]: throws  exception(error(domain_error(stream_or_alias,'$stream'(int,int)),'stream_basic:close'/1-1))
 %test 9 
 :- test close_test9(S) : (open('/tmp/foo', write, S, []), close(S))
 	+ exception(error(existence_error(stream, S), Imp_dep))
@@ -1970,6 +2186,7 @@ close_test9(S) :- close(S).
 %% 8.11.7 (FROM SICTUS AND EDDBALI) These tests are specified in the         %%
 %% page 89 of the ISO standard.                                           %%
 
+%% REVIEW:PENDING                                              **Label_6**
 %test 1
 :- test flush_output_test1(S)
 	: (open_and_write('/tmp/foo', write, S, [], text, foo))
@@ -1999,6 +2216,9 @@ flush_output_test3 :- flush_output(_).
 
 flush_output_test4(S) :- flush_output(S).
 
+%% REVIEW:PENDING                                                            **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(output, stream, S),_))
+%%   [ciao]: throws  exception(error(permission_error(modify,stream,'$stream'(int,int)),'stream_basic:flush_output'/1-1))
 %test 5 
 :- test flush_output_test5(S1) :
 	( open('/tmp/foo', write, S, [type(text)]),
@@ -2009,6 +2229,9 @@ flush_output_test4(S) :- flush_output(S).
 
 flush_output_test5(S1) :- flush_output(S1).
 
+%% REVIEW:PENDING                                                    **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception: error(permission_error(open,source_sink,alias(st_o)),open/4)
+%%   [ciao]: throws exception(error(domain_error(stream_or_alias,st_o),'stream_basic:flush_output'/1-1))
 %test 6 
 :- test flush_output_test6 :
 	(Alias=st_o, open('/tmp/foo', write, S, [type(text), alias(st_o)]))
@@ -2037,6 +2260,7 @@ flush_output_test6 :- flush_output(st_o).
 
 stream_property_test1(L) :- findall(F, stream_property(_, file_name(F)), L).
 
+%% REVIEW:PENDING                                                        **Label_6**
 %test 2 
 :- test stream_property_test2(L) :
 	(open('/tmp/file1', write, S1, []), current_output(Cout))
@@ -2048,7 +2272,9 @@ stream_property_test2(L) :- findall(S, stream_property(S, output), L).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
-
+%% REVIEW:PENDING                                                            **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(stream, foo), _))
+%%   [ciao]: no throws
 %test 3 
 :- test stream_property_test3
 	+ exception(error(domain_error(stream, foo), Imp_dep))
@@ -2056,6 +2282,9 @@ stream_property_test2(L) :- findall(S, stream_property(S, output), L).
 
 stream_property_test3 :- stream_property(foo, _Property).
 
+%% REVIEW:PENDING                                                        **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(stream_property, foo), _))
+%%   [ciao]: no throws
 %test 4 
 :- test stream_property_test4
 	+ exception(error(domain_error(stream_property, foo), Imp_dep))
@@ -2063,6 +2292,7 @@ stream_property_test3 :- stream_property(foo, _Property).
 
 stream_property_test4 :- stream_property(_S, foo).
 
+%% REVIEW:PENDING                                                      **Label_4**
 %test 5 
 :- test stream_property_test5(S, Property) :
 	(current_input(S))
@@ -2073,6 +2303,7 @@ stream_property_test4 :- stream_property(_S, foo).
 
 stream_property_test5(S, Property) :- stream_property(S, Property).
 
+%% REVIEW:PENDING                                                     **Label_4**
 %test 6 
 :- test stream_property_test6(S, Property) :
 	(current_output(S))
@@ -2083,6 +2314,7 @@ stream_property_test5(S, Property) :- stream_property(S, Property).
 
 stream_property_test6(S, Property) :- stream_property(S, Property).
 
+%% REVIEW:DONE                     
 %test 7 
 :- test stream_property_test7 + fails
 # "[Non-ISO] stream_property/2: expected(fail)".
@@ -2090,6 +2322,10 @@ stream_property_test6(S, Property) :- stream_property(S, Property).
 stream_property_test7 :- stream_property(_S, type(binary)).
 
 % ===========================================================================
+
+%% REVIEW:PENDING                                              **Nothrow_vs_iso**
+%%   [gprolog]: throws  exception(error(instantiation_error,_))
+%%   [ciao]: no throws
 %test 1
 :- test at_end_of_stream_test1
 	+ exception(error(instantiation_error, Imp_dep))
@@ -2097,6 +2333,9 @@ stream_property_test7 :- stream_property(_S, type(binary)).
 
 at_end_of_stream_test1 :- at_end_of_stream(_S).
 
+%% REVIEW:PENDING                                         **Nothrow_vs_iso**
+%%   [gprolog]: throws error(existence_error(stream,foo),at_end_of_stream/1)
+%%   [ciao]: no throws
 %test 2 
 :- test at_end_of_stream_test2
 	+ exception(error(domain_error(stream_or_alias, foo), Imp_dep))
@@ -2104,6 +2343,9 @@ at_end_of_stream_test1 :- at_end_of_stream(_S).
 
 at_end_of_stream_test2 :- at_end_of_stream(foo).
 
+%% REVIEW:PENDING                                            **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(existence_error(stream, S), _))
+%%   [ciao]: no throws
 %test 3 
 :- test at_end_of_stream_test3(S) :
 	(open('/tmp/foo', write, S, []), close(S))
@@ -2112,6 +2354,7 @@ at_end_of_stream_test2 :- at_end_of_stream(foo).
 
 at_end_of_stream_test3(S) :- at_end_of_stream(S).
 
+%% REVIEW:PENDING                                                       **Label_6**
 %test 4 
 :- test at_end_of_stream_test4 :
 	( open('/tmp/tmp.in', write, S, [type(text)]),
@@ -2122,6 +2365,7 @@ at_end_of_stream_test3(S) :- at_end_of_stream(S).
 
 at_end_of_stream_test4 :- at_end_of_stream(st_i).
 
+%% REVIEW:PENDING                                                   **Label_6**
 %test 5 
 :- test at_end_of_stream_test5 :
 	( open('/tmp/tmp.in', write, S, [type(text)]), write_contents(text, a, S),
@@ -2133,6 +2377,7 @@ at_end_of_stream_test4 :- at_end_of_stream(st_i).
 
 at_end_of_stream_test5 :- at_end_of_stream(st_i).
 
+%% REVIEW:PENDING                                                  **Label_6**
 %test 6 
 :- test at_end_of_stream_test6 :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -2143,6 +2388,7 @@ at_end_of_stream_test5 :- at_end_of_stream(st_i).
 
 at_end_of_stream_test6 :- at_end_of_stream(st_i).
 
+%% REVIEW:PENDING                                             **Label_6**
 %test 7 
 :- test at_end_of_stream_test7 :
 	( open_and_write('/tmp/tmp.in', write, S, [type(binary)], binary, "a"),
@@ -2158,6 +2404,7 @@ at_end_of_stream_test7 :- at_end_of_stream(st_i).
 %% 8.11.9 (FROM SICTUS AND EDDBALI) These tests are specified in the         %%
 %% page 90 of the ISO standard.                                           %%
 
+%% REVIEW:PENDING                                                  **Label_6**
 %test1
 :- test set_stream_position_test1(S, Pos) :
 	( open('/tmp/bar', write, S, [reposition(true)]),
@@ -2170,6 +2417,9 @@ at_end_of_stream_test7 :- at_end_of_stream(st_i).
 set_stream_position_test1(S, Pos) :- stream_property(S, position(Pos)),
 	set_stream_position(_, Pos).
 
+%% REVIEW:PENDING                                 **Nothrow_vs_iso**
+%%   [gprolog]: throws exception: error(permission_error(reposition,stream,'$stream'(0)),set_stream_position/2)
+%%   [ciao]: no throws
 %test2 
 :- test set_stream_position_test2(S, _Pos) : (current_input(S))
 	+ exception(error(instantiation_error, Imp_dep))
@@ -2177,6 +2427,7 @@ set_stream_position_test1(S, Pos) :- stream_property(S, position(Pos)),
 
 set_stream_position_test2(S, _Pos) :- set_stream_position(S, _Pos).
 
+%% REVIEW:PENDING                                              **Label_6**
 %test3
 :- test set_stream_position_test3(Pos) :
 	( open('/tmp/bar', write, S, [reposition(true)]),
@@ -2187,6 +2438,7 @@ set_stream_position_test2(S, _Pos) :- set_stream_position(S, _Pos).
 
 set_stream_position_test3(Pos) :- set_stream_position(foo, Pos).
 
+%% REVIEW:PENDING                                              **Label_6**
 %test4 
 :- test set_stream_position_test4(S, Pos) :
 	( open('/tmp/bar', write, S, [reposition(true)]),
@@ -2198,6 +2450,9 @@ set_stream_position_test3(Pos) :- set_stream_position(foo, Pos).
 
 set_stream_position_test4(S, Pos) :- set_stream_position(S, Pos).
 
+%% REVIEW:PENDING                           **Nothrow_vs_iso**
+%%   [gprolog]: throwsexception: error(permission_error(reposition,stream,'$stream'(0)),set_stream_position/2)
+%%   [ciao]: no throws
 %test5 
 :- test set_stream_position_test5(S) :
 	(current_input(S))
@@ -2206,6 +2461,7 @@ set_stream_position_test4(S, Pos) :- set_stream_position(S, Pos).
 
 set_stream_position_test5(S) :- set_stream_position(S, foo).
 
+%% REVIEW:PENDING                                            **Label_4**
 %test6 
 :- test set_stream_position_test6(S, Pos) :
 	( open('/tmp/foo', write, S),
@@ -2219,6 +2475,7 @@ set_stream_position_test6(S, Pos) :- set_stream_position(S, Pos).
 % ===========================================================================
 %% 8.12.1.4 These tests are specified in page 91 of the ISO standard. %%%
 
+%% REVIEW:PENDING                           **Label_6**
 %test 1
 :- test getchar_test1(Char) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(text)], text, 'qwerty.'),
@@ -2229,6 +2486,7 @@ set_stream_position_test6(S, Pos) :- set_stream_position(S, Pos).
 
 getchar_test1(Char) :- get_char(Char).
 
+%% REVIEW:PENDING                       **Label_6**
 %test 2
 :- test getcode_test2(Code) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(text)], text, 'qwerty.'),
@@ -2239,6 +2497,7 @@ getchar_test1(Char) :- get_char(Char).
 
 getcode_test2(Code) :- get_code(Code).
 
+%% REVIEW:PENDING                  **Label_6**
 %test 3 
 :- test getchar_test3(Char)
 	: ( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
@@ -2250,6 +2509,7 @@ getcode_test2(Code) :- get_code(Code).
 
 getchar_test3(Char) :- get_char(st_i, Char).
 
+%% REVIEW:PENDING                    **Label_6**
 %test 4
 :- test getcode_test4(Code) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
@@ -2261,6 +2521,7 @@ getchar_test3(Char) :- get_char(st_i, Char).
 
 getcode_test4(Code) :- get_code(st_i, Code).
 
+%% REVIEW:PENDING                               **Label_6**
 %test 5 
 :- test getchar_test5(Char) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
@@ -2272,6 +2533,7 @@ getcode_test4(Code) :- get_code(st_i, Code).
 
 getchar_test5(Char) :- get_char(st_i, Char).
 
+%% REVIEW:PENDING                       **Label_6**
 %test 6 
 :- test getcode_test6(Code) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
@@ -2283,6 +2545,7 @@ getchar_test5(Char) :- get_char(st_i, Char).
 
 getcode_test6(Code) :- get_code(st_i, Code).
 
+%% REVIEW:PENDING                     **Label_6**
 %test 7 
 :- test getchar_test7 :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
@@ -2294,6 +2557,7 @@ getcode_test6(Code) :- get_code(st_i, Code).
 
 getchar_test7 :- get_char(st_i, p).
 
+%% REVIEW:PENDING                        **Label_6**
 %test 8 
 :- test getcode_test8 :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(binary), alias(st_i)],
@@ -2305,6 +2569,7 @@ getchar_test7 :- get_char(st_i, p).
 
 getcode_test8 :- get_code(st_i, 0'p).
 
+%% REVIEW:PENDING       **Label_6**
 %test 9 
 :- test getchar_test9(Char) :
 	( open('/tmp/tmp.in', write, S1, [type(text), alias(st_i)]),
@@ -2317,6 +2582,7 @@ getcode_test8 :- get_code(st_i, 0'p).
 
 getchar_test9(Char) :- get_char(st_i, Char).
 
+%% REVIEW:PENDING        **Label_6**
 %test 10 
 :- test getcode_test10(Code) :
 	( open('/tmp/tmp.in', write, S1, [type(text), alias(st_i)]),
@@ -2328,6 +2594,9 @@ getchar_test9(Char) :- get_char(st_i, Char).
 
 getcode_test10(Code) :- get_code(st_i, Code).
 
+%% REVIEW:PENDING                                                **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(input, stream, user_ouput), _))
+%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:get_code'/2-1))
 %test 11 
 :- test getchar_test11
 	+ exception(error(permission_error(input, stream, user_ouput),
@@ -2336,6 +2605,9 @@ getcode_test10(Code) :- get_code(st_i, Code).
 
 getchar_test11 :- get_char(user_output, _X).
 
+%% REVIEW:PENDING                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(input, stream, user_ouput), _))
+%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:get_code'/2-1))
 %test 12 
 :- test getcode_test12
 	+ exception(error(permission_error(input, stream, user_ouput),
@@ -2353,12 +2625,18 @@ getcode_test12 :- get_code(user_output, _X).
 
 getchar_test13 :- get_char(_, _).
 
+%% REVIEW:PENDING                                                  **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(in_character, 1), _))
+%%   [ciao]: throws exception(error(permission_error(access,past_end_of_stream,[]),'io_basic:get_code'/1))
 %test 14 
 :- test getchar_test14 + exception(error(type_error(in_character, 1), Imp_dep))
 # "[Non-ISO] get_char/1: expected(error) bug(wrong_error)".
 
 getchar_test14 :- get_char(1).
 
+%% REVIEW:PENDING                                                 **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(in_character, 1), _))
+%%   [ciao]: no throws 
 %test 15 
 :- test getchar_test15 + exception(error(type_error(in_character, 1), Imp_dep))
 # "[Non-ISO] get_char/2: expected(error) bug(wrong_error)".
@@ -2373,12 +2651,14 @@ getchar_test15 :- get_char(user_input, 1).
 getchar_test16 :- get_char(foo, _).
 
 % %test 17
-% :- test getchar_test17(S) :
-% 	(open('/tmp/foo', write, S, []), close(S))
-% 	+ exception(error(existence_error(stream, S), Imp_dep)).
-% getchar_test17(S) :- get_char(S, _).
+:- test getchar_test17(S) :
+ 	(open('/tmp/foo', write, S, []), close(S))
+ 	+ exception(error(existence_error(stream, S), Imp_dep)).
+ getchar_test17(S) :- get_char(S, _).
 
-
+ %% REVIEW:PENDING                                           **Diffthrow_vs_iso**
+ %%   [gprolog]: throws exception(error(permission_error(input, stream, S), _))
+%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:get_code'/2-1))
 %test 18 
 :- test getchar_test18(S, _) : (current_output(S))
 	+ exception(error(permission_error(input, stream, S), Imp_dep))
@@ -2386,6 +2666,7 @@ getchar_test16 :- get_char(foo, _).
 
 getchar_test18(S, _) :- get_char(S, _).
 
+%% REVIEW:PENDING                           **Label_6**
 %test 19 
 :- test getchar_test19 :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -2399,6 +2680,7 @@ getchar_test18(S, _) :- get_char(S, _).
 
 getchar_test19 :- get_char(_).
 
+%% REVIEW:PENDING                            **Label_6**
 %test 20
 :- test getchar_test20 :
 	( open('/tmp/tmp.in', write, S, [type(text)]),
@@ -2414,6 +2696,7 @@ getchar_test19 :- get_char(_).
 
 getchar_test20 :- get_char(_).
 
+%% REVIEW:PENDING                               **Label_6**
 %test 21
 :- test getchar_test21(S1, Char1, Char2) :
 	( open_and_write('/tmp/t', write, S, [type(text)], text, ''),
@@ -2424,6 +2707,9 @@ getchar_test20 :- get_char(_).
 
 getchar_test21(S1, Char1, Char2) :- get_char(S1, Char1), get_char(S1, Char2).
 
+%% REVIEW:PENDING                                       **Nothrow_vs_iso**
+%%   [gprolog]: throws exception: error(existence_error(procedure,open_and_write/6),getchar_test22/0)
+%%   [ciao]: no throws
 %test 22
 :- test getchar_test22(S1) :
 	( open_and_write('/tmp/t', write, S, [type(binary)], binary, [0]),
@@ -2440,18 +2726,27 @@ getchar_test22(S1) :- get_char(S1, _).
 
 getcode_test23 :- get_code(_, _).
 
+%% REVIEW:PENDING                                            **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(integer, p), _))
+%%   [ciao]: throws exception(error(permission_error(access,past_end_of_stream,[]),'io_basic:get_code'/1))
 %test 24  
 :- test getcode_test24 + exception(error(type_error(integer, p), Imp_dep))
 # "[Non-ISO] get_code/1: expected(error) bug(wrong_error)".
 
 getcode_test24 :- get_code(p).
 
+%% REVIEW:PENDING                                         **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(integer, p), _))
+%%   [ciao]: throws exception(error(permission_error(access,past_end_of_stream,user_input),'io_basic:get_code'/2-1))
 %test 25 
 :- test getcode_test25 + exception(error(type_error(integer, p), Imp_dep))
 # "[Non-ISO] get_code/2: expected(error) bug(wrong_error)".
 
 getcode_test25 :- get_code(user_input, p).
 
+%% REVIEW:PENDING                                          **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(representation_error(in_character_code), _))
+%%   [ciao]: throws exception(error(permission_error(access,past_end_of_stream,[]),'io_basic:get_code'/1))
 %test 26 
 :- test getcode_test26
 	+ exception(error(representation_error(in_character_code), Imp_dep))
@@ -2476,6 +2771,9 @@ getcode_test27 :- get_code(foo, _).
 
 getcode_test28(S1) :- get_code(S1, _).
 
+%% REVIEW:PENDING                                              **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(input, stream, S), _))
+%%   [ciao]: throws  exception(error(permission_error(access,stream,user_output),'io_basic:get_code'/2-1))
 %test 29 
 :- test getcode_test29(S) : (current_output(S))
 	+ exception(error(permission_error(input, stream, S), Imp_dep))
@@ -2483,6 +2781,7 @@ getcode_test28(S1) :- get_code(S1, _).
 
 getcode_test29(S) :- get_code(S, _).
 
+%% REVIEW:PENDING                                **Label_6**
 %test 30 
 :- test getcode_test30 :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -2495,6 +2794,7 @@ getcode_test29(S) :- get_code(S, _).
 
 getcode_test30 :- get_code(_).
 
+%% REVIEW:PENDING                                     **Label_6**
 %test 31
 :- test getcode_test31 :
 	( open('/tmp/tmp.in', write, S, [type(text)]),
@@ -2510,6 +2810,7 @@ getcode_test30 :- get_code(_).
 
 getcode_test31 :- get_code(_).
 
+%% REVIEW:PENDING                                   **Label_6**
 %test 32 
 :- test getcode_test32(S1, Code1, Code2) :
 	( open_and_write('/tmp/t', write, S, [type(text)], text, ''),
@@ -2520,6 +2821,9 @@ getcode_test31 :- get_code(_).
 
 getcode_test32(S1, Code1, Code2) :- get_code(S1, Code1), get_code(S1, Code2).
 
+%% REVIEW:PENDING                              **Nothrow_vs_iso**
+%%   [gprolog]: throws exception: error(existence_error(procedure,open_and_write/6),getcode_test33/0)
+%%   [ciao]: no throws
 %test 33
 :- test getcode_test33(S1) :
 	( open_and_write('/tmp/t', write, S, [type(binary)], binary, [0]),
@@ -2535,6 +2839,7 @@ getcode_test33(S1) :- get_code(S1, _).
 % ===========================================================================
 %% 8.12.2.4 These tests are specified in page 93 of the ISO standard. %%%
 
+%% REVIEW:PENDING                             **Label_6**
 %test 1
 :- test peekchar_test1(Char) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(text)], text, 'qwerty.'),
@@ -2545,6 +2850,7 @@ getcode_test33(S1) :- get_code(S1, _).
 
 peekchar_test1(Char) :- peek_char(Char).
 
+%% REVIEW:PENDING                                **Label_6**
 %test 2
 :- test peekcode_test2(Code) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(text)], text, 'qwerty.'),
@@ -2555,6 +2861,7 @@ peekchar_test1(Char) :- peek_char(Char).
 
 peekcode_test2(Code) :- peek_code(Code).
 
+%% REVIEW:PENDING                               **Label_6**
 %test 3 
 :- test peekchar_test3(Char) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
@@ -2566,6 +2873,7 @@ peekcode_test2(Code) :- peek_code(Code).
 
 peekchar_test3(Char) :- peek_char(st_i, Char).
 
+%% REVIEW:PENDING                            **Label_6**
 %test 4 
 :- test peekcode_test4(Code) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
@@ -2577,6 +2885,7 @@ peekchar_test3(Char) :- peek_char(st_i, Char).
 
 peekcode_test4(Code) :- peek_code(st_i, Code).
 
+%% REVIEW:PENDING                         **Label_6**
 %test 5 
 :- test peekchar_test5(Char) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(binary), alias(st_i)],
@@ -2588,6 +2897,7 @@ peekcode_test4(Code) :- peek_code(st_i, Code).
 
 peekchar_test5(Char) :- peek_char(st_i, Char).
 
+%% REVIEW:PENDING                            **Label_6**
 %test 6 
 :- test peekcode_test6(Code) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(binary), alias(st_i)],
@@ -2599,6 +2909,7 @@ peekchar_test5(Char) :- peek_char(st_i, Char).
 
 peekcode_test6(Code) :- peek_code(st_i, Code).
 
+%% REVIEW:PENDING                            **Label_6**
 %test 7  
 :- test peekchar_test7 :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
@@ -2610,6 +2921,7 @@ peekcode_test6(Code) :- peek_code(st_i, Code).
 
 peekchar_test7 :- peek_char(st_i, p).
 
+%% REVIEW:PENDING                              **Label_6**
 %test 8 
 :- test peekcode_test8 :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(binary), alias(st_i)],
@@ -2621,6 +2933,7 @@ peekchar_test7 :- peek_char(st_i, p).
 
 peekcode_test8 :- peek_code(st_i, 0'p).
 
+%% REVIEW:PENDING                                  **Label_6**
 %test 9 
 :- test peekchar_test9(Char) :
 	( open('/tmp/tmp.in', write, S1, [type(text), alias(st_i)]),
@@ -2633,6 +2946,7 @@ peekcode_test8 :- peek_code(st_i, 0'p).
 
 peekchar_test9(Char) :- peek_char(st_i, Char).
 
+%% REVIEW:PENDING                                **Label_6**
 %test 10 
 :- test peekcode_test10(Code) :
 	( open('/tmp/tmp.in', write, S1, [type(text), alias(st_i)]),
@@ -2645,6 +2959,7 @@ peekchar_test9(Char) :- peek_char(st_i, Char).
 
 peekcode_test10(Code) :- peek_code(st_i, Code).
 
+%% REVIEW:PENDING                                   **Label_6**
 %test 11 
 :- test peekchar_test11 :
 	( open('/tmp/tmp.in', write, S, [type(text)]),
@@ -2657,6 +2972,9 @@ peekcode_test10(Code) :- peek_code(st_i, Code).
 
 peekchar_test11 :- peek_char(s, _).
 
+%% REVIEW:PENDING                                             **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(input, stream, user_ouput),_))
+%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_code'/2-1))
 %test 12
 :- test peekchar_test12
 	+ exception(error(permission_error(input, stream, user_ouput),
@@ -2665,6 +2983,9 @@ peekchar_test11 :- peek_char(s, _).
 
 peekchar_test12 :- peek_char(user_output, _).
 
+%% REVIEW:PENDING                                              **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(input, stream, user_ouput),_))
+%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_code'/2-1))
 %test 13 
 :- test peekcode_test13
 	+ exception(error(permission_error(input, stream, user_ouput),
@@ -2681,6 +3002,9 @@ peekcode_test13 :- peek_code(user_output, _).
 
 peekchar_test14 :- peek_char(_, _).
 
+%% REVIEW:PENDING                                          **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(in_character, 1),_))
+%%   [ciao]: no throws
 %test 15 
 :- test peekchar_test15
 	+ exception(error(type_error(in_character, 1), Imp_dep))
@@ -2688,6 +3012,9 @@ peekchar_test14 :- peek_char(_, _).
 
 peekchar_test15 :- peek_char(1).
 
+%% REVIEW:PENDING                                              **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(in_character, 1), _))
+%%   [ciao]: throws  exception(error(permission_error(access,past_end_of_stream,user_input),'io_basic:peek_code'/2-1))
 %test 16 
 :- test peekchar_test16
 	+ exception(error(type_error(in_character, 1), Imp_dep))
@@ -2703,13 +3030,16 @@ peekchar_test16 :- peek_char(user_input, 1).
 peekchar_test17 :- peek_char(foo, _).
 
 % %test 18 
-% :- test peekchar_test18(S1) : ( open('/tmp/foo', write, S),
-% 	    close(S),
-% 	    open('/tmp/foo', read, S1),
-% 	    close(S1) )
-% 	+ exception(error(existence_error(stream, S1), Imp_dep)).
-% peekchar_test18(S1) :- peek_char(S1, _).
+:- test peekchar_test18(S1) : ( open('/tmp/foo', write, S),
+ 	    close(S),
+ 	    open('/tmp/foo', read, S1),
+ 	    close(S1) )
+ 	+ exception(error(existence_error(stream, S1), Imp_dep)).
+peekchar_test18(S1) :- peek_char(S1, _).
 
+%% REVIEW:PENDING                                             **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(input, stream, S), _))
+%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_code'/2-1))
 %test 19 
 :- test peekchar_test19(S) : (current_output(S))
 	+ exception(error(permission_error(input, stream, S), Imp_dep))
@@ -2717,6 +3047,7 @@ peekchar_test17 :- peek_char(foo, _).
 
 peekchar_test19(S) :- peek_char(S, _).
 
+%% REVIEW:PENDING                                                    **Label_6**
 %test 20 
 :- test peekchar_test20 :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -2739,6 +3070,9 @@ peekchar_test20 :- peek_char(s, _).
 peekchar_test21(S1, Char1, Char2) :- peek_char(S1, Char1), peek_char(S1, Char1
 	), get_char(S1, Char2).
 
+%% REVIEW:PENDING                               **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(existence_error(procedure,open_and_write/6))
+%%   [ciao]: no throws
 %test 22 
 :- test peekchar_test22(S1) :
 	( open_and_write('/tmp/t', write, S, [type(binary)], binary, [0]),
@@ -2755,19 +3089,27 @@ peekchar_test22(S1) :- peek_char(S1, _).
 
 peekcode_test23 :- peek_code(_, _).
 
-
+%% REVIEW:PENDING                                             **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(integer, p), _))
+%%   [ciao]: no throws
 %test 24
 :- test peekcode_test24 + exception(error(type_error(integer, p), Imp_dep))
 # "[Non-ISO] peek_code/1: expected(error) bug(fail)".
 
 peekcode_test24 :- peek_code(p).
 
+%% REVIEW:PENDING                                                **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(integer, p), _))
+%%   [ciao]: throws  exception(error(permission_error(access,past_end_of_stream,user_input),'io_basic:peek_code'/2-1))
 %test 25 
 :- test peekcode_test25 + exception(error(type_error(integer, p), Imp_dep))
 # "[Non-ISO] peek_code/2: expected(error) bug(fail)".
 
 peekcode_test25 :- peek_code(user_input, p).
 
+%% REVIEW:PENDING                                                  **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(representation_error(in_character_code), _))
+%%   [ciao]: no throws
 %test 26 
 :- test peekcode_test26
 	+ exception(error(representation_error(in_character_code), Imp_dep))
@@ -2783,14 +3125,17 @@ peekcode_test26 :- peek_code(-2).
 peekcode_test27 :- peek_code(foo, _).
 
 % %test 28 
-% :- test peekcode_test28(S1) : ( open('/tmp/foo', write, S, []),
-% 	    close(S),
-% 	    open('/tmp/foo', read, S1, []),
-% 	    close(S1) )
-% 	+ exception(error(existence_error(stream, S1), Imp_dep)).
+:- test peekcode_test28(S1) : ( open('/tmp/foo', write, S, []),
+ 	    close(S),
+ 	    open('/tmp/foo', read, S1, []),
+ 	    close(S1) )
+ 	+ exception(error(existence_error(stream, S1), Imp_dep)).
 
-% peekcode_test28(S1) :- peek_code(S1, _).
+peekcode_test28(S1) :- peek_code(S1, _).
 
+%% REVIEW:PENDING                                                  **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(input, stream, S), Imp_dep))
+%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_code'/2-1))
 %test 29
 :- test peekcode_test29(S) : (current_output(S))
 	+ exception(error(permission_error(input, stream, S), Imp_dep))
@@ -2798,6 +3143,7 @@ peekcode_test27 :- peek_code(foo, _).
 
 peekcode_test29(S) :- peek_code(S, _).
 
+%% REVIEW:PENDING                                   **Label_6**
 %test 30 
 :- test peekcode_test30(S1) :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -2811,6 +3157,7 @@ peekcode_test29(S) :- peek_code(S, _).
 
 peekcode_test30(S1) :- peek_code(S1, _).
 
+%% REVIEW:PENDING                                      **Label_6**
 %test 31  
 :- test peekcode_test31 :
 	( open('/tmp/tmp.in', write, S, [type(text)]),
@@ -2825,6 +3172,7 @@ peekcode_test30(S1) :- peek_code(S1, _).
 
 peekcode_test31 :- peek_code(_).
 
+%% REVIEW:PENDING                             **Label_6**
 %test 32 
 :- test peekcode_test32(Code1, Code2) :
 	( open('/tmp/t', write, S, [type(text)]),
@@ -2836,6 +3184,9 @@ peekcode_test31 :- peek_code(_).
 
 peekcode_test32(Code1, Code2) :- peek_code(Code1), get_code(Code2).
 
+%% REVIEW:PENDING                                       **Nothrow_vs_iso**
+%%   [gprolog]: throws  exception(existence_error(procedure,open_to_read/5))
+%%   [ciao]: no throws
 %test 33 
 :- test peekcode_test33(S1) :
 	( open_and_write('/tmp/t', write, S, [type(binary)], binary, [0]),
@@ -2851,6 +3202,7 @@ peekcode_test33(S1) :- peek_code(S1, _).
 % ===========================================================================
 %% 8.12.3.4 These tests are specified in page 94 of the ISO standard. %%%
 
+%% REVIEW:PENDING                                   **Label_6**
 %test 1
 :- test putchar_test1 :
 	( open_and_write('/tmp/tmp.out', write, S, [type(text)], text, 'qwer'),
@@ -2865,6 +3217,7 @@ peekcode_test33(S1) :- peek_code(S1, _).
 
 putchar_test1 :- put_char(t).
 
+%% REVIEW:PENDING                               **Label_6**
 %test 2 
 :- test putchar_test2 :
 	( open_and_write('/tmp/tmp.out', write, S, [type(text), alias(st_o)],
@@ -2880,6 +3233,7 @@ putchar_test1 :- put_char(t).
 
 putchar_test2 :- put_char(st_o, 'A').
 
+%% REVIEW:PENDING                             **Label_6**
 %test 3
 :- test putcode_test3 :
 	( open_and_write('/tmp/tmp.out', write, S, [type(text)], text, 'qwer'),
@@ -2895,6 +3249,7 @@ putchar_test2 :- put_char(st_o, 'A').
 
 putcode_test3 :- put_code(0't).
 
+%% REVIEW:PENDING                                 **Label_6**
 %test 4 
 :- test putcode_test4 :
 	( open_and_write('/tmp/tmp.out', write, S, [type(text), alias(st_o)],
@@ -2909,6 +3264,7 @@ putcode_test3 :- put_code(0't).
 
 putcode_test4 :- put_code(st_o, 0't).
 
+%% REVIEW:PENDING                              **Label_6**
 %test 5 
 :- test putchar_test5 :
 	( open_and_write('/tmp/tmp.out', write, S, [type(text)], text, 'qwer'),
@@ -2921,6 +3277,7 @@ putcode_test4 :- put_code(st_o, 0't).
 
 putchar_test5 :- nl, put_char(a).
 
+%% REVIEW:PENDING                               **Label_6**
 %test 6
 :- test putchar_test6 :
 	( open_and_write('/tmp/tmp.out', write, S, [type(text), alias(st_o)],
@@ -2938,6 +3295,9 @@ putchar_test6 :- nl(st_o), put_char(st_o, a).
 
 putchar_test7 :- put_char(my_file, _).
 
+%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(character, ty), _))
+%%   [ciao]: no throws
 %test 8
 :- test putchar_test8 + exception(error(type_error(character, ty), Imp_dep))
 # "[ISO] put_char/2: expected(error) bug(fail)".
@@ -2951,6 +3311,9 @@ putchar_test8 :- put_char(st_o, 'ty').
 
 putcode_test9 :- put_code(my_file, _).
 
+%% REVIEW:PENDING                                            **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(integer,ty),'io_basic:put_code'/2-2))
+%%   [ciao]: throws  exception(error(type_error(integer,ty),'io_basic:put_code'/2-2))
 %test 10
 :- test putcode_test10
 	+ exception(error(domain_error(stream_or_alias, S_or_a), Imp_dep))
@@ -2964,6 +3327,9 @@ putcode_test10 :- put_code(st_o, 'ty').
 
 nl_test11 :- nl(_).
 
+%% REVIEW:PENDING                                                         **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(output, stream, user_input), _))
+%%   [ciao]: throws exception(error(permission_error(modify,stream,user_input),'io_basic:nl'/1-1))
 %test 12 
 :- test nl_test12
 	+ exception(error(permission_error(output, stream, user_input),
@@ -2995,6 +3361,9 @@ putchar_test14 :- put_char(_).
 
 putchar_test15(S) :- put_char(S, a).
 
+%% REVIEW:PENDING                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws  exception(error(permission_error(output, stream, S), _))
+%%   [ciao]: throws  exception(error(permission_error(modify,stream,'$stream'(int,int)),'io_basic:put_code'/2-1))
 %test 16 
 :- test putchar_test16(S) : (current_input(S))
 	+ exception(error(permission_error(output, stream, S), Imp_dep))
@@ -3002,6 +3371,9 @@ putchar_test15(S) :- put_char(S, a).
 
 putchar_test16(S) :- put_char(S, a).
 
+%% REVIEW:PENDING                                       **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(existence_error(procedure,open_and_write/6))
+%%   [ciao]: no throws
 %test 17 
 :- test putchar_test17 :
 	( open_and_write('/tmp/tmp.out', write, S, [type(binary)], binary, []),
@@ -3033,6 +3405,9 @@ putcode_test19 :- put_code(_).
 
 putcode_test20(S) :- put_code(S, 0'a).
 
+%% REVIEW:PENDING                                       **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(output, stream, S), _))
+%%   [ciao]: throws  exception(error(permission_error(modify,stream,'$stream'(int,int)),'io_basic:put_code'/2-1))
 %test 21 
 :- test putcode_test21(S) : (current_input(S))
 	+ exception(error(permission_error(output, stream, S), Imp_dep))
@@ -3040,6 +3415,9 @@ putcode_test20(S) :- put_code(S, 0'a).
 
 putcode_test21(S) :- put_code(S, 0'a).
 
+%% REVIEW:PENDING                                          **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(output, binary_stream, S),_))
+%%   [ciao]: no throws
 %test 22 
 :- test putcode_test22(S) : (open('/tmp/t', write, S, [type(binary)]))
 	+ exception(error(permission_error(output, binary_stream, S), Imp_dep))
@@ -3066,6 +3444,7 @@ putcode_test24 :- put_code(foo, -1).
 % ===========================================================================
 %% 8.13.1.4 These tests are specified in page 96 of the ISO standard. %%%
 
+%% REVIEW:PENDING                             **Label_6**
 %test 1 
 :- test getbyte_test1(Byte) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary, [113, 119,
@@ -3076,6 +3455,7 @@ putcode_test24 :- put_code(foo, -1).
 
 getbyte_test1(Byte) :- get_byte(Byte).
 
+%% REVIEW:PENDING                               **Label_6**
 %test 2 
 :- test getbyte_test2(Byte) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(binary)],
@@ -3087,6 +3467,7 @@ getbyte_test1(Byte) :- get_byte(Byte).
 
 getbyte_test2(Byte) :- get_byte(st_i, Byte).
 
+%% REVIEW:PENDING                                **Label_6**
 %test 3
 :- test getbyte_test3 :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(binary)],
@@ -3098,6 +3479,7 @@ getbyte_test2(Byte) :- get_byte(st_i, Byte).
 
 getbyte_test3 :- get_byte(st_i, 114).
 
+%% REVIEW:PENDING                                **Label_6**
 %test 4 
 :- test getbyte_test4(Byte)
 	: ( open('/tmp/tmp.in', write, S1, [type(binary)]),
@@ -3107,7 +3489,9 @@ getbyte_test3 :- get_byte(st_i, 114).
 
 getbyte_test4(Byte) :- get_byte(st_i, Byte).
 
-
+%% REVIEW:PENDING                                                   **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(input, stream, user_output),_))
+%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:get_byte'/2-1))
 %test 5 
 :- test getbyte_test5
 	+ exception(error(permission_error(input, stream, user_output),
@@ -3127,6 +3511,7 @@ getbyte_test5 :- get_byte(user_output, _).
 
 getbyte_test6 :- get_byte(_, _).
 
+%% REVIEW:PENDING                                  **Label_6**
 %test 7 
 :- test getbyte_test7 :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -3139,6 +3524,7 @@ getbyte_test6 :- get_byte(_, _).
 
 getbyte_test7 :- get_byte(p).
 
+%% REVIEW:PENDING                                 **Label_6**
 %test 8 
 :- test getbyte_test8 :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -3166,6 +3552,9 @@ getbyte_test9 :- get_byte(foo, _).
 
 getbyte_test10(S1) :- get_byte(S1, _).
 
+%% REVIEW:PENDING                                               **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(input, stream, S), _))
+%%   [ciao]: throws  exception(error(permission_error(access,stream,user_output),'io_basic:get_byte'/2-1))
 %test 11 
 :- test getbyte_test11(S) : (current_output(S))
 	+ exception(error(permission_error(input, stream, S), Imp_dep))
@@ -3173,6 +3562,7 @@ getbyte_test10(S1) :- get_byte(S1, _).
 
 getbyte_test11(S) :- get_byte(S, _).
 
+%% REVIEW:PENDING                                        **Label_6**
 %test 12 
 :- test getbyte_test12 :
 	( open('/tmp/tmp.in', write, S, [type(text)]), close(S),
@@ -3185,6 +3575,7 @@ getbyte_test11(S) :- get_byte(S, _).
 
 getbyte_test12 :- get_byte(_).
 
+%% REVIEW:PENDING                                        **Label_6**
 %test 13 .
 :- test getbyte_test13 :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -3202,6 +3593,7 @@ getbyte_test13 :- get_byte(_), get_byte(_).
 % ===========================================================================
 %% 8.13.2.4 These tests are specified in page 97 of the ISO standard. %%%
 
+%% REVIEW:PENDING                                            **Label_4**
 %test 1 
 :- test peekbyte_test1(Byte) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(binary)],
@@ -3213,6 +3605,7 @@ getbyte_test13 :- get_byte(_), get_byte(_).
 
 peekbyte_test1(Byte) :- peek_byte(Byte).
 
+%% REVIEW:PENDING                                           **Label_6**
 %test 2
 :- test peekbyte_test2(Byte) :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary,
@@ -3224,6 +3617,7 @@ peekbyte_test1(Byte) :- peek_byte(Byte).
 
 peekbyte_test2(Byte) :- peek_byte(st_i, Byte).
 
+%% REVIEW:PENDING                                     **Label_6**
 %test 3 
 :- test peekbyte_test3 :
 	( open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary,
@@ -3235,6 +3629,7 @@ peekbyte_test2(Byte) :- peek_byte(st_i, Byte).
 
 peekbyte_test3 :- peek_byte(st_i, 114).
 
+%% REVIEW:PENDING                                      **Label_6**
 %test 4 
 :- test peekbyte_test4 :
 	( open('/tmp/tmp.in', write, S1, [type(binary)]),
@@ -3245,6 +3640,9 @@ peekbyte_test3 :- peek_byte(st_i, 114).
 
 peekbyte_test4 :- peek_byte(st_i, _).
 
+%% REVIEW:PENDING                                                     **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(input, stream, user_output),_))
+%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_byte'/2-1))
 %test 5 
 :- test peekbyte_test5
 	+ exception(error(permission_error(input, stream, user_output),
@@ -3263,6 +3661,7 @@ peekbyte_test5 :- peek_byte(user_output, _).
 
 peekbyte_test6 :- peek_byte(_, _).
 
+%% REVIEW:PENDING                                            **Label_6**
 %test 7 
 :- test peekbyte_test7 :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -3275,6 +3674,7 @@ peekbyte_test6 :- peek_byte(_, _).
 
 peekbyte_test7 :- peek_byte(p).
 
+%% REVIEW:PENDING                                   **Label_6**
 %test 8 
 :- test peekbyte_test8 :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -3304,7 +3704,9 @@ peekbyte_test9 :- peek_byte(foo, _).
 
 peekbyte_test10(S1) :- peek_byte(S1, _).
 
-
+%% REVIEW:PENDING                                            **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(input, stream, S),_))
+%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_byte'/2-1))
 %test 11
 :- test peekbyte_test11(S, _) : (current_output(S))
 	+ exception(error(permission_error(input, stream, S), Imp_dep))
@@ -3312,6 +3714,7 @@ peekbyte_test10(S1) :- peek_byte(S1, _).
 
 peekbyte_test11(S, _) :- peek_byte(S, _).
 
+%% REVIEW:PENDING                                  **Label_6**
 %test 12 
 :- test peekbyte_test12 :
 	( open('/tmp/tmp.in', write, S, [type(text)]),
@@ -3325,6 +3728,7 @@ peekbyte_test11(S, _) :- peek_byte(S, _).
 
 peekbyte_test12 :- peek_byte(_).
 
+%% REVIEW:PENDING                                       **Label_6**
 %test 13
 :- test peekbyte_test13 :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -3343,6 +3747,7 @@ peekbyte_test13 :- get_byte(_), peek_byte(_).
 % ===========================================================================
 %% 8.13.2.4 These tests are specified in page 98 of the ISO standard. %%%
 
+%% REVIEW:PENDING                                     **Label_6**
 %test 1 
 :- test putbyte_test1 :
 	( open_and_write('/tmp/tmp.out', write, S, [type(binary)], binary,
@@ -3356,6 +3761,7 @@ peekbyte_test13 :- get_byte(_), peek_byte(_).
 
 putbyte_test1 :- put_byte(84).
 
+%% REVIEW:PENDING                                       **Label_6**
 %test 2
 :- test putbyte_test2 :
 	( open_and_write('/tmp/tmp.out', write, S, [type(binary), alias(st_i)],
@@ -3367,6 +3773,9 @@ putbyte_test1 :- put_byte(84).
 
 putbyte_test2 :- put_byte(st_i, 84).
 
+%% REVIEW:PENDING                                          **Diffthrow_vs_iso**
+%%   [gprolog]: throws existence_error(stream,my_file),put_byte/2)
+%%   [ciao]: throws exception(error(domain_error(stream_or_alias,my_file),'io_basic:put_byte'/2-1))
 %test 3 
 :- test putbyte_test3 + exception(error(instantiation_error, Imp_dep))
 # "[ISO] put_byte/2: expected(error) bug(wrong_error)".
@@ -3387,6 +3796,7 @@ putbyte_test4 :- put_byte(user_output, 'ty').
 
 putbyte_test5 :- put_byte(_, 118).
 
+%% REVIEW:PENDING                                  **Label_6**
 %test 6
 :- test putbyte_test6 :
 	( open('/tmp/tmp.out', write, S, [tye(binary)]),
@@ -3404,6 +3814,7 @@ putbyte_test6 :- put_byte(_).
 
 putbyte_test7(S) :- put_byte(S, 77).
 
+%% REVIEW:PENDING                                      **Label_6**
 %test 8 
 :- test putbyte_test8(S1) :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -3417,6 +3828,9 @@ putbyte_test7(S) :- put_byte(S, 77).
 
 putbyte_test8(S1) :- put_byte(S1, 99).
 
+%% REVIEW:PENDING                                                   **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(output, text_stream, S), _))
+%%   [ciao]: no throws
 %test 9 
 :- test putbyte_test9 : (current_output(S))
 	+ exception(error(permission_error(output, text_stream, S), Imp_dep))
@@ -3456,7 +3870,7 @@ putbyte_test13 :- put_byte(user_output, 'ty').
 % ===========================================================================
 %% 8.14.1.4 These tests are specified in page 99 of the ISO standard. %%X
 
-
+%% REVIEW:PENDING                                      **Label_6**
 %test 1 
 :- test read_test1(X) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)],
@@ -3468,6 +3882,7 @@ putbyte_test13 :- put_byte(user_output, 'ty').
 
 read_test1(X) :- read(X).
 
+%% REVIEW:PENDING                                         **Label_6**
 %test 2
 :- test read_test2(X) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)],
@@ -3479,6 +3894,7 @@ read_test1(X) :- read(X).
 
 read_test2(X) :- read(st_o, X).
 
+%% REVIEW:PENDING                                             **Label_6**
 %test 3
 :- test read_test3(T, VL, VN, VS) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text,
@@ -3493,6 +3909,7 @@ read_test3(T, VL, VN, VS) :-
 	read_term(st_o, T, [variables(VL), variable_names(VN),
 		singletons(VS)]).
 
+%% REVIEW FAILURE EXPECTED
 %test 4 
 :- test read_test4 :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '3.1. term2.'),
@@ -3503,6 +3920,9 @@ read_test3(T, VL, VN, VS) :-
 
 read_test4 :- read(4.1).
 
+%% REVIEW:PENDING                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws existence_error(procedure,open_and_write/6)
+%%   [ciao]: throws exception(error(syntax_error([1,1,['operator expected after expression'],['',foo,'\n','** here **','\n','',123,' ','.']]),read/1))
 %test 5 
 :- test read_test5(X) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)],
@@ -3515,6 +3935,9 @@ read_test4 :- read(4.1).
 
 read_test5(X) :- read(X).
 
+%% REVIEW:PENDING                                          **Diffthrow_vs_iso**
+%%   [gprolog]: throws existence_error(procedure,open_and_write/6)
+%%   [ciao]: throws  exception(error(syntax_error([1,1,['operator expected after expression'],['',3.1,'\n','** here **','\n']]),read/1))
 %test 6 
 :- test read_test6(X) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '3.1'),
@@ -3529,6 +3952,7 @@ read_test6(X) :- read(X).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
+%% REVIEW:PENDING                                             **Label_6**
 %test 7
 :- test read_test7(T, L) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, 'foo(bar).'),
@@ -3585,6 +4009,9 @@ read_test13 :- read_term(user_input, _, bar).
 
 read_test14 :- read_term(user_input, _, [bar]).
 
+%% REVIEW:PENDING                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permissioin_error(input, stream, user_output),_))
+%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),read_term/3))
 %test 15 
 :- test read_test15
 	+ exception(error(permissioin_error(input, stream, user_output),
@@ -3593,6 +4020,7 @@ read_test14 :- read_term(user_input, _, [bar]).
 
 read_test15 :- read_term(user_output, _, []).
 
+%% REVIEW:PENDING                                            **Label_6**
 %test 16
 :- test read_test16(T) :
 	( open('/tmp/tmp.in', write, S, [type(text)]),
@@ -3613,6 +4041,7 @@ read_test16(T) :- read(T).
 
 read_test17(S1) :- read_term(S1, _, []).
 
+%% REVIEW:PENDING                                         **Label_6**
 %test 18
 :- test read_test18 :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -3626,6 +4055,7 @@ read_test17(S1) :- read_term(S1, _, []).
 
 read_test18 :- read_term(_, []).
 
+%% REVIEW:PENDING                                         **Label_6**
 %test 19 
 :- test read_test19 :
 	( open('/tmp/tmp.in', write, S, [type(binary)]),
@@ -3639,6 +4069,7 @@ read_test18 :- read_term(_, []).
 
 read_test19 :- read(_).
 
+%% REVIEW:PENDING                                        **Label_6**
 %test 20 
 :- test read_test20(S1) :
 	( open('/tmp/tmp.in', write, S, [type(text)]),
@@ -3657,6 +4088,7 @@ read_test20(S1) :- read_term(S1, _, []).
 % Reformatted to avoid new lines in atoms. --MH
 aux_read_test21('foo(\n 	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n 	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1).').
 
+%% REVIEW:PENDING                                            **Label_6**
 %test 21
 :- test read_test21(Ops) :
 	( Ops=[],
@@ -3671,6 +4103,7 @@ aux_read_test21('foo(\n 	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 
 read_test21(Ops) :- read_term(_, Ops).
 
+%% REVIEW:PENDING                                         **Label_6**
 %test 22
 :- test read_test22 :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'a."),
@@ -3683,7 +4116,7 @@ read_test21(Ops) :- read_term(_, Ops).
 
 read_test22 :- read_term(_, []).
 
-
+%% REVIEW:PENDING                                              **Label_6**
 %test 23
 :- test read_test23(T) :
 	( (current_prolog_flag(max_integer, M) ->true;M=0),
@@ -3699,6 +4132,7 @@ read_test22 :- read_term(_, []).
 
 read_test23(T) :- read(T).
 
+%% REVIEW:PENDING                                          **Label_6**
 %test 24
 :- test read_test24(T) :
 	( (current_prolog_flag(min_integer, M) ->true;M=0),
@@ -3719,7 +4153,7 @@ read_test24(T) :- read(T).
 % ===========================================================================
 %% 8.14.2.4 These tests are specified in page 100 of the ISO standard. %%
 
-
+%% REVIEW:PENDING                                                  **Label_6**
 %test 1 
 :- test write_test1(S) :
 	( open('/tmp/tmp.out', write, S, [type(text)]),
@@ -3734,6 +4168,7 @@ read_test24(T) :- read(T).
 
 write_test1(S) :- write_term(S, [1, 2, 3], []).
 
+%% REVIEW:PENDING                                        **Label_6**
 %test 2 
 :- test write_test2 :
 	( open('/tmp/tmp.out', write, S, [type(text)]),
@@ -3746,6 +4181,7 @@ write_test1(S) :- write_term(S, [1, 2, 3], []).
 
 write_test2 :- write_canonical([1, 2, 3]).
 
+%% REVIEW:PENDING                                      **Label_6**
 %test 3
 :- test write_test3(S) :
 	( open('/tmp/tmp.out', write, S, [type(text)]),
@@ -3758,6 +4194,7 @@ write_test2 :- write_canonical([1, 2, 3]).
 
 write_test3(S) :- write_term(S, '1<2', []).
 
+%% REVIEW:PENDING                                          **Label_6**
 %test 4
 :- test write_test4(S) :
 	( open('/tmp/tmp.out', write, S, [type(text)]),
@@ -3769,6 +4206,7 @@ write_test3(S) :- write_term(S, '1<2', []).
 
 write_test4(S) :- writeq(S, '1<2').
 
+%% REVIEW:PENDING                                                **Label_6**
 %test 5 
 :- test write_test5 :
 	( open('/tmp/tmp.out', write, S, [type(text)]),
@@ -3781,6 +4219,7 @@ write_test4(S) :- writeq(S, '1<2').
 
 write_test5 :- writeq('$VAR'(0)).
 
+%% REVIEW:PENDING                                                    **Label_6**
 %test 6 
 :- test write_test6(S) :
 	( open('/tmp/tmp.out', write, S, [type(text)]),
@@ -3793,6 +4232,7 @@ write_test5 :- writeq('$VAR'(0)).
 
 write_test6(S) :- write_term(S, '$VAR'(1), [numbervars(false)]).
 
+%% REVIEW:PENDING                                                **Label_6**
 %test 7
 :- test write_test7(S) :
 	( open('/tmp/tmp.out', write, S, [type(text)]),
@@ -3820,8 +4260,8 @@ write_test8 :- write(_, foo).
 write_test9 :- write_term(foo, _).
 
 %test 10 
-%:- test write_test10 + exception(error(instantiation_error,Imp_dep)).
-%write_test10 :- write_term(user_output,foo,_).
+:- test write_test10 + exception(error(instantiation_error,Imp_dep)).
+write_test10 :- write_term(user_output,foo,_).
 
 %test 11
 :- test write_test11
@@ -3831,8 +4271,8 @@ write_test9 :- write_term(foo, _).
 write_test11 :- write_term(foo, [quoted(true)|_]).
 
 %test 12 
-%:- test write_test12 + exception(error(instantiation_error,Imp_dep)).
-%write_test12 :- write_term(user_output,foo,[quoted(true)|_]).
+:- test write_test12 + exception(error(instantiation_error,Imp_dep)).
+write_test12 :- write_term(user_output,foo,[quoted(true)|_]).
 
 
 %test 13
@@ -3843,14 +4283,17 @@ write_test11 :- write_term(foo, [quoted(true)|_]).
 write_test13 :- write_term(foo, [quoted(true), _]).
 
 %test 14 
-%:- test write_test14 + exception(error(instantiation_error,Imp_dep)).
-%write_test14 :- write_term(user_output,foo,[quoted(true),_]).
+:- test write_test14 + exception(error(instantiation_error,Imp_dep)).
+write_test14 :- write_term(user_output,foo,[quoted(true),_]).
 
 
 %test 15 
-%:- test write_test15 + exception(error(type_error(list,2),Imp_dep)).
-%write_test15 :- write_term(user_output,1,2).
+:- test write_test15 + exception(error(type_error(list,2),Imp_dep)).
+write_test15 :- write_term(user_output,1,2).
 
+%% REVIEW:PENDING                                                       **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(list, [quoted(true)|foo]), _))
+%%   [ciao]: throws exception(error(type_error(list,foo),write_term/2-2))
 %test 16 
 :- test write_test16
 	+ exception(error(type_error(list, [quoted(true)|foo]), Imp_dep))
@@ -3879,6 +4322,9 @@ write_test18 :- write_term(1, [quoted(true), foo]).
 
 write_test19(S) :- write(S, a).
 
+%% REVIEW:PENDING                                                **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(output, stream, S), _))
+%%   [ciao]: throws  exception(error(permission_error(modify,stream,'$stream'(int,int)),write/2-1))
 %test 20 
 :- test write_test20(S) : (current_input(S))
 	+ exception(error(permission_error(output, stream, S), Imp_dep))
@@ -3886,6 +4332,9 @@ write_test19(S) :- write(S, a).
 
 write_test20(S) :- write(S, a).
 
+%% REVIEW:PENDING                                              **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(output, binary_stream, S), _))
+%%   [ciao]: no throws
 %test 21 
 :- test write_test21 :
 	( open('/tmp/tmp.out', write, S, [type(binary)]),
@@ -3921,6 +4370,9 @@ op_test1(_) :- op(30, xfy, ++).
 
 op_test2 :- op(0, yfx, ++).
 
+%% REVIEW:PENDING                                     **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(integer, max), _))
+%%   [ciao]: throws  exception(error(domain_error(operator_priority,max),op/3-1))
 %test 3 
 :- test op_test3 + exception(error(type_error(integer, max), Imp_dep))
 # "[ISO] op/3: expected(error) bug(wrong_error)".
@@ -3971,6 +4423,9 @@ op_test9_poscond(_) :- (current_op(40, xfx, ++), op(0, xfx, ++)).
 
 op_test9(_) :- op(30, xfy, ++), op(40, xfx, ++).
 
+%% REVIEW:PENDING                                             **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(create, operator, ++), _))
+%%   [ciao]: no throws
 %test 10 
 :- test op_test10
 	+ exception(error(permission_error(create, operator, ++), Imp_dep))
@@ -3987,12 +4442,18 @@ op_test10 :- op(30, xfy, ++), op(50, yf, ++).
 
 op_test11 :- op(_, xfx, ++).
 
+%% REVIEW:PENDING                                   **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error,_))
+%%   [ciao]: throws exception(error(permission_error(modify,operator,','),op/3))
 %test 12
 :- test op_test12 + exception(error(instantiation_error, Imp_dep))
 # "[Non-ISO] op/3: expected(error) bug(succeed)".
 
 op_test12 :- op(100, xfx, _).
 
+%% REVIEW:PENDING                                              **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error,_))
+%%   [ciao]: no throws
 %test 13 
 :- test op_test13 + exception(error(instantiation_error, Imp_dep))
 # "[Non-ISO] op/3: expected(error) bug(succeed)".
@@ -4034,6 +4495,9 @@ op_test17 :- op(100, xfx, [a, a+b]).
 
 op_test18 :- op(100, xfx, ',').
 
+%% REVIEW:PENDING                                                 **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(modify, operator, ','), _))
+%%   [ciao]: no throws
 %test 19
 :- test op_test19
 	+ exception(error(permission_error(modify, operator, ','), Imp_dep))
@@ -4046,7 +4510,10 @@ op_test19 :- op(100, xfx, [a, ',']).
 % ===========================================================================
 %% 8.14.4.4 These tests are specified in page 103 of the ISO standard. %%
 
-%test 1 
+
+%test 1                                               ** Wrong_vs_iso**
+%%   [gprolog]: Result = [[1050,*->],[740,#==>],[1000,','],[600,:],[1100,;],[200,^],[1105,'|'],[740,#\==>],[730,##],[1050,->],[750,#\<=>],[750,#<=>]]
+%%   [ciao]: Result = [[1100,;],[1050,->],[200,^],[30,++]]
 :- test current_op_test1(Result)
 	=> ( find_on_list([[1100, ';'], [1050, '->'], [1000, ','], [200, '^']],
 		Result) )
@@ -4056,6 +4523,9 @@ current_op_test1(Result) :- findall([P, OP], current_op(P, xfy, OP), Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
+%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(operator_priority, 1201),_))
+%%   [ciao]: no throws
 %test 2 
 :- test current_op_test2
 	+ exception(error(domain_error(operator_priority, 1201), Imp_dep))
@@ -4063,6 +4533,9 @@ current_op_test1(Result) :- findall([P, OP], current_op(P, xfy, OP), Result).
 
 current_op_test2 :- current_op(1201, _, _).
 
+%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(operator_specifier, yfy), Imp_dep))
+%%   [ciao]: no throws
 %test 3
 :- test current_op_test3
 	+ exception(error(domain_error(operator_specifier, yfy), Imp_dep))
@@ -4070,12 +4543,18 @@ current_op_test2 :- current_op(1201, _, _).
 
 current_op_test3 :- current_op(_, yfy, _).
 
+%% REVIEW:PENDING                                           **Nothrow_vs_iso**
+%%   [gprolog]: throws error(domain_error(operator_specifier,0),current_op/3)
+%%   [ciao]: no throws
 %test 4 
 :- test current_op_test4 + exception(error(type_error(atom, 0), Imp_dep))
 # "[Non-ISO] current_op/3: expected(error) bug(fail)".
 
 current_op_test4 :- current_op(_, 0, _).
 
+%% REVIEW:PENDING                                                             **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(atom, 5), _))
+%%   [ciao]: no throws
 %test 5 
 :- test current_op_test5 + exception(error(type_error(atom, 5), Imp_dep))
 # "[Non-ISO] current_op/3: expected(error) bug(fail)".
@@ -4087,6 +4566,7 @@ current_op_test5 :- current_op(_, _, 5).
 % ===========================================================================
 %% 8.14.5.4 These tests are specified in page 103 of the ISO standard. %%
 
+%% REVIEW:PENDING                               **Label_6**      
 %test 1 
 :- test char_conversion_test1
 	: ( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, 'a&b. &'),
@@ -4098,6 +4578,7 @@ current_op_test5 :- current_op(_, _, 5).
 
 char_conversion_test1 :- char_conversion('&', ',').
 
+%% REVIEW:PENDING                                    **Label_6**  
 %test 2 
 :- test char_conversion_test2
 	: ( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '^b+c^'),
@@ -4109,6 +4590,7 @@ char_conversion_test1 :- char_conversion('&', ',').
 
 char_conversion_test2 :- char_conversion('^', '''').
 
+%% REVIEW:PENDING                                  **Label_6**  
 %test 3 
 :- test char_conversion_test3 :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'A+c'+A."),
@@ -4120,6 +4602,7 @@ char_conversion_test2 :- char_conversion('^', '''').
 
 char_conversion_test3 :- char_conversion('A', 'a').
 
+%% REVIEW:PENDING                                      **Label_6**  
 %test 4 
 :- test char_conversion_test4(X, Y, Z) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text,
@@ -4135,6 +4618,7 @@ char_conversion_test3 :- char_conversion('A', 'a').
 
 char_conversion_test4(X, Y, Z) :- read(X), read(Y), read(Z).
 
+%% REVIEW:PENDING                                  **Label_6**          
 %test 5  
 :- test char_conversion_test5 :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "& ."),
@@ -4150,6 +4634,7 @@ char_conversion_test5 :- char_conversion('&', '&').
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
+%% REVIEW:PENDING                                              **Label_6**  
 %test 6 
 :- test char_conversion_test6(X) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "0'%%1."),
@@ -4163,6 +4648,7 @@ char_conversion_test5 :- char_conversion('&', '&').
 
 char_conversion_test6(X) :- read(X).
 
+%% REVIEW:PENDING                                               **Label_6**  
 %test 7 
 :- test char_conversion_test7(X) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'%'%1."),
@@ -4176,6 +4662,7 @@ char_conversion_test6(X) :- read(X).
 
 char_conversion_test7(X) :- read(X).
 
+%% REVIEW:PENDING                                                  **Label_6**  
 %test 8  
 :- test char_conversion_test8(X) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '"%"%1.'),
@@ -4189,6 +4676,7 @@ char_conversion_test7(X) :- read(X).
 
 char_conversion_test8(X) :- read(X).
 
+%% REVIEW:PENDING                                               **Label_6**  
 %test 9 
 :- test char_conversion_test9(X) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '1.#.'),
@@ -4202,6 +4690,7 @@ char_conversion_test8(X) :- read(X).
 
 char_conversion_test9(X) :- read(X).
 
+%% REVIEW:PENDING                                                 **Label_6**  
 %test 10  
 :- test char_conversion_test10(X) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "^aa'+'bb^'."),
@@ -4215,6 +4704,7 @@ char_conversion_test9(X) :- read(X).
 
 char_conversion_test10(X) :- read(X).
 
+%% REVIEW:PENDING                                                **Label_6**  
 %test 11 
 :- test char_conversion_test11(X, Y) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "+ .% ."),
@@ -4229,6 +4719,7 @@ char_conversion_test10(X) :- read(X).
 char_conversion_test11(X, Y) :- set_prolog_flag(char_conversion, off), read(X),
 	set_prolog_flag(char_conversion, on), read(Y).
 
+%% REVIEW:PENDING                                          **Label_6**  
 %test 12 
 :- test char_conversion_test12(X, Y) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "- .% ."),
@@ -4243,6 +4734,8 @@ char_conversion_test11(X, Y) :- set_prolog_flag(char_conversion, off), read(X),
 char_conversion_test12(X, Y) :- read(X), read(Y).
 
 %% 8.14.6.4 These tests are specified in page 104 of the ISO standard. %%
+
+%% REVIEW:PENDING                               **Label_6**  
 %test 1  
 :- test current_char_conversion_test1(Result) :
 	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'\\341\\'."),
@@ -4423,6 +4916,9 @@ atomlength_test7 :- atom_length(atom, '4').
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
+%% REVIEW:PENDING                                    **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -4), Imp_def))
+%%   [ciao]: no throws
 %test8 
 :- test atomlength_test8
 	+ exception(error(domain_error(not_less_than_zero, -4), Imp_def))
@@ -4430,6 +4926,9 @@ atomlength_test7 :- atom_length(atom, '4').
 
 atomlength_test8 :- atom_length(atom, -4).
 
+%% REVIEW:PENDING                              ** Wrong_vs_iso**
+%%   [gprolog]: L = 13
+%%   [ciao]: L = 13
 %test9
 :- test atomlength_test9(L) => (L=11)
 # "[Non-ISO] atom_length/2: expected(succeed)".
@@ -4544,11 +5043,12 @@ atomconcat_test14(Result) :-
 
 subatom_test1(S) :- sub_atom(abracadabra, 0, 5, _, S).
 
+%% REVIEW:DONE                   
 %test 2
 :- test subatom_test2(S) => (S='dabra')
 # "[ISO] sub_atom/5: expected(succeed)".
 
-subatom_test2(S) :- sub_atom(abracadabra, _, 5, _, S).
+subatom_test2(S) :- sub_atom(abracadabra, _, 5, 0, S).
 
 %test 3
 :- test subatom_test3(L, S) => (Y=5, S='acada')
@@ -4601,30 +5101,45 @@ subatom_test8 :- sub_atom(_W, 3, 2, _Z, _S).
 
 subatom_test9 :- sub_atom(f(a), 2, 2, _Z, _S).
 
-%test 10
+%% REVIEW:PENDING
+%test 10                                             **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(atom, 2), _))
+%%   [ciao]: no throws
 :- test subatom_test10 + exception(error(type_error(atom, 2), Imp_dep))
 # "[Non-ISO] sub_atom/5: expected(error) bug(fail)".
 
 subatom_test10 :- sub_atom('Banana', 4, 2, _Z, 2).
 
+%% REVIEW:PENDING                                          **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(integer, a), _))
+%%   [ciao]: no throws
 %test 11 
 :- test subatom_test11 + exception(error(type_error(integer, a), Imp_dep))
 # "[Non-ISO] sub_atom/5: expected(error) bug(fail)".
 
 subatom_test11 :- sub_atom('Banana', a, 2, _Z, _S).
 
+%% REVIEW:PENDING                                        **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(integer, n), _))
+%%   [ciao]: no throws
 %test 12
 :- test subatom_test12 + exception(error(type_error(integer, n), Imp_dep))
 # "[Non-ISO] sub_atom/5: expected(error) bug(fail)".
 
 subatom_test12 :- sub_atom('Banana', 4, n, _Z, _S).
 
+%% REVIEW:PENDING                                           **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(integer, m), _))
+%%   [ciao]: no throws
 %test 13 
 :- test subatom_test13 + exception(error(type_error(integer, m), Imp_dep))
 # "[Non-ISO] sub_atom/5: expected(error) bug(fail)".
 
 subatom_test13 :- sub_atom('Banana', 4, _Y, m, _S).
 
+%% REVIEW:PENDING                                     **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -2), _))
+%%   [ciao]: no throws
 %test 14 
 :- test subatom_test14
 	+ exception(error(domain_error(not_less_than_zero, -2), Imp_dep))
@@ -4632,6 +5147,9 @@ subatom_test13 :- sub_atom('Banana', 4, _Y, m, _S).
 
 subatom_test14 :- sub_atom('Banana', -2, 3, 4, _S).
 
+%% REVIEW:PENDING                                          **Nothrow_vs_iso**
+%%   [gprolog]: throws  exception(error(domain_error(not_less_than_zero, -3),_))
+%%   [ciao]: no throws
 %test 15 
 :- test subatom_test15
 	+ exception(error(domain_error(not_less_than_zero, -3), Imp_dep))
@@ -4639,6 +5157,9 @@ subatom_test14 :- sub_atom('Banana', -2, 3, 4, _S).
 
 subatom_test15 :- sub_atom('Banana', 2, -3, 4, _S).
 
+%% REVIEW:PENDING                                     **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -4),_))
+%%   [ciao]: no throws
 %test 16.
 :- test subatom_test16
 	+ exception(error(domain_error(not_less_than_zero, -4), Imp_dep))
@@ -4718,18 +5239,27 @@ subatom_test27 :- sub_atom('Banana', 7, 0, 0, _S).
 
 subatom_test28 :- sub_atom('Banana', 0, 0, 7, _S).
 
+%% REVIEW:PENDING                   **Failure due to accent marks**                               ** Wrong_vs_iso**
+%%   [gprolog]: Y = 7
+%%   [ciao]: Y = 7
 %test 31
 :- test subatom_test31(Z, S) => (Z=5, S='ók')
 # "[Non-ISO] sub_atom/5: expected(succeed)".
 
 subatom_test31(Z, S) :- sub_atom('Bartók Béla', 4, 2, Z, S).
 
+%% REVIEW:PENDING                   **Failure due to accent marks**                                ** Wrong_vs_iso**
+%%   [gprolog]: Y = 4
+%%   [ciao]: Y = 4
 %test 32 
 :- test subatom_test32(Y, S) => (Y=2, S='ók')
 # "[Non-ISO] sub_atom/5: expected(succeed)".
 
 subatom_test32(Y, S) :- sub_atom('Bartók Béla', 4, Y, 5, S).
 
+%% REVIEW:PENDING                   **Failure due to accent marks**                                ** Wrong_vs_iso**
+%%   [gprolog]: Y = 6
+%%   [ciao]: Y = 6
 %test 33 
 :- test subatom_test33(X, S) => (X=4, S='ók')
 # "[Non-ISO] sub_atom/5: expected(succeed)".
@@ -4799,6 +5329,9 @@ atomchars_test6(X) :- atom_chars('North', ['N'|X]).
 
 atomchars_test7 :- atom_chars('soap', ['s', 'o', 'p']).
 
+%% REVIEW:PENDING                                           **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error, _))
+%%   [ciao]: no throws
 %test 8 
 :- test atomchars_test8
 	+ exception(error(instantiation_error, Imp_dep))
@@ -4816,6 +5349,9 @@ atomchars_test8 :- atom_chars(_X, _Y).
 
 atomchars_test9 :- atom_chars(_A, [a, _E, c]).
 
+%% REVIEW:PENDING                                       **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error, Imp_dep))
+%%   [ciao]: no throws
 %test 10
 :- test atomchars_test10 + exception(error(instantiation_error, Imp_dep))
 # "[Non-ISO] atom_chars/2: expected(error)".
@@ -4828,12 +5364,18 @@ atomchars_test10 :- atom_chars(_A, [a, b|_L]).
 
 atomchars_test11 :- atom_chars(f(a), _L).
 
+%% REVIEW:PENDING                                           **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(list, iso), Imp_dep))
+%%   [ciao]: no throws
 %test 12 
 :- test atomchars_test12 + exception(error(type_error(list, iso), Imp_dep))
 # "[Non-ISO] atom_chars/2: expected(error) bug(fail)".
 
 atomchars_test12 :- atom_chars(_A, iso).
 
+%% REVIEW:PENDING                                                  **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(character, f(b)), _))
+%%   [ciao]: throws exception(error(type_error(atom,f(b)),'atomic_basic:$constant_codes'/3-1))
 %test 13 
 :- test atomchars_test13
 	+ exception(error(type_error(character, f(b)), Imp_dep))
@@ -4980,6 +5522,9 @@ atomcodes_test11 :- atom_codes(_X, [0'i, 0's, -1]).
 %:- test atomcodes_test13(A) => (A='Pécs').
 %atomcodes_test13(A) :- atom_codes(A,[0'P,0'é,0'c,0's]).
 
+%% REVIEW:PENDING                                                     **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(integer,a),'atomic_basic:$constant_codes'/3-2))
+%%   [ciao]: throws exception(error(type_error(integer,a),'atomic_basic:$constant_codes'/3-2))
 %test 16 
 :- test atomcodes_test16
 	+ exception(error(representation_error(character_code), Imp_dep))
@@ -5022,11 +5567,15 @@ charcode_test4(X) :- char_code(X, 163).
 
 charcode_test5 :- char_code('b', 0'b).
 
+%% REVIEW:PENDING                                                        **Nothrow_vs_iso**
+%%   [gprolog]: throws  exception(error(type_error(character, ab), _))
+%%   [ciao]: no throws
 %test 6 
 :- test charcode_test6 + exception(error(type_error(character, ab), Imp_dep))
 # "[ISO] char_code/2: expected(error) bug(fail)".
 
 charcode_test6 :- char_code('ab', _Int).
+
 
 %test 7 
 :- test charcode_test7 + exception(error(instantiation_error, Imp_dep))
@@ -5090,12 +5639,16 @@ numberchars_test5 :- number_chars(3.3, ['3', '.', '3', 'E', +, '0']).
 
 numberchars_test6(A) :- number_chars(A, [-, '2', '5']).
 
+%% REVIEW:PENDING                                           **Label_4**
 %test7 
 :- test numberchars_test7(A) => (A=3)
 # "[ISO] number_chars/2: expected(succeed) bug(fail)".
 
 numberchars_test7(A) :- number_chars(A, ['\n', '', '3']).
 
+%% REVIEW:PENDING                                                **Nothrow_vs_iso**
+%%   [gprolog]: throws type_error(character,'')  
+%%   [ciao]: no throws
 %test8 
 :- test numberchars_test8
 	+ exception(error(syntax_error(imp_dep_atom), Imp_dep))
@@ -5103,12 +5656,14 @@ numberchars_test7(A) :- number_chars(A, ['\n', '', '3']).
 
 numberchars_test8 :- number_chars(_A, ['3', '']).
 
+%% REVIEW:PENDING                                            **Label_4**
 %test9 
 :- test numberchars_test9(A) => (A=15)
 # "[ISO] number_chars/2: expected(succeed) bug(fail)".
 
 numberchars_test9(A) :- number_chars(A, ['0', x, f]).
 
+%% REVIEW:PENDING                                  **Label_4**
 %test10 
 :- test numberchars_test10(A) => (A=0'a)
 # "[ISO] number_chars/2: expected(succeed) bug(fail)".
@@ -5142,12 +5697,18 @@ numberchars_test13 :- number_chars(_X, _Y).
 
 numberchars_test14 :- number_chars(a, _Y).
 
+%% REVIEW:PENDING                                                   **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(list, 4), _))
+%%   [ciao]: no throws
 %test 15 
 :- test numberchars_test15 + exception(error(type_error(list, 4), Imp_dep))
 # "[Non-ISO] number_chars/2: expected(error) bug(fail)".
 
 numberchars_test15 :- number_chars(_, 4).
 
+%% REVIEW:PENDING                                                **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(character, 2), _))
+%%   [ciao]: throws exception(error(type_error(atom,2),'atomic_basic:$constant_codes'/3-1))
 %test 16
 :- test numberchars_test16
 	+ exception(error(type_error(character, 2), Imp_dep))
@@ -5168,24 +5729,30 @@ numberchars_test17 :- number_chars(_A, [a|_]).
 
 numberchars_test18 :- number_chars(_A, [a, _]).
 
+%% REVIEW:PENDING                                              **Label_4**
 %test 19 
 :- test numberchars_test19(A) => (A=9)
 # "[Non-ISO] number_chars/2: expected(succeed) bug(fail)".
 
 numberchars_test19(A) :- number_chars(A, [' ', '0', 'o', '1', '1']).
 
+%% REVIEW:PENDING                                           **Label_4**
 %test 20
 :- test numberchars_test20(A) => (A=17)
 # "[Non-ISO] number_chars/2: expected(succeed) bug(fail)".
 
-numberchars_test20(A) :- number_chars(A, [' ', '0', 'x', '1', '1']).
+numberchars_test20(A) :- number_chars(A, [' ', '0', 'x', '1', '1']).               
 
+%% REVIEW:PENDING                                       **Label_4**
 %test 21 
 :- test numberchars_test21(A) => (A=3)
 # "[Non-ISO] number_chars/2: expected(succeed) bug(fail)".
 
 numberchars_test21(A) :- number_chars(A, [' ', '0', 'b', '1', '1']).
 
+%% REVIEW:PENDING                                        **Nothrow_vs_iso**
+%%   [gprolog]: throws error(syntax_error('constant term stream:1 (char:2) non numeric character'),number_chars/2)
+%%   [ciao]: no throws
 %test 22 
 :- test numberchars_test22
 	+ exception(error(syntax_error(Imp_dep_atom), Imp_dep))
@@ -5193,6 +5760,9 @@ numberchars_test21(A) :- number_chars(A, [' ', '0', 'b', '1', '1']).
 
 numberchars_test22 :- number_chars(_A, ['0', 'o', '8']).
 
+%% REVIEW:PENDING                                             **Nothrow_vs_iso**
+%%   [gprolog]: exception(error(syntax_error(_), _)) 
+%%   [ciao]: no throws
 %test 23 
 :- test numberchars_test23
 	+ exception(error(syntax_error(Imp_dep_atom), Imp_dep))
@@ -5200,6 +5770,9 @@ numberchars_test22 :- number_chars(_A, ['0', 'o', '8']).
 
 numberchars_test23 :- number_chars(_A, [' ', 'b', '2']).
 
+%% REVIEW:PENDING                                             **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(syntax_error(_), _))
+%%   [ciao]: no throws
 %test 24 
 :- test numberchars_test24
 	+ exception(error(syntax_error(Imp_dep_atom), Imp_dep))
@@ -5207,6 +5780,9 @@ numberchars_test23 :- number_chars(_A, [' ', 'b', '2']).
 
 numberchars_test24 :- number_chars(_A, [' ', 'x', 'g']).
 
+%% REVIEW:PENDING                                          **Nothrow_vs_iso**
+%%   [gprolog]: throws  error(type_error(character,'\xc3\\xa1\'),number_chars/2)
+%%   [ciao]: no throws
 %test 25 
 :- test numberchars_test25
 	+ exception(error(syntax_error(Imp_dep_atom), Imp_dep))
@@ -5214,6 +5790,9 @@ numberchars_test24 :- number_chars(_A, [' ', 'x', 'g']).
 
 numberchars_test25 :- number_chars(_A, ['á']).
 
+%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(syntax_error(_), _))
+%%   [ciao]: no throws
 %test 26 
 :- test numberchars_test26
 	+ exception(error(syntax_error(Imp_dep_atom), Imp_dep))
@@ -5221,6 +5800,9 @@ numberchars_test25 :- number_chars(_A, ['á']).
 
 numberchars_test26 :- number_chars(_A, ['a']).
 
+%% REVIEW:PENDING                                                                **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(syntax_error(_), _))
+%%   [ciao]: no throws
 %test 27 
 :- test numberchars_test27
 	+ exception(error(syntax_error(Imp_dep_atom), Imp_dep))
@@ -5262,18 +5844,21 @@ numbercodes_test4 :- number_codes(33.0, [0'3|_L]).
 
 numbercodes_test5(A) :- number_codes(A, [0'-, 0'2, 0'5]).
 
+%% REVIEW:PENDING                                                        **Label_4**
 %test 6 
 :- test numbercodes_test6(A) => (A=3)
 # "[ISO] number_codes/2: expected(succeed) bug(fail)".
 
 numbercodes_test6(A) :- number_codes(A, [0' , 0'3]).
 
+%% REVIEW:PENDING                                         **Label_4**
 %test 7 
 :- test numbercodes_test7(A) => (A=15)
 # "[ISO] number_codes/2: expected(succeed) bug(fail)".
 
 numbercodes_test7(A) :- number_codes(A, [0'0, 0'x, 0'f]).
 
+%% REVIEW:PENDING                                       **Label_4**
 %test 8 
 :- test numbercodes_test8(A) => (A=0'a)
 # "[ISO] number_codes/2: expected(succeed) bug(fail)".
@@ -5371,6 +5956,7 @@ numbercodes_test15 :- number_codes(_X, [0'a|_]).
 
 numbercodes_test16 :- number_codes(_X, [0'a, _]).
 
+%% REVIEW:PENDING                                                  **Label_4**
 %test 17 
 :- test numbercodes_test17(A, S) => (A=273, S=[50, 55, 51])
 # "[Non-ISO] number_codes/2: expected(succeed) bug(fail)".
@@ -5379,6 +5965,7 @@ numbercodes_test17(A, S) :-
 	number_chars(A, [' ', '0', 'x', '1', '1', '1']),
 	number_codes(A, S).
 
+%% REVIEW:PENDING                                        **Label_4**
 %test 18 
 :- test numbercodes_test18(A, S) => (A=73, S=[55, 51])
 # "[Non-ISO] number_codes/2: expected(succeed) bug(fail)".
@@ -5387,6 +5974,7 @@ numbercodes_test18(A, S) :-
 	number_chars(A, [' ', '0', 'o', '1', '1', '1']),
 	number_codes(A, S).
 
+%% REVIEW:PENDING                                                         **Label_4**
 %test 19  
 :- test numbercodes_test19(A, S) => (A=7, S=[55])
 # "[Non-ISO] number_codes/2: expected(succeed) bug(fail)".
@@ -5395,6 +5983,9 @@ numbercodes_test19(A, S) :-
 	number_chars(A, [' ', '0', 'b', '1', '1', '1']),
 	number_codes(A, S).
 
+%% REVIEW:PENDING                          **It's correct in GNU**                             **Nothrow_vs_iso**
+%%   [gprolog]: throws FOO
+%%   [ciao]: no throws
 %test 20 
 :- test numbercodes_test20
 	+ exception(error(syntax_error(Imp_dep_atom), Imp_dep))
@@ -5402,6 +5993,9 @@ numbercodes_test19(A, S) :-
 
 numbercodes_test20 :- number_codes(_X, "ä").
 
+%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(syntax_error(_), _))
+%%   [ciao]: no throws
 %test 21 
 :- test numbercodes_test21
 	+ exception(error(syntax_error(Imp_dep_atom), Imp_dep))
@@ -5419,24 +6013,36 @@ numbercodes_test21 :- number_codes(_A, [0'0, 0'x, 0'0, 0'., 0'0]).
 
 setflag_test1 :- set_prolog_flag(unknown, fail).
 
+%% REVIEW:PENDING                                                        **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(instantiation_error, _))
+%%   [ciao]: no throws
 %test 2 
 :- test setflag_test2 + exception(error(instantiation_error, Imp_dep))
 # "[ISO] set_flag/2: expected(error) bug(fail)".
 
 setflag_test2 :- set_prolog_flag(_X, off).
 
+%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(atom, 5), _))
+%%   [ciao]: no throws
 %test 3 
 :- test setflag_test3 + exception(error(type_error(atom, 5), Imp_dep))
 # "[ISO] set_flag/2: expected(error) bug(fail)".
 
 setflag_test3 :- set_prolog_flag(5, decimals).
 
+%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(flag, date), _))
+%%   [ciao]: no throws
 %test 4 
 :- test setflag_test4 + exception(error(domain_error(flag, date), Imp_dep))
 # "[ISO] set_flag/2: expected(error) bug(fail)".
 
 setflag_test4 :- set_prolog_flag(date, 'July 1988').
 
+%% REVIEW:PENDING                                                       **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(flag_value, debug+trace), _))
+%%   [ciao]: no throws
 %test 5 
 :- test setflag_test5
 	+ exception(error(domain_error(flag_value, debug+trace), Imp_dep))
@@ -5446,6 +6052,9 @@ setflag_test5 :- set_prolog_flag(debug, trace).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
+%% REVIEW:PENDING                                                        **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(permission_error(modify, flag, max_arity), _))
+%%   [ciao]: no throws
 %test 6 
 :- test setflag_test6
 	+ exception(error(permission_error(modify, flag, max_arity), Imp_dep))
@@ -5458,7 +6067,7 @@ setflag_test6 :- set_prolog_flag(max_arity, 40).
 % ===========================================================================
 %% 8.17.2.4 These tests are specified in page 113 of the ISO standard. %%
 
-
+%% REVIEW:PENDING                                       **Label_4**
 %test 1 
 :- test currentflag_test1 : (X=debug, Y=off, set_prolog_flag(X, Y))
 # "[ISO] current_prolog_flag/2: expected(succeed) bug(fail)".
@@ -5472,6 +6081,9 @@ currentflag_test1 :- current_prolog_flag(debug, off).
 currentflag_test2(Result) :-
 	findall([X, Y], current_prolog_flag(X, Y), Result).
 
+%% REVIEW:PENDING                                                      **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(atom, 5), _))
+%%   [ciao]: no throws
 %test 3 
 :- test currentflag_test3 + exception(error(type_error(atom, 5), Imp_dep))
 # "[ISO] current_prolog_flag/2: expected(error) bug(fail)".
@@ -5494,12 +6106,16 @@ currentflag_test4 :- current_prolog_flag(unknown, warning).
 
 currentflag_test5 :- current_prolog_flag(unknown, error).
 
+%% REVIEW:PENDING                                               **Label_4**
 %test 6 
 :- test currentflag_test6
 # "[Non-ISO] current_prolog_flag/2: expected(succeed) bug(fail)".
 
 currentflag_test6 :- current_prolog_flag(debug, off).
 
+%% REVIEW:PENDING                                                 **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(domain_error(prolog_flag, warning), _))
+%%   [ciao]: no throws
 %test 7 
 :- test currentflag_test7
 	+ exception(error(domain_error(prolog_flag, warning), Imp_dep))
@@ -5507,6 +6123,9 @@ currentflag_test6 :- current_prolog_flag(debug, off).
 
 currentflag_test7 :- current_prolog_flag(warning, _Y).
 
+%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%%   [gprolog]: throws exception(error(type_error(atom, 1 + 2), _))
+%%   [ciao]: no throws
 %test 8 
 :- test currentflag_test8
 	+ exception(error(type_error(atom, 1 + 2), Imp_dep))
@@ -5581,6 +6200,9 @@ eval_test3(S) :- S is '+'(0, 3.2 +11).
 
 eval_test4(S) :- S is '+'(77, _N).
 
+%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 5 
 :- test eval_test5(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] '+'/2: expected(error) bug(fail)".
@@ -5611,6 +6233,9 @@ eval_test8(S) :- S is '-'(3.2 -11).
 
 eval_test9(S) :- S is '-'(_N).
 
+%% REVIEW:PENDING                                                           **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 10 
 :- test eval_test10(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] '-'/2: expected(error) bug(fail)".
@@ -5642,6 +6267,9 @@ eval_test13(S) :- S is '-'(0, 3.2 +11).
 
 eval_test14(S) :- S is '-'(77, _N).
 
+%% REVIEW:PENDING                                                  **Diffthrow_vs_iso**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 15 
 :- test eval_test15(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] '-'/2: expected(error) bug(fail)".
@@ -5673,6 +6301,9 @@ eval_test18(S) :- S is '*'(1.5, 3.2 +11).
 
 eval_test19(S) :- S is '*'(77, _N).
 
+%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 20 
 :- test eval_test20(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] '*'/2: expected(error) bug(fail)".
@@ -5715,24 +6346,29 @@ eval_test25(S) :- S is '//'(7, -3).
 
 eval_test26(S) :- S is '//'(-7, 3).
 
+%% REVIEW:DONE                             
 %test 27 
-:- test eval_test27(S) + exception(error(intantiation_error, Imp_dep))
+:- test eval_test27(S) + exception(error(instantiation_error, Imp_dep))
 # "[ISO] '/'/2: expected(error) bug(fail)".
 
 eval_test27(S) :- S is '/'(77, _N).
 
+%% REVIEW:PENDING                                                              **Diffthrow_vs_iso**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 28 
 :- test eval_test28(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] '/'/2: expected(error) bug(fail)".
 
 eval_test28(S) :- S is '/'(foo, 77).
 
+%% REVIEW:DONE                             
 %test 29 
 :- test eval_test29(S) + exception(error(evaluation_error(zero_divisor),
 		Imp_dep))
 # "[Non-ISO] '/'/2: expected(error) bug(succeed)".
 
-eval_test29(S) :- S is '/'(3, 0).
+eval_test29(S) :- S is '//'(3, 0).
 
 %test 30
 :- test eval_test30(S) => (S=1)
@@ -5758,6 +6394,9 @@ eval_test32(S) :- S is mod(7, -2).
 
 eval_test33(S) :- S is mod(77, _N).
 
+%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 34 
 :- test eval_test34(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] 'mod'/2: expected(error) bug(fail)".
@@ -5825,6 +6464,9 @@ eval_test43(S) :- S is ceiling(-0.5).
 
 eval_test44(S) :- S is truncate(-0.5).
 
+%% REVIEW:PENDING                                                        **Diffthrow_vs_iso**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws  exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 45
 :- test eval_test45(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] truncate/1: expected(error) bug(fail)".
@@ -5855,6 +6497,9 @@ eval_test48(S) :- S is float(5//3).
 
 eval_test49(S) :- S is float(_X).
 
+%% REVIEW:PENDING                                                            **Diffthrow_vs_iso**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 50  
 :- test eval_test50(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] float/1: expected(error) bug(fail)".
@@ -5885,13 +6530,110 @@ eval_test53(S) :- S is abs(3.2 -11.0).
 
 eval_test54(S) :- S is abs(_N).
 
+%% REVIEW:PENDING                                                       **Diffthrow_vs_iso**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws  exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 55  
 :- test eval_test55(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] abs/1: expected(error) bug(fail)".
 
 eval_test55(S) :- S is abs(foo).
 
+%test 56 
+:- test eval_test56(S) => (S=(5.0))
+# "[ISO] '/'/2: expected(succeed)".
 
+eval_test56(S) :- S is '/'(10,2).
+
+%test 57
+:- test eval_test57(S) => (S=(0.0))
+# "[ISO] '/'/2: expected(succeed)".
+
+eval_test57(S) :- S is '/'(0,3+11).
+
+%test 58
+:- test eval_test58(S) => (S=(-2.5))
+# "[ISO] '/'/2: expected(succeed)".
+
+eval_test58(S) :- S is '/'(-5,2).
+
+%test 59
+:- test eval_test59(S) => (S=(-0.1))
+# "[ISO] '/'/2: expected(succeed)".
+
+eval_test59(S) :- S is '/'(1,-10).
+
+%test 60 
+:- test eval_test60(S) => (S=(0))
+# "[ISO] '//'/2: expected(succeed)".
+
+eval_test60(S) :- S is '//'(0,3+11).
+
+%test 61 
+:- test eval_test61(S) => (S=(-1))
+# "[ISO] '//'/2: expected(succeed)".
+
+eval_test61(S) :- S is '//'(-5,3).
+
+%test 62
+:- test eval_test62(S) => (S=(0))
+# "[ISO] '//'/2: expected(succeed)".
+
+eval_test62(S) :- S is '//'(1,-12).
+
+%test 63                                                              **Diffthrow_vs_iso**
+%% REVIEW:PENDING
+%%   [gprolog]: S = 3
+%%   [ciao]: throws exception(error(type_error(evaluable,max(2,3)),'arithmetic:is'/2-2))
+:- test eval_test63(S) => (S=(3)) + no_exception
+# "[ISO] max/2: expected(succeed) bug(fail)".
+
+eval_test63(S) :- S is max(2, 3).
+
+%test 64                                                                **Diffthrow_vs_iso**
+%% REVIEW:PENDING
+%%   [gprolog]: throws exception: error(instantiation_error,(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,max(_,3)),'arithmetic:is'/2-2))
+:- test eval_test64(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] max/2: expected(succeed) bug(fail)".
+
+eval_test64(S) :- S is max(N,3).
+
+%test 65                                                              **Diffthrow_vs_iso**
+%% REVIEW:PENDING
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws  exception(error(type_error(evaluable,max(3,foo)),'arithmetic:is'/2-2))
+:- test eval_test65(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] max/2: expected(succeed) bug(fail)".
+
+eval_test65(S) :- S is max(3,foo).
+
+%test 66                                                                 **Diffthrow_vs_iso**
+%% REVIEW:PENDING
+%%   [gprolog]: S = 2
+%%   [ciao]: throws exception(error(type_error(evaluable,min(2,3)),'arithmetic:is'/2-2))
+:- test eval_test66(S) => (S=(2)) + no_exception
+# "[ISO] min/2: expected(succeed) bug(fail)".
+
+eval_test66(S) :- S is min(2, 3).
+
+%test 67                                                                  **Diffthrow_vs_iso**
+%% REVIEW:PENDING
+%%   [gprolog]: throws exception: error(instantiation_error,(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,min(_,3)),'arithmetic:is'/2-2))
+:- test eval_test67(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] min/2: expected(succeed) bug(fail)".
+
+eval_test67(S) :- S is min(N,3).
+
+%test 68                                                                 **Diffthrow_vs_iso**
+%% REVIEW:PENDING
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,min(3,foo)),'arithmetic:is'/2-2))
+:- test eval_test68(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] min/2: expected(succeed) bug(fail)".
+
+eval_test68(S) :- S is min(3,foo).
 % ===========================================================================
 %% 9.3.1.4 These tests are specified in page 120 of the ISO standard. %%%
 
@@ -5919,6 +6661,9 @@ power_test3(S) :- S is '**'(5, -1).
 
 power_test4(S) :- S is '**'(77, _N).
 
+%% REVIEW:PENDING                                                          **Diffthrow_vs_iso**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 5 
 :- test power_test5(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] '**'/2: expected(error) bug(fail)".
@@ -5959,6 +6704,9 @@ sin_test2(S) :- S is sin(_N).
 
 sin_test3(S) :- S is sin(0).
 
+%% REVIEW:PENDING                                                            **Diffthrow_vs_iso**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 4 
 :- test sin_test4(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] sin/1: expected(error) bug(fail)".
@@ -5996,6 +6744,9 @@ cos_test2(S) :- S is cos(_N).
 
 cos_test3(S) :- S is cos(0).
 
+%% REVIEW:PENDING                                                           **Diffthrow_vs_iso**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 4 
 :- test cos_test4(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] cos/1: expected(error) bug(fail)".
@@ -6037,6 +6788,9 @@ atan_test3(S) :- S is atan(_N).
 
 atan_test4(S) :- S is atan(0.0).
 
+%% REVIEW:PENDING                                                     **Diffthrow_vs_iso**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 5 
 :- test atan_test5(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] atan/1: expected(error) bug(fail)".
@@ -6071,7 +6825,9 @@ exp_test3(S) :- S is exp(_N).
 # "[ISO] exp/1: expected(succeed)".
 
 exp_test4(S) :- S is exp(0).
-
+%%REVIEW:PENDING                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 5 
 :- test exp_test5(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] exp/1: expected(error) bug(fail)".
@@ -6100,18 +6856,27 @@ log_test2(S) :- S is log(2.71828).
 
 log_test3(S) :- S is log(_N).
 
+%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%%   [gprolog]: S = -inf
+%%   [ciao]: no throws
 %test 4 
 :- test log_test4(S) + exception(error(evaluation_error(undefined), Imp_dep))
 # "[ISO] log/2: expected(error) bug(succeed)".
 
 log_test4(S) :- S is log(0).
 
+%% REVIEW:PENDING                                                  **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 5 
 :- test log_test5(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] log/1: expected(error) bug(fail)".
 
 log_test5(S) :- S is log(foo).
 
+%% REVIEW:PENDING                                         **Nothrow_vs_iso**
+%%   [gprolog]: S = -inf
+%%   [ciao]: no throws
 %test 6 
 :- test log_test6(S) + exception(error(evaluation_error(undfined), Imp_dep))
 # "[ISO] log/2: expected(error) bug(succeed)".
@@ -6146,12 +6911,18 @@ sqrt_test3(X, S) :- S is sqrt(X).
 
 sqrt_test4(S) :- S is sqrt(_N).
 
+%% REVIEW:PENDING                                             **Nothrow_vs_iso**
+%%   [gprolog]: S = -nan
+%%   [ciao]: no throws
 %test 5 
 :- test sqrt_test5(S) + exception(error(evaluation_error(undefined), Imp_dep))
 # "[ISO] sqrt/1: expected(error) bug(succeed)".
 
 sqrt_test5(S) :- S is sqrt(-1.0).
 
+%% REVIEW:PENDING                                                **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: no throws
 %test 6
 :- test sqrt_test6(S) + exception(error(type_error(number, foo), Imp_dep))
 # "[ISO] sqrt/1: expected(error) bug(fail)".
@@ -6185,6 +6956,9 @@ bit_rl_test3(S) :- S is '>>'(-16, 2).
 
 bit_rl_test4(S) :- S is '>>'(77, _N).
 
+%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws  exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws  exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 5 
 :- test bit_rl_test5(S) + exception(error(type_error(integer, foo), Imp_dep))
 # "[ISO] '>>'/2: expected(error) bug(fail)".
@@ -6227,6 +7001,9 @@ bit_lr_test3(S) :- S is '<<'(-16, 2).
 
 bit_lr_test4(S) :- S is '<<'(77, _N).
 
+%% REVIEW:PENDING                                                                 **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 5 
 :- test bit_lr_test5(S) + exception(error(type_error(integer, foo), Imp_dep))
 # "[ISO] '<<'/2: expected(error) bug(fail)".
@@ -6275,6 +7052,9 @@ bit_and_test4(S) :- S is /\(-10, 12).
 
 bit_and_test5(S) :- S is '/\\'(77, _N).
 
+%% REVIEW:PENDING                                                            **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 6 
 :- test bit_and_test6(S) + exception(error(type_error(integer, foo), Imp_dep))
 # "[ISO] '/\\'/2: expected(error) bug(fail)".
@@ -6322,6 +7102,9 @@ bit_or_test4(S) :- S is \/(-10, 12).
 
 bit_or_test5(S) :- S is '\\/'(77, _N).
 
+%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
 %test 6
 :- test bit_or_test6(S) + exception(error(type_error(integer, foo), Imp_dep))
 # "[ISO] '\\/'/2: expected(error) bug(fail)".
@@ -6379,3 +7162,9 @@ bit_not_test5(S) :- S is '\\'(2.5).
 # "[Non-ISO] '\\'/2: expected(error) bug(succeed)".
 
 bit_not_test6(S) :- S is '\\'(2.5).
+
+
+
+
+
+
