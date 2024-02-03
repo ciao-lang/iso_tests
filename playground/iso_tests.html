@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ciao tests for ISO Prolog</title>
+    <link rel="stylesheet" href="/css/lpdoc.css" type="text/css"/>
+    <link rel="stylesheet" href="/playground/css/ciao_playground.css" type="text/css"/>
+    <script>
+      var playgroundCfg = {
+        title: "Ciao tests for ISO Prolog",
+        has_run_tests_button: true, //true,
+        has_debug_button: false, //true,
+        has_doc_button: false, //true,
+        has_acheck_button: false,
+        has_spec_button: false,
+        window_layout: ['E','T','P'],
+        storage_key: 'iso_tests', // key for local storage of draft program
+        splash_code: `
+% (Nothing here)
+`,
+        // Amend code (add module, etc.)
+        amend_on_save: false
+      };
+      // Query for loading code
+      var toplevelCfg = {
+        // Bundles required for this playground
+        init_bundles: ['ciaowasm', 'core', 'builder', 'ciaodbg', 'iso_tests'],
+        // Initialization queries
+        init_queries: [
+        ]
+      };
+    </script>
+    <script> var lpdocPG='playground'; </script>
+    <script src="/js/lpdoc.js"></script> <!-- LPdoc UI -->
+  </head>
+  <body></body>
+</html>

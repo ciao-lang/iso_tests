@@ -7,4 +7,5 @@ depends([
 alias_paths([
   iso_tests = src
 ]).
+lib('src').
 manual('iso_tests', [main='doc/SETTINGS.pl']).
