@@ -1193,3 +1193,110 @@ bit_not_test5(S) :- S is '\\'(2.5).
 
 bit_not_test6(S) :- S is '\\'(2.5).
 
+
+% ===========================================================================
+%% These tests verifying the operation of unbounded based on logtalk tests.
+
+%test 1
+:- test unbounded_test1(N) => (N=( 123456789012345678901234567890))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test1(N) :- N is '-'( 123456789012345678901234567891, 1).
+
+%test 2
+:- test unbounded_test2(N) => (N=(-1.3419876543210988e+34))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test2(N) :- N is '-'( 123456789012345678901234567890, 13.42e+33).
+
+%test 3
+:- test unbounded_test3(N) => (N=(123456789012345678901234567890))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test3(N) :- N is '-'( 246913578024691357802469135780,123456789012345678901234567890).
+
+%test 4
+:- test unbounded_test4(N) => (N=(-123456789012345678901234567890))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test4(N):- N is '-'(1,123456789012345678901234567891).
+
+%test 5
+:- test unbounded_test5(N) => (N=(123456789012345678901234567891))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test5(N):- N is '+'(1,123456789012345678901234567890).
+
+%test 6
+:- test unbounded_test6(N) => (N=(246913578024691357802469135780))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test6(N):- N is '+'(123456789012345678901234567890,123456789012345678901234567890).
+
+%test 7
+:- test unbounded_test7(N) => (N=(1.3420123456789013e+34))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test7(N):- N is '+'(123456789012345678901234567890,13.42e+33).
+
+%test 8
+:- test unbounded_test8(N) => (N=(370370367037037036703703703670))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test8(N):- N is '*'(123456789012345678901234567890,3).
+
+%test 9
+:- test unbounded_test9(N) => (N=(15241578753238836750495351562536198787501905199875019052100))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test9(N):- N is '*'(123456789012345678901234567890,123456789012345678901234567890).
+
+%test 10
+:- test unbounded_test10(N) => (N=( 1.656790108545679e+63))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test10(N):- N is '*'(123456789012345678901234567890,13.42e+33).
+
+%test 11
+:- test unbounded_test11(N) => (N=(41152263004115226300411522630))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test11(N):- N is '//'(123456789012345678901234567890,3).
+
+%test 12
+:- test unbounded_test12(N) => (N=(0))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test12(N):- N is '//'(3,123456789012345678901234567890).
+
+%test 13
+:- test unbounded_test13(N) => (N=( 41152263004115226300411522630))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test13(N):- N is '//'(15241578753238836750495351562536198787501905199875019052100, 370370367037037036703703703670).
+
+%test 14
+:- test unbounded_test14(N) => (N=(4.115226300411523e+28))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test14(N):- N is '/'(123456789012345678901234567890,3).
+
+%test 15
+:- test unbounded_test15(N) => (N=( 2.4300000218700003e-29))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test15(N):- N is '/'(3,123456789012345678901234567890).
+
+%test 16
+:- test unbounded_test16(N) => (N=( 3.0000000000000004))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test16(N):- N is '/'(370370367037037036703703703670,123456789012345678901234567890).
+
+%test 17
+:- test unbounded_test17(N) => (N=( 2.7598388005740465e-05))
+# "[ISO] '-'/2: expected(succeed)".
+
+unbounded_test17(N):- N is '/'(370370367037037036703703703670,13.42e+33).
+
+
