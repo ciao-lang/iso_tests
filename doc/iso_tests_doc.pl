@@ -11,17 +11,17 @@
 which have been developed according to examples used in the ISO
 standard for PROLOG and therefore, all the tests meet the standard.
 
-The battery of tests contained in the file `iso_tests.pl` is based in the
-application `Stdprolog` developed by Péter Szabó  and Péter
+The battery of tests contained in the file `iso_tests.pl` is based originally
+on the application `Stdprolog` developed by Péter Szabó  and Péter
 Szeredi from the Department of Computer Science and Information Technology at
 the Budapest University of Technology and Economics.
 The `Stdprolog` application contains all the tests based on the examples of the
 ISO standard and a set of tests obtained from SICStus and `eddbali`. Most of
 the tests included in `Stdprolog` have also been included in the file `iso_tests.pl`, 
 except for the tests that do not make sense when applied to Ciao.
-The tests from SICStus and `eddbali` have also been included becuase it is
-interesting to do test certain characteristics that are common to many systems 
-supporting Prolog but that go beyond those established by the standard.").
+The tests from SICStus and `eddbali` have also been included in order to test
+certain characteristics that are common to many systems supporting Prolog but
+that go beyond those established by the standard.").
 
 :- doc(module,
 "The battery of tests is organized in such way that the tests for each 
@@ -569,27 +569,27 @@ test succeeds.
 
 
 
-  - Predicate '/\\'/2
+  - Predicate '/@\\'/2 
          According to the ISO standard if the value of B1 in the predicate
-         '/\\'(B1,B2) is not an integer and B1 is not a variable the compiler
+         '/@\\'(B1,B2) is not an integer and B1 is not a variable the compiler
          should raise the following error: type_error(integer,B1). 
          But in Ciao the execution succeeds
-         Example: S is '/\\'(1.0,2).
+         Example: S is '/@\\'(1.0,2).
 
 
-  - Predicate '\\/'/2 
+  - Predicate '@\\/'/2 
          According to the ISO standard if the value of B1 in the predicate
-         '/\\'(B1,B2) is not an integer and B1 is not a variable the compiler
+         '/@\\'(B1,B2) is not an integer and B1 is not a variable the compiler
          should raise the following error: type_error(integer,B1). 
          But in Ciao the execution succeeds
-         Example: S is '\\/'(1.0,2).
+         Example: S is '@\\/'(1.0,2).
 
-  - Predicate '\\'/2 
+  - Predicate '@\\'/2 
          According to the ISO standard if the value of B1 in the predicate
-         '\\'(B1) is not an integer and B1 is not a variable the compiler
+         '@\\'(B1) is not an integer and B1 is not a variable the compiler
          should raise the following error: type_error(integer,B1). 
          But in Ciao the execution succeeds
-         Example: S is '\\'(2.5).
+         Example: S is '@\\'(2.5).
 
   - Predicate catch/3
          According to the ISO standard the execution of
@@ -900,12 +900,12 @@ Error `Malformed body`:
    Example:
 
        :- test not_test2 + fails.
-       not_test2 :- '\\+'(!).
+       not_test2 :- '@\\+'(!).
 
    But the next equivalent test does not have this problem:
 
        :- test not_test2(X) : (X=!) + fails.
-       not_test2(X) :- '\\+'(X).
+       not_test2(X) :- '@\\+'(X).
 
    In this case I have chosen to write these tests in the second way
    to avoid the problem of malformed body.

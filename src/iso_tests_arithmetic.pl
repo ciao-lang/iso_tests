@@ -627,7 +627,7 @@ eval_test63(S) :- S is max(2, 3).
 :- test eval_test64(S) + exception(error(instantiation_error, Imp_dep))
 # "[ISO] max/2: expected(succeed) bug(fail)".
 
-eval_test64(S) :- S is max(N,3).
+eval_test64(S) :- S is max(_N,3).
 
 %test 65                                                              **Label_3**
 %% REVIEW:PENDING
@@ -654,7 +654,7 @@ eval_test66(S) :- S is min(2, 3).
 :- test eval_test67(S) + exception(error(instantiation_error, Imp_dep))
 # "[ISO] min/2: expected(succeed) bug(fail)".
 
-eval_test67(S) :- S is min(N,3).
+eval_test67(S) :- S is min(_N,3).
 
 %test 68                                                                 **Label_3**
 %% REVIEW:PENDING
