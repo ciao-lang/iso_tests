@@ -42,13 +42,31 @@ look(P,  [CP|CPs]) :-
     ;(->(P=CP, true), look(P, CPs)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This predicates allow the reading of non-terms
-read_no_term(S, []) :-
-    ';'('->'(get_code(S, -1), close(S)), fail).
+% TODO: this duplicates stream_utils:read_string_to_end/2 because that
+% module does not use iso_strict; remove once aliases, etc. are
+% integrated into the Ciao standard libraries.
 
-read_no_term(S, [C|Cs]) :-
-    get_code(S, C),
-    read_no_term(S, Cs).
+% The read_no_term/2 predicate is used to read a sequence of
+% characters from an input stream S to the end of the file and unify
+% this sequence with Cs. This predicate is implemented using the
+% auxiliary predicate read_string_to_end/2.
+
+read_no_term(S,Cs):-
+    read_string_to_end(S,Cs).
+
+read_string_to_end(Stream, String) :-
+    current_input(OldIn),
+    set_input(Stream),
+    read_string_to_end_(String),
+    set_input(OldIn).
+
+read_string_to_end_(L) :-
+    get_code(C),
+    read_string_to_end__(C, L).
+
+read_string_to_end__(-1, []) :- !.
+read_string_to_end__(C, [C|L]) :-
+    read_string_to_end_(L).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
