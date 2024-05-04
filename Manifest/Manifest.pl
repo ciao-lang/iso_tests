@@ -2,7 +2,7 @@
 % An ISO Prolog test suite for Ciao
 version('1.23.0'). % (same as 'core')
 depends([
-  ciaodbg_extra
+  core
 ]).
 alias_paths([
   iso_tests = src

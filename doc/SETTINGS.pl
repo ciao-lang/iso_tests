@@ -4,7 +4,6 @@
 
 :- include(core_docsrc(docpaths)).
 
-filepath := at_bundle(ciaodbg_extra, 'lib').
 filepath := ~ciaofilepath_common.
 
 output_name := 'iso_tests'.
