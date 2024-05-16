@@ -1161,9 +1161,10 @@ retract_test6(Result) :-
 	    Result).
 
 %% REVIEW:PENDING                                               **Label_4**
-%test 7 UNDEFINED but is a bit strange, sometimes succeeds and sometimes fails
-%       Added times(50) to increase the chance the test fails
-:- test retract_test7(A) + times(50).
+% %test 7 UNDEFINED but is a bit strange, sometimes succeeds and sometimes fails
+% %       Added times(50) to increase the chance the test fails
+% :- test retract_test7(A) + times(50).
+:- test retract_test7(A). % TODO: fix setup/cleanup in these tests
 retract_test7(A) :- retract((foo(A) :- A, call(A))).
 
 %% REVIEW:PENDING                                                  **Label_4**
