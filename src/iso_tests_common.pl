@@ -51,6 +51,7 @@ look(P,  [CP|CPs]) :-
 % this sequence with Cs. This predicate is implemented using the
 % auxiliary predicate read_string_to_end/2.
 
+% TODO: simplify
 read_no_term(S,Cs):-
     read_string_to_end(S,Cs).
 
@@ -68,8 +69,22 @@ read_string_to_end__(-1, []) :- !.
 read_string_to_end__(C, [C|L]) :-
     read_string_to_end_(L).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TODO: simplify
+read_bytes_to_end(Stream, String) :-
+    current_input(OldIn),
+    set_input(Stream),
+    read_bytes_to_end_(String),
+    set_input(OldIn).
 
+read_bytes_to_end_(L) :-
+    get_byte(C),
+    read_bytes_to_end__(C, L).
+
+read_bytes_to_end__(-1, []) :- !.
+read_bytes_to_end__(C, [C|L]) :-
+    read_bytes_to_end_(L).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 my_list_of(0, _, []).
 my_list_of(N, A, [A|L]) :-
@@ -80,7 +95,6 @@ my_list_of(N, A, [A|L]) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This predicate open a file and write in it the content of String 
 open_and_write(File, Mode, S, Ops, Type, String) :-
-    display(user_error, open_and_write(File, Mode, S, Ops, Type, String)), nl(user_error),
     open(File, Mode, S, Ops),
     write_contents(Type, String, S).
 
