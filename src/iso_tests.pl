@@ -5,23 +5,18 @@
 % TODO: rewrite with use test modules?
 :- reexport(engine(runtime_control)).
 %:- reexport(library(streams)).
-:- reexport(library(streams), [current_input/1, current_output/1, open/3, get_code/1]).
+:- reexport(library(streams), [
+    open/3
+                            ]).
 :- reexport(library(iso_incomplete)).
-:- reexport(library(read), [
-    read/1,
-    read_term/2
-]).
+
 :- reexport(library(write), [
-    write_term/2,
-    write/1, writeq/1,
+    writeq/1,
     write_canonical/1
 ]).
-:- reexport(library(operators)).
+
 :- reexport(library(iso_char), [
-    char_code/2, atom_chars/2, number_chars/2,char_codes/2,
-    get_char/1,
-    peek_char/1,
-    put_char/1
+    char_code/2, atom_chars/2, number_chars/2,char_codes/2
 ]).
 :- reexport(library(iso_incomplete)).
 :- reexport(library(compiler)).
@@ -31,7 +26,7 @@
 :- doc(author, "The Ciao Development Team").
 :- doc(author, "Lorea Galech").
 :- doc(author, "Jose F. Morales (simplified)").
-:- doc(author, "Jose Luis Bueno").
+:- doc(author, "Jos@'{e} Luis Bueno").
 
 :- doc(module, "This module contains a collection of test assertions
 for checking compliance of Ciao with the ISO Prolog standard. The
@@ -76,9 +71,9 @@ and the current status in Ciao:
 
 %%Labels:
 %% 
-%%Wrong_vs_iso: Wrong solution
-%%Nothrow_vs_iso: Doesn't throw exception
-%%Diffthrow_vs_iso: Throws a different exception
+%%Label_1: Wrong solution
+%%Label_2: Doesn't throw exception
+%%Label_3: Throws a different exception
 %%Label_4: Warnings
 %%Label_5: Nondet
 %%Label_6: Aborted
@@ -86,7 +81,6 @@ and the current status in Ciao:
 % The following predicates are not implemented, but here a dummy
 % version is provided in order to avoid compilation errors. -- EMM
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 moose(_) :- fail.
 x :- fail.
 f(_) :- fail.
@@ -96,14 +90,15 @@ foo :- fail.
 foo(_, _) :- fail.
 :- pop_prolog_flag(multi_arity_warnings).
 bird(_) :- fail.
-at_end_of_stream(_) :- fail. % TODO: Non-ISO and not implemented
-set_stream_position(_, _) :- fail. % TODO: Non-ISO and not implemented
+%at_end_of_stream(_) :- fail. % TODO: Non-ISO and not implemented
+%set_stream_position(_, _) :- fail. % TODO: Non-ISO and not implemented
 char_conversion(_, _) :- fail.
 current_char_conversion(_, _) :- fail.
 
 % ---------------------------------------------------------------------------
 
 :- load_test_module(iso_tests(iso_tests_common)).
+:- use_module(iso_tests_common).
 
 % ===========================================================================
 %% 7.8.1.4 These tests are specified in page 43 of the ISO standard. %%%%
@@ -114,6 +109,9 @@ current_char_conversion(_, _) :- fail.
 %% 7.8.2.4 These tests are specified in page 44 of the ISO standard. %%%%
 
 :- test fail/0 + fails # "[ISO] fail/0: expected(fail)".
+
+% ===========================================================================
+
 
 % ===========================================================================
 %% 7.8.3.4 These tests are specified in page 45 of the ISO standard. %%%%
@@ -170,9 +168,9 @@ call_test5 :- call(bb(_)).
 
 call_test6 :- call(bb(3)).
 
-%% REVIEW:PENDING                ** wrong_vs_iso**
+%% REVIEW:PENDING                **Label_1**
 %%   [gprolog]: it is correct
-%%   [ciao]: returns a different result
+%%   [ciao]: return a different result
 %test 7 
 :- test call_test7(Result) => (Result=[[1, !]])
 # "[ISO] call/1: expected(succeed) bug(wrong_succeed)".
@@ -213,7 +211,7 @@ call_test11 :- call(_).
 
 call_test12 :- call(1).
 
-%% REVIEW:PENDING                                 **Nothrow_vs_iso**
+%% REVIEW:PENDING                                 **Label_2**
 %%   [gprolog]: throws exception(error(type_error(callable, (fail, 1)),_))
 %%   [ciao]: no throws
 %test 13 
@@ -223,7 +221,7 @@ call_test12 :- call(1).
 
 call_test13 :- call((fail, 1)).
 
-%% REVIEW:PENDING                               **Diffthrow_vs_iso**
+%% REVIEW:PENDING                               **Label_3**
 %%   [gprolog]: throws exception(error(type_error(callable, (write(3), 1)),_))
 %%   [ciao]:  throws exception(error(type_error(callable,1),'in metacall'))
 %test 14
@@ -233,7 +231,7 @@ call_test13 :- call((fail, 1)).
 
 call_test14 :- call((write(3), 1)).
 
-%% REVIEW:PENDING                                **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                **Label_3**
 %%   [gprolog]: throws exception(error(type_error(callable, (1;true)),_))
 %%   [ciao]:  throws exception(error(type_error(callable,1),'in metacall'))
 %test 15 
@@ -531,7 +529,7 @@ catch_test2(Z) :- catch(bar(3), Z, true).
 
 catch_test3 :- catch(true, _, 3).
 
-%% REVIEW:PENDING                                **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                **Label_3**
 %test4
 %%   [gprolog]: throws exception(bla)
 %%   [ciao]:  throws  exception(bla)
@@ -729,7 +727,7 @@ arithmetic_comparision_test18 :- '=<'(3*2, 7 -1).
 
 arithmetic_comparision_test19(X) :- '=:='(X, 5).
 
-%% REVIEW:PENDING                                **Nothrow_vs_iso**
+%% REVIEW:PENDING                                **Label_2**
 %%   [gprolog]: error(instantiation_error,(=\=)/2)
 %%   [ciao]: no throws
 %test 20 
@@ -807,27 +805,27 @@ clause_test1 :- clause(cat, true).
 
 clause_test2:- clause(dog, true).
 
-%% REVIEW:PENDING                                   ** Wrong_vs_iso**
+%% REVIEW:PENDING                                   **Label_1**
 %%   [gprolog]: it is correct
-%%   [ciao]: returns a different result
+%%   [ciao]: return a different result
 %test 3 
 :- test clause_test3(I, Body) => (Body=insect(I))
 # "[ISO] clause/2: expected(succeed) bug(fail)".
 
 clause_test3(I, Body) :- clause(legs(I, 6), Body).
 
-%% REVIEW:PENDING                                   ** Wrong_vs_iso**
+%% REVIEW:PENDING                                   **Label_1**
 %%   [gprolog]: it is correct
-%%   [ciao]: returns a different result
+%%   [ciao]: return a different result
 %test 4 
 :- test clause_test4(C, Body) => (Body=(call(C), call(C)))
 # "[ISO] clause/2: expected(succeed) bug(fail)".
 
 clause_test4(C, Body) :- clause(legs(C, 7), Body).
 
-%% REVIEW:PENDING                                 ** Wrong_vs_iso**
+%% REVIEW:PENDING                                 **Label_1**
 %%   [gprolog]: it is correct
-%%   [ciao]: returns a different result
+%%   [ciao]: return a different result
 %test 5 
 :- test clause_test5(Result) => (Result=[[ant, true], [bee, true]])
 # "[ISO] clause/2: expected(succeed) bug(fail)".
@@ -841,7 +839,7 @@ clause_test5(Result) :- findall([I, T], clause(insect(I), T), Result).
 
 clause_test6(Body) :- clause(x, Body).
 
-%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: throws exception(error(instantation_error, _))
 %%   [ciao]: no throws
 %test 7 
@@ -850,7 +848,7 @@ clause_test6(Body) :- clause(x, Body).
 
 clause_test7(B) :- clause(_, B).
 
-%% REVIEW:PENDING                                                 **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                 **Label_2**
 %%   [gprolog]: throws exception(error(type_error(callable, 4), _))
 %%   [ciao]: no throws
 %test 8 
@@ -859,9 +857,9 @@ clause_test7(B) :- clause(_, B).
 
 clause_test8(X) :- clause(4, X).
 
-%% REVIEW:PENDING                                                 **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                 **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(access, private_procedure, elk/1),_))
-%%   [ciao]: throws exception(error(permission_error(modify,static_procedure,'iso_tests:elk'/1),clause/2))
+%%   [ciao]: throw exception(error(permission_error(modify,static_procedure,'iso_tests:elk'/1),clause/2))
 %test 9
 :- test clause_test9(N, Body)
 	+ exception(error(permission_error(access, private_procedure, elk/1),
@@ -870,9 +868,9 @@ clause_test8(X) :- clause(4, X).
 
 clause_test9(N, Body) :- clause(elk(N), Body).
 
-%% REVIEW:PENDING                                                 **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                 **Label_3**
 %%   [gprolog]: throws  exception(error(permission_error(access, private_procedure, atom/1),_))
-%%   [ciao]: throws exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),clause/2))
+%%   [ciao]: throw exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),clause/2))
 %test 10
 :- test clause_test10(Body)
 	+ exception(error(permission_error(access, private_procedure, atom/1),
@@ -891,9 +889,9 @@ clause_test11 :- clause(legs(A, 6), insect(f(A))).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
-%% REVIEW:PENDING                                    **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                    **Label_3**
 %%   [gprolog]: throws exception(error(type_error(callable, 5), _))
-%%   [ciao]: throws exception(error(permission_error(modify,static_procedure,'iso_tests:f'/1),clause/2))
+%%   [ciao]: throw exception(error(permission_error(modify,static_procedure,'iso_tests:f'/1),clause/2))
 %test 12 
 :- test clause_test12
 	+ exception(error(type_error(callable, 5), Imp_dep))
@@ -928,12 +926,12 @@ currentpredicate_test3(Arity) :- current_predicate(elk/Arity).
 
 %% REVIEW:PENDING                                                    **Label_5**
 %%   [gprolog]: nondet
-%%   [ciao]: succeed
+%%   [ciao]: nondet
 %test 4
 :- test currentpredicate_test4(A) + fails
 # "[ISO] current_predicate/2: expected(fail)".
 
-currentpredicate_test4(A) :- current_predicate(foo_undefined/A).
+currentpredicate_test4(A) :- current_predicate(foo/A).
 
 %test 5
 :- test currentpredicate_test5(Result)
@@ -943,9 +941,9 @@ currentpredicate_test4(A) :- current_predicate(foo_undefined/A).
 currentpredicate_test5(Result) :-
 	findall(Name, current_predicate(Name/1), Result).
 
-%% REVIEW:PENDING                                                      **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                      **Label_2**
 %%   [gprolog]: throws exception(error(type_error(predicate_indicator, 4),_))
-%%   [ciao]: no throws 
+%%   [ciao]: no throw 
 %test 6 
 :- test currentpredicate_test6
 	+ exception(error(type_error(predicate_indicator, 4), Imp_dep))
@@ -956,9 +954,9 @@ currentpredicate_test6 :- current_predicate(4).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
-%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: throw exception(error(type_error(predicat_indicator, 0/dog), _))
-%%   [ciao]: no throws 
+%%   [ciao]: no throw 
 %test 7 
 :- test currentpredicate_test7(X) : (X=dog)
 	+ exception(error(type_error(predicat_indicator, 0/dog), Imp_dep))
@@ -966,9 +964,9 @@ currentpredicate_test6 :- current_predicate(4).
 
 currentpredicate_test7(X) :- current_predicate(X).
 
-%% REVIEW:PENDING                                        **Nothrow_vs_iso**
+%% REVIEW:PENDING                                        **Label_2**
 %%   [gprolog]: throws exception: error(type_error(atom,0),current_predicate/1)
-%%   [ciao]: no throws 
+%%   [ciao]: no throw 
 %test 8
 :- test currentpredicate_test8(X) : (X=0/dog)
 	+ exception(error(type_error(predicat_indicator, 0/dog), Imp_dep))
@@ -982,7 +980,6 @@ currentpredicate_test8(X) :- current_predicate(X).
 # "[Non-ISO] current_predicate/2: expected(succeed)".
 
 currentpredicate_test9(X, Result) :- findall(X, current_predicate(X), Result).
-
 
 
 % ===========================================================================
@@ -1007,7 +1004,7 @@ asserta_test2 :- asserta((legs(A, 4) :- animal(A))).
 
 asserta_test3 :- asserta((foo(A) :- A, call(A))).
 
-%% REVIEW:PENDING                                                         **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                         **Label_3**
 %%   [gprolog]: throws exception(error(instantiation_error,_))
 %%   [ciao]: throws exception(error(type_error(clause,_),asserta/1-1)) 
 %test 4
@@ -1016,7 +1013,7 @@ asserta_test3 :- asserta((foo(A) :- A, call(A))).
 
 asserta_test4 :- asserta(_).
 
-%% REVIEW:PENDING                                                        **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                        **Label_3**
 %%   [gprolog]: exception(error(type_error(callable, 4), _))
 %%   [ciao]: throws exception(error(type_error(clause,4),asserta/1-1))
 %test 5
@@ -1025,7 +1022,7 @@ asserta_test4 :- asserta(_).
 
 asserta_test5 :- asserta(4).
 
-%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                      **Label_3**
 %%   [gprolog]: throws exception(error(type_error(callable, 4), _))
 %%   [ciao]: throws exception(error(type_error(clause,('iso_tests:foo':-4)),asserta/1-1))
 %test 6 
@@ -1034,7 +1031,7 @@ asserta_test5 :- asserta(4).
 
 asserta_test6 :- asserta((foo :- 4)).
 
-%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                      **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(modify, static_procedure, atom/1), _))
 %%   [ciao]: throws exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),asserta/1))
 %test 7 
@@ -1070,7 +1067,7 @@ assertz_test2 :- assertz((legs(B, 2) :- bird(B))).
 
 assertz_test3 :- assertz((foo(X) :- X -> call(X))).
 
-%% REVIEW:PENDING                                                    **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                    **Label_3**
 %%   [gprolog]: throws exception(error(instantiation_error,_))
 %%   [ciao]: throws exception(error(type_error(clause,_),assertz/1-1))
 %test 4 
@@ -1079,7 +1076,7 @@ assertz_test3 :- assertz((foo(X) :- X -> call(X))).
 
 assertz_test4 :- assertz(_).
 
-%% REVIEW:PENDING                                                    **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                    **Label_3**
 %%   [gprolog]: throws exception(error(type_error(callable, 4), _))
 %%   [ciao]: throws exception(error(type_error(clause,4),assertz/1-1))
 %test 5 
@@ -1088,7 +1085,7 @@ assertz_test4 :- assertz(_).
 
 assertz_test5 :- assertz(4).
 
-%% REVIEW:PENDING                                                    **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                    **Label_3**
 %%   [gprolog]: throws exception(error(type_error(callable, 4), _))
 %%   [ciao]: throws exception(error(type_error(clause,('iso_tests:foo':-4)),assertz/1-1))
 %test 6 
@@ -1098,7 +1095,7 @@ assertz_test5 :- assertz(4).
 assertz_test6 :- assertz((foo :- 4)).
 
 
-%% REVIEW:PENDING                                                  **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                  **Label_3**
 %%   [gprolog]: throws  exception(error(permission_error(modify, static_procedure, atom/1),_))
 %%   [ciao]: throws  exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),assertz/1))
 %test 7 
@@ -1134,7 +1131,7 @@ retract_test2 :- retract(legs(spider, 6)).
 retract_test3(X, T) :- retract((legs(X, 2) :-T)).
 
 
-%% REVIEW:PENDING                                                ** Wrong_vs_iso**
+%% REVIEW:PENDING                                                **Label_1**
 %%   [gprolog]: does not return what was expected
 %%   [ciao]: does not return what was expected
 %test 4 
@@ -1161,10 +1158,10 @@ retract_test6(Result) :-
 	    Result).
 
 %% REVIEW:PENDING                                               **Label_4**
-% %test 7 UNDEFINED but is a bit strange, sometimes succeeds and sometimes fails
-% %       Added times(50) to increase the chance the test fails
+%test 7 UNDEFINED but is a bit strange, sometimes succeeds and sometimes fails
+%       Added times(50) to increase the chance the test fails
 % :- test retract_test7(A) + times(50).
-:- test retract_test7(A). % TODO: fix setup/cleanup in these tests
+:- test retract_test7(A). % TODO: fix this test
 retract_test7(A) :- retract((foo(A) :- A, call(A))).
 
 %% REVIEW:PENDING                                                  **Label_4**
@@ -1174,7 +1171,7 @@ retract_test7(A) :- retract((foo(A) :- A, call(A))).
 
 retract_test8(A, B, C) :- retract((foo(C) :- A -> B)).
 
-%% REVIEW:PENDING                                                  **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                  **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
 %test 9 
@@ -1183,7 +1180,7 @@ retract_test8(A, B, C) :- retract((foo(C) :- A -> B)).
 
 retract_test9(X, Y) :- retract((X :- in_eec(Y))).
 
-%% REVIEW:PENDING                                                  **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                  **Label_2**
 %%   [gprolog]: throws exception(error(type_error(callable, 4), _))
 %%   [ciao]: no throws
 %test 10 
@@ -1193,7 +1190,7 @@ retract_test9(X, Y) :- retract((X :- in_eec(Y))).
 
 retract_test10(X) :- retract((4 :- X)).
 
-%% REVIEW:PENDING                                             **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                             **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(modify, static_procedure, atom/1),_))
 %%   [ciao]:  throws exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),retract/1))
 %test 11 
@@ -1213,7 +1210,7 @@ retract_test11(X) :- retract((atom(X) :- X == '[]')).
 
 abolish_test1 :- abolish(foo/2).
 
-%% REVIEW:PENDING                                                  **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                  **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
 %test 2 
@@ -1223,7 +1220,7 @@ abolish_test1 :- abolish(foo/2).
 
 abolish_test2 :- abolish(foo/_).
 
-%% REVIEW:PENDING                                                   **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                   **Label_2**
 %%   [gprolog]: throws exception(error(type_error(predicate_indicator, foo),_))
 %%   [ciao]: no throws
 %test 3 
@@ -1233,7 +1230,7 @@ abolish_test2 :- abolish(foo/_).
 
 abolish_test3 :- abolish(foo).
 
-%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(type_error(predicate_indicator, foo(_)),_))
 %%   [ciao]: no throws
 %test 4 
@@ -1273,7 +1270,7 @@ abolish_test7(Result) :-
 	asserta(insect(bee)), asserta(insect(ant)),
 	findall(X, (insect(X), abolish(insect/1)), Result).
 
-%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
 %test 8
@@ -1282,7 +1279,7 @@ abolish_test7(Result) :-
 
 abolish_test8 :- abolish(foo/_).
 
-%% REVIEW:PENDING                                             **Nothrow_vs_iso**
+%% REVIEW:PENDING                                             **Label_2**
 %%   [gprolog]: no throws
 %%   [ciao]: no throws
 %test 9 
@@ -1293,7 +1290,7 @@ abolish_test8 :- abolish(foo/_).
 
 abolish_test9 :- abolish(bar/1).
 
-%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: throws exception(error(type_error(integer, a), _))
 %%   [ciao]: no throws
 %test 10  
@@ -1303,7 +1300,7 @@ abolish_test9 :- abolish(bar/1).
 
 abolish_test10 :- abolish(foo/a).
 
-%% REVIEW:PENDING                                                  **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                  **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -1),_))
 %%   [ciao]: no throws
 %test 11 
@@ -1313,7 +1310,7 @@ abolish_test10 :- abolish(foo/a).
 
 abolish_test11 :- abolish(foo /(-1)).
 
-%% REVIEW:PENDING                                                 **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                 **Label_2**
 %%   [gprolog]: throws exception(error(representation_error(max_arity), _))
 %%   [ciao]: no throws
 %test 12 
@@ -1324,7 +1321,7 @@ abolish_test11 :- abolish(foo /(-1)).
 
 abolish_test12(X) :- abolish(foo/X).
 
-%% REVIEW:PENDING                                                   **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                   **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 5), _))
 %%   [ciao]: no throws
 %test 13 
@@ -1333,7 +1330,7 @@ abolish_test12(X) :- abolish(foo/X).
 
 abolish_test13 :- abolish(5/a).
 
-%% REVIEW:PENDING                                                  **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                  **Label_2**
 %%   [gprolog]: throws exception(error(type_error(predicate_indicator, insect), _))
 %%   [ciao]: no throws
 %test 14  
@@ -1403,7 +1400,7 @@ findall_test8(X, Result) :- findall(X, 4, Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
-%% REVIEW:PENDING                                                   **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                   **Label_2**
 %%   [gprolog]: throws exception(error(type_error(list, [A|1]), _))
 %%   [ciao]: no throws
 %test 9 
@@ -1606,7 +1603,7 @@ setof_test7(Result) :- findall([L, Y], setof(1, (Y=2;Y=1), L), Result).
 
 setof_test8(Result) :- setof(f(X, Y), (X=a;Y=b), Result).
 
-%% REVIEW:PENDING                                     ** Wrong_vs_iso**
+%% REVIEW:PENDING                                     **Label_1**
 %%   [gprolog]: throws exception: error(existence_error(procedure,(^)/2),setof/3)
 %%   [ciao]:   _1=[1]
 %test 9 
@@ -1663,7 +1660,7 @@ setof_test14(Y, Z, Result) :- setof(X, member_(X, [f(Y, b), f(Z, c)]), Result).
 setof_test15(Y, Z) :- setof(X, member_(X, [f(Y, b), f(Z, c)]),
 	    [f(a, c), f(a, b)]).
 
-%% REVIEW:PENDING                                                ** Wrong_vs_iso**
+%% REVIEW:PENDING                                                **Label_1**
 %%   [gprolog]:  _1=Y
 %%   [ciao]:  _1=Y
 %test 16
@@ -1756,7 +1753,7 @@ setof_test27(Result) :- setof(_X, Y^Y^1, Result).
 
 setof_test28(A) :- setof(X, X=1, [1|A]).
 
-%% REVIEW:PENDING                      **It's correct in GNU**                                        **Nothrow_vs_iso**
+%% REVIEW:PENDING                      **It's correct in GNU**                                        **Label_2**
 %%   [gprolog]: throws exception(error(type_error(list, [A|1]), _))
 %%   [ciao]: no throws
 %test 29 
@@ -1778,7 +1775,7 @@ setof_test29 :- setof(X, X=1, [_|1]).
 
 currentinput_test1(S) :- current_input(S).
 
-%% REVIEW:PENDING                                                             **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                             **Label_3**
 %%   [gprolog]: throws exception(error(domain_error(stream, foo), _))
 %%   [ciao]:  throws exception(error(domain_error(stream_or_alias,foo),'stream_basic:current_output'/1-1))
 %test2 
@@ -1789,24 +1786,32 @@ currentinput_test1(S) :- current_input(S).
 currentinput_test2 :- current_input(foo).
 
 %test3
-:- test currentinput_test3(S) : (current_output(S)) + fails
-# "[Non-ISO] current_input/1: expected(fail)".
+:- test currentinput_test3(S) : (current_output(S))
+   	# "[Non-ISO] current_input/1: expected(fail)".
 
-currentinput_test3(S) :- current_input(S).
+currentinput_test3(S) :-
+    (current_input(S) -> fail ;true).
 
-%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: no throws
 %%   [ciao]: no throws
 %test 4 
-:- test currentinput_test4(S2)
-	: ( open('/tmp/foo', write, S, [type(text)]),
-	    close(S),
-	    open('/tmp/foo', read, S2, []),
-	    close(S2) )
-	+ exception(error(domain_error(stream, S2), Imp_dep))
+:- test currentinput_test4(S2) 
+   + (setup(setup_currentinput4(S2)),
+      cleanup(cleanup_currentinput4(S2)),
+      exception(error(domain_error(stream, S2), Imp_dep)))
 # "[Non-ISO] current_input/1: expected(error) bug(fail)".
 
-currentinput_test4(S2) :- current_input(S2).
+currentinput_test4(S2) :-
+    current_input(S2).
+
+setup_currentinput4(S2) :-
+    open('/tmp/foo', write, S, [type(text)]),
+    close(S),
+    open('/tmp/foo', read, S2, []).
+
+cleanup_currentinput4(S2) :- 
+    close(S2).
 
 %test5
 :- test currentinput_test5(S) : (current_input(S))
@@ -1825,7 +1830,7 @@ currentinput_test5(S) :- current_input(S).
 
 currentoutput_test1(S) :- current_output(S).
 
-%% REVIEW:PENDING                                                  **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                  **Label_3**
 %%   [gprolog]: throws  exception(error(domain_error(stream, foo), _))
 %%   [ciao]: no throws
 %test2 
@@ -1841,7 +1846,7 @@ currentoutput_test2 :- current_output(foo).
 
 currentoutput_test3(S) :- current_output(S).
 
-%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: no throws
 %%   [ciao]: no throws
 %test4 
@@ -1894,16 +1899,20 @@ setinput_test3 :- set_input(foo).
 
 setinput_test4(S1) :- set_input(S1).
 
-%% REVIEW:PENDING                                                    **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                    **Label_3**
 %%   [gprolog]: throws  exception(error(permission_error(input, stream, S), _))
 %%   [ciao]: throws  exception(error(permission_error(access,stream,user_output),'stream_basic:set_input'/1-1))
 %test5 
-:- test setinput_test5(S) : (current_output(S))
-	+ exception(error(permission_error(input, stream, S), Imp_dep))
+:- test setinput_test5(S)
+   + (setup(setup_setinput(S)),
+      exception(error(permission_error(input, stream, S), Imp_dep)))
 # "[Non-ISO] set_input/1: expected(error) bug(wrong_error)".
 
-setinput_test5(S) :- set_input(S).
+setinput_test5(S) :-
+    set_input(S).
 
+setup_setinput(S) :-
+    current_output(S).
 
 
 % ===========================================================================
@@ -1930,15 +1939,15 @@ setoutput_test2 :- set_output(_).
 setoutput_test3 :- set_output(foo).
 
 %test4
-:- test setoutput_test4(S) :
+:- test setoutput_test4(S, auxvar(Sc)) :
 	(open('/tmp/foo', write, S, []), close(S), current_output(Sc))
 	=> (close_outstreams(Sc, S))
 	+ exception(error(existence_error(stream, S_or_a), Imp_dep))
 # "[Non-ISO] set_output/1: expected(error) bug(wrong_error)".
 
-setoutput_test4(S) :- set_output(S).
+setoutput_test4(S, _) :- set_output(S).
 
-%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                      **Label_3**
 %%   [gprolog]: throws  exception(error(permission_error(output, stream, S), _))
 %%   [ciao]: throws  exception(error(permission_error(modify,stream,user_input),'stream_basic:set_output'/1-1))
 %test5 
@@ -1953,29 +1962,60 @@ setoutput_test5(S) :- set_output(S).
 
 %% REVIEW:PENDING                                          **Label_6**
 %test1 
-:- test open_test1(Stream) :
-	(open('/tmp/roger data', write, S, [type(binary)]), close(S))
-	=> (current_input(Sc), set_input(Stream), close_instreams(Sc, Stream))
+:- test open_test1(Sc,Stream)
+   + (setup(setup_open1(Stream)),
+      cleanup(cleanup_open1(Sc,Stream)))
 # "[ISO] open/4: expected(succeed)".
 
-open_test1(Stream) :- open('/tmp/roger data', read, Stream, [type(binary)]).
+open_test1(Sc,Stream) :-
+    open('/tmp/roger data', read, Stream, [type(binary)]),
+    current_input(Sc),
+    set_input(Stream).
+
+setup_open1(_Stream):-
+    open('/tmp/roger data', write, S, [type(binary)]),
+    close(S).
+
+cleanup_open1(Sc,Stream):-
+    close_instreams(Sc, Stream).
 
 %% REVIEW:PENDING                                         **Label_6**
-%test 2 
-:- test open_test2(S)
-	=> (current_output(Sc), set_output(S), close_outstreams(Sc, S))
+%test 2
+:- test open_test2(S,Sc)
+   + (setup(setup_open2(S1)),
+      cleanup(cleanup_open2(Sc,S)))
 # "[ISO] open/4: expected(succeed)".
 
-open_test2(S) :- open('/tmp/scowen', write, S, [alias(editor)]).
+open_test2(S,Sc) :-
+    open('/tmp/scowen', write, S, [alias(editor)]),
+    current_output(Sc),
+    set_output(S).
+
+setup_open2(S1):-
+    open('/tmp/roger data', read, S1, [type(binary)]),
+    close(S1).
+
+cleanup_open2(Sc,S):-
+    close_outstreams(Sc, S).
 
 %% REVIEW:PENDING                                     **Label_6**
 %test3
-:- test open_test3(Stream) :
-	(open('/tmp/data', write, S, []), close(S))
-	=> (current_input(Sc), set_input(Stream), close_instreams(Sc, Stream))
+:- test open_test3(Sc,Stream)
+   + (setup(setup_open3(S)),
+      cleanup(cleanup_open3(Sc,Stream)))
 # "[ISO] open/4: expected(succeed)".
 
-open_test3(Stream) :- open('/tmp/data', read, Stream, []).
+open_test3(Sc,Stream) :-
+    open('/tmp/data', read, Stream, []),
+    current_input(Sc),
+    set_input(Stream).
+
+setup_open3(S):-
+    open('/tmp/data', write, S, []),
+    close(S).
+
+cleanup_open3(Sc,Stream):-
+    close_instreams(Sc, Stream).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
@@ -1994,7 +2034,7 @@ open_test4 :- open(_, read, _).
 
 open_test5 :- open('/tmp/f', _, _).
 
-%% REVIEW:PENDING                                                      **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                      **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
 %test 6 
@@ -2003,7 +2043,7 @@ open_test5 :- open('/tmp/f', _, _).
 
 open_test6 :- open('/tmp/f', write, _, _).
 
-%% REVIEW:PENDING                                                      **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                      **Label_2**
 %%   [gprolog]: throws  exception(error(instantiation_error,_))
 %%   [ciao]: no throws
 %test 7 .
@@ -2012,7 +2052,7 @@ open_test6 :- open('/tmp/f', write, _, _).
 
 open_test7 :- open('/tmp/f', write, _, [type(text)|_]).
 
-%% REVIEW:PENDING                                                       **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                       **Label_3**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: throws exception(error(type_error(atom,_),'stream_basic:$open'/4-4))
 %test 8
@@ -2028,7 +2068,7 @@ open_test8 :- open('/tmp/f', write, _, [type(text), _]).
 
 open_test9 :- open('/tmp/f', 1, _).
 
-%% REVIEW:PENDING                                                         **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                         **Label_2**
 %%   [gprolog]: throws exception(error(type_error(list, type(text)),_))
 %%   [ciao]: no throws
 %test 10 
@@ -2057,7 +2097,7 @@ open_test12 :- open(foo(1, 2), write, _).
 
 open_test13 :- open('/tmp/foo', red, _).
 
-%% REVIEW:PENDING                                                      **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                      **Label_3**
 %%   [gprolog]: throws exception(error(domain_error(stream_option, bar),_))
 %%   [ciao]: throws exception(error(domain_error(open_option_list,[bar]),open/4-4)
 %test 14 
@@ -2082,7 +2122,7 @@ open_test15 :- open('nonexistent', read, _).
 
 open_test16 :- open('/tmp/bar', write, _, [alias(a)]).
 
-%% REVIEW:PENDING                                                           **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                           **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(open, source_sink, reposition(true)), _))
 %%   [ciao]: throws exception(error(domain_error(open_option_list,[reposition(true)]),open/4-4))
 %test 17
@@ -2105,7 +2145,7 @@ open_test17 :- open('/dev/tty', read, _, [reposition(true)]).
 
 close_test1(S) :- close(S).
 
-%% REVIEW:PENDING                                                           **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                           **Label_3**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: throws exception(error(domain_error(stream_or_alias,_),'stream_basic:close'/1-1))
 %test 2 
@@ -2114,7 +2154,7 @@ close_test1(S) :- close(S).
 
 close_test2 :- close(_).
 
-%% REVIEW:PENDING                                                         **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                         **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error,_))
 %%   [ciao]: no throws
 %test 3 
@@ -2124,7 +2164,7 @@ close_test2 :- close(_).
 
 close_test3(Sc) :- close(Sc, _).
 
-%% REVIEW:PENDING                                                       **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                       **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
 %test 4 
@@ -2134,7 +2174,7 @@ close_test3(Sc) :- close(Sc, _).
 
 close_test4(Sc) :- close(Sc, [force(true)|_]).
 
-%% REVIEW:PENDING                                                      **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                      **Label_2**
 %%   [gprolog]: throws  exception(error(instantiation_error, _))
 %%   [ciao]: no throws
 %test 5 
@@ -2144,7 +2184,7 @@ close_test4(Sc) :- close(Sc, [force(true)|_]).
 
 close_test5(Sc) :- close(Sc, [force(true), _]).
 
-%% REVIEW:PENDING                                                          **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                          **Label_2**
 %%   [gprolog]: throws exception(error(type_error(list, foo), _))
 %%   [ciao]: no throws
 %test 6
@@ -2154,7 +2194,7 @@ close_test5(Sc) :- close(Sc, [force(true), _]).
 
 close_test6(Sc) :- close(Sc, foo).
 
-%% REVIEW:PENDING                                                        **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                        **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(close_option, foo),_))
 %%   [ciao]: no throws
 %test 7 
@@ -2171,7 +2211,7 @@ close_test7(Sc) :- close(Sc, [foo]).
 
 close_test8 :- close(foo).
 
-%% REVIEW:PENDING                                                         **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                         **Label_3**
 %%   [gprolog]: throws exception(error(existence_error(stream, S), _))
 %%   [ciao]: throws  exception(error(domain_error(stream_or_alias,'$stream'(int,int)),'stream_basic:close'/1-1))
 %test 9 
@@ -2189,12 +2229,21 @@ close_test9(S) :- close(S).
 
 %% REVIEW:PENDING                                              **Label_6**
 %test 1
-:- test flush_output_test1(S)
-	: (open_and_write('/tmp/foo', write, S, [], text, foo))
-	=> (close(S), open('/tmp/foo', read, S1, []), read_no_term(S1, "foo"))
-# "[Non-ISO] flush_output/1: expected(succeed)".
+:- test flush_output_test1(S,S1)
+   + (setup(setup_flush_output1(S)),
+      cleanup(cleanup_flush_output1(S)))
+   # "[Non-ISO] flush_output/1: expected(succeed)".
 
-flush_output_test1(S) :- flush_output(S).
+flush_output_test1(S,S1) :-
+    flush_output(S),
+    open('/tmp/foo', read, S1, []),
+    read_no_term(S1, "foo").
+
+setup_flush_output1(S):-
+    open_and_write('/tmp/foo', write, S, [], text, foo).
+
+cleanup_flush_output1(S):-
+    close(S).
 
 %test 2
 :- test flush_output_test2
@@ -2217,7 +2266,7 @@ flush_output_test3 :- flush_output(_).
 
 flush_output_test4(S) :- flush_output(S).
 
-%% REVIEW:PENDING                                                            **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                            **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(output, stream, S),_))
 %%   [ciao]: throws  exception(error(permission_error(modify,stream,'$stream'(int,int)),'stream_basic:flush_output'/1-1))
 %test 5 
@@ -2230,13 +2279,14 @@ flush_output_test4(S) :- flush_output(S).
 
 flush_output_test5(S1) :- flush_output(S1).
 
-%% REVIEW:PENDING                                                    **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                    **Label_3**
 %%   [gprolog]: throws exception: error(permission_error(open,source_sink,alias(st_o)),open/4)
 %%   [ciao]: throws exception(error(domain_error(stream_or_alias,st_o),'stream_basic:flush_output'/1-1))
 %test 6 
 :- test flush_output_test6 :
-	(Alias=st_o, open('/tmp/foo', write, S, [type(text), alias(st_o)]))
-	+ exception(error(permission_error(output, stream, S), Imp_dep))
+   (Alias=st_o, open('/tmp/foo', write, S, [type(text), alias(st_o)]),
+    close(S))
+  	+ exception(error(permission_error(output, stream, S), Imp_dep))
 # "[Non-ISO] flush_output/1: expected(error) bug(wrong_error)".
 
 flush_output_test6 :- flush_output(st_o).
@@ -2248,32 +2298,53 @@ flush_output_test6 :- flush_output(st_o).
 
 
 %test 1 
-:- test stream_property_test1(L) :
-	( open('/tmp/file1.pl', write, SS, []),
-	    close(SS),
-	    open('/tmp/file1.pl', read, S1, []), open('/tmp/file2.pl', write, S2, []) )
-	=> (
-	    absolute_file_name('/tmp/file1.pl', File1),
-	    absolute_file_name('/tmp/file2.pl', File2),
-	    find_path(L, File1),
-	    find_path(L, File2))
+:- test stream_property_test1(L, File1, File2, auxvar(S1, S2))
+   + (setup(setup_strp1(S1, S2)),
+      cleanup(cleanup_strp1(S1,S2)))
 # "[ISO] stream_property/2: expected(succeed)".
 
-stream_property_test1(L) :- findall(F, stream_property(_, file_name(F)), L).
+stream_property_test1(L, File1, File2, _) :-
+    findall(F, stream_property(_, file_name(F)), L),
+    absolute_file_name('/tmp/file1.pl', File1),
+	    absolute_file_name('/tmp/file2.pl', File2),
+	    find_path(L, File1),
+	    find_path(L, File2).
+
+setup_strp1(S1, S2):-
+    open('/tmp/file1.pl', write, SS, []),
+    close(SS),
+    open('/tmp/file1.pl', read, S1, []),
+    open('/tmp/file2.pl', write, S2, []).
+
+cleanup_strp1(S1, S2):-
+    close(S1),
+    close(S2).
 
 %% REVIEW:PENDING                                                        **Label_6**
 %test 2 
-:- test stream_property_test2(L) :
-	(open('/tmp/file1', write, S1, []), current_output(Cout))
-	=> (find_on_list([S1, Cout], L), close(S1))
+:- test stream_property_test2(L)
+   + (setup(setup_strp2(S1, Cout)),
+      cleanup(cleanup_strp2(S1, Cout, L)))
+	
 # "[ISO] stream_property/2: expected(succeed) bug(fail)".
 % TODO: stream_property(_,output) is not implemented
 
-stream_property_test2(L) :- findall(S, stream_property(S, output), L).
+%Call the predicate and reading the output
+stream_property_test2( L) :-
+     %Receive the result
+    findall(S, stream_property(S, output), L).
+
+setup_strp2(S1, Cout):-
+    open('/tmp/file1', write, S1, []),
+    current_output(Cout).
+
+cleanup_strp2(S1, Cout, L):-
+    find_on_list([S1, Cout], L),
+    close(S1).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
-%% REVIEW:PENDING                                                            **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                            **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(stream, foo), _))
 %%   [ciao]: no throws
 %test 3 
@@ -2283,7 +2354,7 @@ stream_property_test2(L) :- findall(S, stream_property(S, output), L).
 
 stream_property_test3 :- stream_property(foo, _Property).
 
-%% REVIEW:PENDING                                                        **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                        **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(stream_property, foo), _))
 %%   [ciao]: no throws
 %test 4 
@@ -2295,25 +2366,40 @@ stream_property_test4 :- stream_property(_S, foo).
 
 %% REVIEW:PENDING                                                      **Label_4**
 %test 5 
-:- test stream_property_test5(S, Property) :
-	(current_input(S))
-	=> ( find_on_list([input, alias(user_input), eof_action(reset),
-		    mode(read), reposition(true), type(text)], Property) )
+:- test stream_property_test5(S, Property)
+   + (setup(setup_strp5(S)),
+      cleanup(cleanup_strp5(Property)))
 # "[Non-ISO] stream_property/2: expected(succeed) bug(fail)".
 % TODO: we will not implement reposition(true) in open/4
 
-stream_property_test5(S, Property) :- stream_property(S, Property).
+stream_property_test5(S, Property) :-
+    stream_property(S, Property).
+
+setup_strp5(S):-
+    current_input(S).
+
+cleanup_strp5(Property):-
+    find_on_list([input, alias(user_input), eof_action(reset),
+                  mode(read), reposition(true), type(text)], Property) .
+
 
 %% REVIEW:PENDING                                                     **Label_4**
 %test 6 
-:- test stream_property_test6(S, Property) :
-	(current_output(S))
-	=> ( find_on_list([output, alias(user_output), eof_action(reset),
-		    mode(append), reposition(false), type(text)], Property) )
+:- test stream_property_test6(S, Property) 
+   + (setup(setup_strp6(S)),
+      cleanup(cleanup_strp6(Property)))
 # "[Non-ISO] stream_property/2: expected(succeed) bug(fail)".
 % TODO: we will not implement reposition(true) in open/4
 
-stream_property_test6(S, Property) :- stream_property(S, Property).
+stream_property_test6(S, Property) :-
+    stream_property(S, Property).
+
+setup_strp6(S):-
+    current_output(S).
+
+cleanup_strp6(Property):-
+    find_on_list([output, alias(user_output), eof_action(reset),
+                  mode(append), reposition(false), type(text)], Property).
 
 %% REVIEW:DONE                     
 %test 7 
@@ -2324,7 +2410,7 @@ stream_property_test7 :- stream_property(_S, type(binary)).
 
 % ===========================================================================
 
-%% REVIEW:PENDING                                              **Nothrow_vs_iso**
+%% REVIEW:PENDING                                              **Label_2**
 %%   [gprolog]: throws  exception(error(instantiation_error,_))
 %%   [ciao]: no throws
 %test 1
@@ -2334,7 +2420,7 @@ stream_property_test7 :- stream_property(_S, type(binary)).
 
 at_end_of_stream_test1 :- at_end_of_stream(_S).
 
-%% REVIEW:PENDING                                         **Nothrow_vs_iso**
+%% REVIEW:PENDING                                         **Label_2**
 %%   [gprolog]: throws error(existence_error(stream,foo),at_end_of_stream/1)
 %%   [ciao]: no throws
 %test 2 
@@ -2344,81 +2430,124 @@ at_end_of_stream_test1 :- at_end_of_stream(_S).
 
 at_end_of_stream_test2 :- at_end_of_stream(foo).
 
-%% REVIEW:PENDING                                            **Nothrow_vs_iso**
+%% REVIEW:PENDING                                            **Label_2**
 %%   [gprolog]: throws exception(error(existence_error(stream, S), _))
 %%   [ciao]: no throws
 %test 3 
-:- test at_end_of_stream_test3(S) :
-	(open('/tmp/foo', write, S, []), close(S))
-	+ exception(error(existence_error(stream, S), Imp_dep))
+:- test at_end_of_stream_test3(S)
+   + (setup(setup_eostr3(S)),
+      exception(error(existence_error(stream, S), Imp_dep)))
 # "[Non-ISO] at_end_of_stream/1: expected(error) bug(wrong_error)".
 
-at_end_of_stream_test3(S) :- at_end_of_stream(S).
+at_end_of_stream_test3(S) :-
+    at_end_of_stream(S).
+
+setup_eostr3(S):-
+    open('/tmp/foo', write, S, []), close(S).
 
 %% REVIEW:PENDING                                                       **Label_6**
 %test 4 
-:- test at_end_of_stream_test4 :
-	( open('/tmp/tmp.in', write, S, [type(text)]),
-	    close(S),
-	    open('/tmp/tmp.in', read, S1,
-		[type(text), eof_action(error), alias(st_i)]) )
+:- test at_end_of_stream_test4(auxvar(S1)) 
+   + (setup(setup_eostr4(S1)),
+      cleanup(cleanup_eostr4(S1)))
 # "[Non-ISO] at_end_of_stream/1: expected(succeed) bug(error)".
 
-at_end_of_stream_test4 :- at_end_of_stream(st_i).
+%Call the predicate and receive the result
+at_end_of_stream_test4(_) :-
+    at_end_of_stream(st_m).
+
+setup_eostr4(S1):-
+    open('/tmp/tmp.in', write, S, [type(text)]),
+    close(S),
+    open('/tmp/tmp.in', read, S1,
+         [type(text), eof_action(error), alias(st_m)]).
+
+cleanup_eostr4(S1):-
+    close(S1).
 
 %% REVIEW:PENDING                                                   **Label_6**
 %test 5 
-:- test at_end_of_stream_test5 :
-	( open('/tmp/tmp.in', write, S, [type(text)]), write_contents(text, a, S),
-	    close(S),
-	    open('/tmp/tmp.in', read, S1,
-		[type(text), eof_action(error), alias(st_i)]) )
-	=> (read_no_term(S1, "a")) + fails
+:- test at_end_of_stream_test5(S1) 
+   + (setup(setup_eostr5(S1)),
+      cleanup(cleanup_eostr5(S1)))
 # "[Non-ISO] at_end_of_stream/1: expected(fail) bug(error)".
 
-at_end_of_stream_test5 :- at_end_of_stream(st_i).
+%Call the predicate and receive the result
+
+
+at_end_of_stream_test5(S1) :-
+    (at_end_of_stream(st_i)-> fail; true),
+    read_no_term(S1, "a").
+
+setup_eostr5( S1):-
+    open('/tmp/tmp.in', write, S, [type(text)]), write_contents(text, a, S),
+    close(S),
+    open('/tmp/tmp.in', read, S1,
+         [type(text), eof_action(error), alias(st_i)]).
+
+cleanup_eostr5(S1):-
+    close(S1).
 
 %% REVIEW:PENDING                                                  **Label_6**
 %test 6 
-:- test at_end_of_stream_test6 :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open('/tmp/tmp.in', read, S1,
-		[type(binary), eof_action(error), alias(st_i)]) )
+:- test at_end_of_stream_test6(auxvar(S1)) 
+   + (setup(setup_aeos6(S1)),
+      cleanup(cleanup_aeos6(S1)))
 # "[Non-ISO] at_end_of_stream/1: expected(succeed) bug(error)".
 
-at_end_of_stream_test6 :- at_end_of_stream(st_i).
+at_end_of_stream_test6(_) :-
+    at_end_of_stream(st_m).
+
+setup_aeos6(S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open('/tmp/tmp.in', read, S1,
+         [type(binary), eof_action(error), alias(st_m)]).
+
+cleanup_aeos6(S1):-
+    close(S1).
 
 %% REVIEW:PENDING                                             **Label_6**
 %test 7 
-:- test at_end_of_stream_test7 :
-	( open_and_write('/tmp/tmp.in', write, S, [type(binary)], binary, "a"),
-	    close(S),
-	    open('/tmp/tmp.in', read, S1, [type(binary), eof_action(error),
-		    alias(Alias)]) )
-	=> (read_no_term(S1, "a")) + fails
+:- test at_end_of_stream_test7(S1) 
+   + (setup(setup_aeostr7(S1)),
+      cleanup(cleanup_aeostr7(S1))) 
 # "[Non-ISO] at_end_of_stream/1: expected(fail) bug(error)".
+                       
+at_end_of_stream_test7(S1) :-
+    (at_end_of_stream(st_i)-> fail; true),
+    read_no_term(S1, "a").
 
-at_end_of_stream_test7 :- at_end_of_stream(st_i).
+setup_aeostr7(S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(binary)], binary, "a"),
+    close(S),
+    open('/tmp/tmp.in', read, S1, [type(binary), eof_action(error),
+                                   alias(st_i)]).
 
+cleanup_aeostr7(S1):-
+    close(S1).
 
 %% 8.11.9 (FROM SICTUS AND EDDBALI) These tests are specified in the         %%
 %% page 90 of the ISO standard.                                           %%
 
 %% REVIEW:PENDING                                                  **Label_6**
 %test1
-:- test set_stream_position_test1(S, Pos) :
-	( open('/tmp/bar', write, S, [reposition(true)]),
-	    stream_property(S, position(Pos)) )
-	+ exception(error(instantiation_error, Imp_dep))
+:- test set_stream_position_test1(S, Pos) 
+   + (setup(setup_ssp1(S,Pos)),
+      exception(error(instantiation_error, Imp_dep)))
 # "[Non-ISO] set_stream_position/2: expected(error) bug(not_implemented)".
 % TODO: position(Pos) in stream_property/2 not implemented
 % TODO: we will not implement reposition(true) in open/4
 
-set_stream_position_test1(S, Pos) :- stream_property(S, position(Pos)),
-	set_stream_position(_, Pos).
+set_stream_position_test1(S, Pos) :-
+    stream_property(S, position(Pos)),
+    set_stream_position(_, Pos).
 
-%% REVIEW:PENDING                                 **Nothrow_vs_iso**
+setup_ssp1(S,Pos):-
+    open('/tmp/bar', write, S, [reposition(true)]),
+    stream_property(S, position(Pos)).
+
+%% REVIEW:PENDING                                 **Label_2**
 %%   [gprolog]: throws exception: error(permission_error(reposition,stream,'$stream'(0)),set_stream_position/2)
 %%   [ciao]: no throws
 %test2 
@@ -2430,28 +2559,36 @@ set_stream_position_test2(S, _Pos) :- set_stream_position(S, _Pos).
 
 %% REVIEW:PENDING                                              **Label_6**
 %test3
-:- test set_stream_position_test3(Pos) :
-	( open('/tmp/bar', write, S, [reposition(true)]),
-	    stream_property(S, position(Pos)) )
-	+ exception(error(domain_error(stream_or_alias, foo), Imp_dep))
+:- test set_stream_position_test3(Pos)
+   + (setup(setup_ssp3(S,Pos)),
+      exception(error(domain_error(stream_or_alias, foo), Imp_dep)))
 # "[Non-ISO] set_stream_position/2: expected(error) bug(not_implemented)".
 % TODO: we will not implement reposition(true) in open/4
 
-set_stream_position_test3(Pos) :- set_stream_position(foo, Pos).
+set_stream_position_test3(Pos) :-
+    set_stream_position(foo, Pos).
+
+setup_ssp3(S,Pos):-
+    open('/tmp/bar', write, S, [reposition(true)]),
+    stream_property(S, position(Pos)).
 
 %% REVIEW:PENDING                                              **Label_6**
 %test4 
-:- test set_stream_position_test4(S, Pos) :
-	( open('/tmp/bar', write, S, [reposition(true)]),
-	    stream_property(S, position(Pos)),
-	    close(S) )
-	+ exception(error(existence_error(stream, S), Imp_dep))
+:- test set_stream_position_test4(S, Pos) 
+   + (setup(setup_ssp4(S,Pos)),
+      exception(error(existence_error(stream, S), Imp_dep)))
 # "[Non-ISO] set_stream_position/2: expected(error) bug(not_implemented)".
 % TODO: we will not implement reposition(true) in open/4
 
-set_stream_position_test4(S, Pos) :- set_stream_position(S, Pos).
+set_stream_position_test4(S, Pos) :-
+    set_stream_position(S, Pos).
 
-%% REVIEW:PENDING                           **Nothrow_vs_iso**
+setup_ssp4(S,Pos):-
+    open('/tmp/bar', write, S, [reposition(true)]),
+    stream_property(S, position(Pos)),
+    close(S).
+
+%% REVIEW:PENDING                           **Label_2**
 %%   [gprolog]: throwsexception: error(permission_error(reposition,stream,'$stream'(0)),set_stream_position/2)
 %%   [ciao]: no throws
 %test5 
@@ -2464,154 +2601,265 @@ set_stream_position_test5(S) :- set_stream_position(S, foo).
 
 %% REVIEW:PENDING                                            **Label_4**
 %test6 
-:- test set_stream_position_test6(S, Pos) :
-	( open('/tmp/foo', write, S),
-	    stream_property(S, position(Pos)),
-	    current_input(S) )
-	+ exception(error(permission_error(reposition, stream, S), Imp_dep))
+:- test set_stream_position_test6(S, Pos) 
+   + (setup(setup_ssp6(S,Pos)),
+      exception(error(permission_error(reposition, stream, S), Imp_dep)))
 # "[Non-ISO] set_stream_position/2: expected(error) bug(not_implemented)".
 
-set_stream_position_test6(S, Pos) :- set_stream_position(S, Pos).
+set_stream_position_test6(S, Pos) :-
+    set_stream_position(S, Pos).
+
+setup_ssp6(S,Pos):-
+    open('/tmp/foo', write, S),
+    stream_property(S, position(Pos)),
+    current_input(S).
 
 % ===========================================================================
 %% 8.12.1.4 These tests are specified in page 91 of the ISO standard. %%%
 
 %% REVIEW:PENDING                           **Label_6**
 %test 1
-:- test getchar_test1(Char) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(text)], text, 'qwerty.'),
-	    close(S1),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text)]) )
-	=> (read(X), Char='q', X='werty', close_instreams(Sc, S2))
+:- test getchar_test1(X, Char, auxvar(Sc, S2)) :
+   true =>
+   (X = 'werty') +
+   (setup(setup_gch1(Sc, S2)),
+   cleanup(cleanup_gch1(Sc, S2)))
 # "[ISO] get_char/1: expected(succeed)".
 
-getchar_test1(Char) :- get_char(Char).
+getchar_test1(X, Char, _) :-
+    (get_char(Char), Char = 'q' -> true ; fail),
+    read(X).
+
+setup_gch1(Sc, S2) :-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text)], text, 'qwerty.'),
+    close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text)]).
+
+cleanup_gch1(Sc, S2) :-
+    close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                       **Label_6**
 %test 2
-:- test getcode_test2(Code) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(text)], text, 'qwerty.'),
-	    close(S1),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text)]) )
-	=> (read(X), Code=0'q, X='werty', close_instreams(Sc, S2))
-# "[ISO] get_code/1: expected(succeed)".
+:- test getcode_test2(X,Code, auxvar(Sc,S2)) :
+   true =>
+   (X= 'werty',Code = 0'q) +
+   (setup(setup_gco2(S2,Sc)),
+   cleanup(cleanup_gco2(Sc,S2)))
+      # "[ISO] get_code/1: expected(succeed)".
 
-getcode_test2(Code) :- get_code(Code).
+getcode_test2(X,Code,_) :-
+    get_code(Code),
+    read(X).
+
+setup_gco2(S2,Sc):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text)], text, 'qwerty.'),
+    close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text)]).
+
+cleanup_gco2(Sc,S2):-
+    close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                  **Label_6**
 %test 3 
-:- test getchar_test3(Char)
-	: ( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
-		text, 'qwerty.'),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i)]) )
-	=> (read(X), Char='q', X='werty', close(S2))
+:- test getchar_test3(X, Char, auxvar(S2)) :
+   true =>
+   (X = 'werty') +
+   (setup(setup_gch3(S2)),
+   cleanup(cleanup_gch3(S2)))
 # "[ISO] get_char/2: expected(succeed) bug(error)".
 
-getchar_test3(Char) :- get_char(st_i, Char).
+getchar_test3(X, Char,_) :-
+    (get_char(st_i, 'q') -> true; fail),
+    read(st_i, X),
+    Char = 'q'.
+
+setup_gch3(S2):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
+                   text, 'qwerty.'),
+    close(S1),
+    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i)]).
+
+cleanup_gch3(S2):-
+    close(S2).
+
 
 %% REVIEW:PENDING                    **Label_6**
 %test 4
-:- test getcode_test4(Code) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
-		text, 'qwerty.'),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i)]) )
-	=> (read(X), Code=0'q, X='werty', close(S2))
+:- test getcode_test4(X, Code, auxvar(S2)) :
+   true =>
+   (X = 'werty') +
+   (setup(setup_gco4(S2)),
+    cleanup(cleanup_gco4(S2)))
 # "[ISO] get_code/2: expected(succeed) bug(error)".
 
-getcode_test4(Code) :- get_code(st_i, Code).
+getcode_test4(X, Code, _) :-
+    (get_code(st_i, 0'q) -> true ; fail),
+    read(st_i, X),
+    Code = 0'q.
+
+setup_gco4(S2) :-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
+                   text, 'qwerty.'),
+    close(S1),
+    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i)]).
+
+cleanup_gco4(S2) :-
+    close(S2).
+
 
 %% REVIEW:PENDING                               **Label_6**
 %test 5 
-:- test getchar_test5(Char) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
-		text, "'qwerty'"),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i)]) )
-	=> (read_no_term(S2, "qwerty'"), Char='''')
-# "[ISO] get_char/2: expected(succeed) bug(error)".
+:- test getchar_test5(X, Char, auxvar(S2)) :
+   true =>
+   (Char = '''',
+    X = "qwerty'") +
+   (setup(setup_gch5(S2)),
+    cleanup(cleanup_gch5(S2))).
 
-getchar_test5(Char) :- get_char(st_i, Char).
+getchar_test5(X, Char, _) :-
+    get_char(st_i, Char),
+    catch(read_no_term(st_i, X),E,X=E).
+
+setup_gch5(S2) :-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)], text, "'qwerty'"),
+    close(S1),
+    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i)]).
+
+cleanup_gch5(S2) :-
+    close(S2).
 
 %% REVIEW:PENDING                       **Label_6**
 %test 6 
-:- test getcode_test6(Code) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
-		text, "'qwerty'"),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i)]) )
-	=> (read_no_term(S2, "qwerty'"), Code=0''')
+:- test getcode_test6(X,Code,auxvar(S2)) :
+   true =>
+   (Code= 0'',
+    X = "qwerty'") +
+   (setup(setup_gco6(S2)),
+    cleanup(cleanup_gco6(S2)))
 # "[ISO] get_code/2: expected(succeed) bug(error)".
 
-getcode_test6(Code) :- get_code(st_i, Code).
+getcode_test6(X,Code,_) :-
+    get_code(st_i, Code),
+    read_no_term(st_i, X).
+    
+setup_gco6(S2):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
+                   text, "'qwerty'"),
+    close(S1),
+    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i)]).
+
+cleanup_gco6(S2):-
+    close(S2). 
 
 %% REVIEW:PENDING                     **Label_6**
 %test 7 
-:- test getchar_test7 :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
-		text, 'qwerty.'),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i)]) )
-	=> (read(X), close(S2), X=werty) + fails
+:- test getchar_test7(X,auxvar(S2)) :
+   true =>
+   (X='werty') +
+   (setup(setup_gch7(S2)),
+    cleanup(cleanup_gch7(S2)))
 # "[ISO] get_char/2: expected(fail) bug(error)".
 
-getchar_test7 :- get_char(st_i, p).
+getchar_test7(X,_) :-
+    ( get_char(st_i, p) -> fail ; true),
+    read(st_i, X).
+
+setup_gch7(S2):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
+                   text, 'qwerty.'),
+    close(S1),
+    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i)]).
+
+cleanup_gch7(S2):-
+    close(S2).
+
 
 %% REVIEW:PENDING                        **Label_6**
 %test 8 
-:- test getcode_test8 :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(binary), alias(st_i)],
-		text, 'qwerty.'),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]) )
-	=> (read(X), close(S2), X=werty) + fails
+:- test getcode_test8(X,auxvar(S2)) :
+   true =>
+   (X= 'werty') +
+   (setup(setup_gco8(S2)),
+   cleanup(cleanup_gco8(S2)))
 # "[ISO] get_code/2: expected(fail) bug(error)".
 
-getcode_test8 :- get_code(st_i, 0'p).
+getcode_test8(X,_) :-
+    (get_code(st_i, 0'p) -> fail ; true),
+    read(st_i,X).
+
+setup_gco8(S2):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(binary), alias(st_i)],
+                   text, 'qwerty.'),
+    close(S1),
+    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]).
+
+cleanup_gco8(S2):-
+    close(S2).
 
 %% REVIEW:PENDING       **Label_6**
 %test 9 
-:- test getchar_test9(Char) :
-	( open('/tmp/tmp.in', write, S1, [type(text), alias(st_i)]),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i),
-		    eof_action(error)]) )
-	=> ( Char=(end_of_file), stream_property(st_i, end_of_stream(past)),
-	    close(S2) )
+:- test getchar_test9(Char,auxvar(S2)) :
+   true =>
+   (Char=(end_of_file)) +
+   (setup(setup_gch9(S2)),
+    cleanup(cleanup_gch9(S2)))
 # "[ISO] get_char/2: expected(succeed) bug(error)".
 
-getchar_test9(Char) :- get_char(st_i, Char).
+getchar_test9(Char, _) :-
+    get_char(st_i, Char).
+
+setup_gch9(S2):-
+    open('/tmp/tmp.in', write, S1, [type(text), alias(st_i)]),
+    close(S1),
+    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i),
+                                   eof_action(error)]).
+  
+cleanup_gch9(S2):-
+    %{past}
+    %stream_property(st_w, end_of_stream(past)),
+    close(S2).
 
 %% REVIEW:PENDING        **Label_6**
 %test 10 
-:- test getcode_test10(Code) :
-	( open('/tmp/tmp.in', write, S1, [type(text), alias(st_i)]),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2,
-		[type(text), alias(st_i), eof_action(error)]) )
-	=> (Code=(-1), stream_property(Alias, end_of_stream(past)), close(S2))
+:- test getcode_test10(Code, auxvar(S2)) :
+   true =>
+   (Code=(-1)) +
+   (setup(setup_gco10(S2)),
+    cleanup(cleanup_gco10(S2))) 
 # "[ISO] get_code/2: expected(succeed) bug(error)".
 
-getcode_test10(Code) :- get_code(st_i, Code).
+getcode_test10(Code, _) :-
+    get_code(st_i, Code).
 
-%% REVIEW:PENDING                                                **Diffthrow_vs_iso**
+setup_gco10(S2):-
+    open('/tmp/tmp.in', write, S1, [type(text), alias(st_i)]),
+    close(S1),
+    open('/tmp/tmp.in', read, S2,
+         [type(text), alias(st_i), eof_action(error)]).
+
+cleanup_gco10(S2):-
+    %{past}
+    %stream_property(st_x, end_of_stream(past)),
+    close(S2).
+
+%% REVIEW:PENDING                                                **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(input, stream, user_ouput), _))
 %%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:get_code'/2-1))
 %test 11 
 :- test getchar_test11
-	+ exception(error(permission_error(input, stream, user_ouput),
+	+ exception(error(permission_error(input, stream, user_output),
 		Imp_dep))
 # "[ISO] get_char/1: expected(error) bug(wrong_error)".
 
-getchar_test11 :- get_char(user_output, _X).
+getchar_test11 :-
+    get_char(user_output, _X).
 
-%% REVIEW:PENDING                                      **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                      **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(input, stream, user_ouput), _))
 %%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:get_code'/2-1))
 %test 12 
 :- test getcode_test12
-	+ exception(error(permission_error(input, stream, user_ouput),
+	+ exception(error(permission_error(input, stream, user_output),
 		Imp_dep))
 # "[ISO] get_code/1: expected(error) bug(wrong_error)".
 
@@ -2626,7 +2874,7 @@ getcode_test12 :- get_code(user_output, _X).
 
 getchar_test13 :- get_char(_, _).
 
-%% REVIEW:PENDING                                                  **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                  **Label_3**
 %%   [gprolog]: throws exception(error(type_error(in_character, 1), _))
 %%   [ciao]: throws exception(error(permission_error(access,past_end_of_stream,[]),'io_basic:get_code'/1))
 %test 14 
@@ -2635,7 +2883,7 @@ getchar_test13 :- get_char(_, _).
 
 getchar_test14 :- get_char(1).
 
-%% REVIEW:PENDING                                                 **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                 **Label_2**
 %%   [gprolog]: throws exception(error(type_error(in_character, 1), _))
 %%   [ciao]: no throws 
 %test 15 
@@ -2652,12 +2900,14 @@ getchar_test15 :- get_char(user_input, 1).
 getchar_test16 :- get_char(foo, _).
 
 % %test 17
-:- test getchar_test17(S) :
- 	(open('/tmp/foo', write, S, []), close(S))
- 	+ exception(error(existence_error(stream, S), Imp_dep)).
- getchar_test17(S) :- get_char(S, _).
+:- test getchar_test17(S) 
+   + (setup(setup_gch17(S)),
+      exception(error(existence_error(stream, S), Imp_dep))).
+getchar_test17(S) :- get_char(S, _).
 
- %% REVIEW:PENDING                                           **Diffthrow_vs_iso**
+setup_gch17(S):- (open('/tmp/foo', write, S, []), close(S)).
+
+ %% REVIEW:PENDING                                           **Label_3**
  %%   [gprolog]: throws exception(error(permission_error(input, stream, S), _))
 %%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:get_code'/2-1))
 %test 18 
@@ -2669,57 +2919,88 @@ getchar_test18(S, _) :- get_char(S, _).
 
 %% REVIEW:PENDING                           **Label_6**
 %test 19 
-:- test getchar_test19 :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(binary), eof_action(error)]),
-	    current_input(S1) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(permission_error(input, binary_stream, S1), Imp_dep))
-# "[Non-ISO] get_char/1: expected(error) bug(wrong_error)".
-
-getchar_test19 :- get_char(_).
+%%:- test getchar_test19 :
+%%   (setup(setup_gch19(S,Sc,S1)))=>
+%%   (cleanup(cleanup_gch19(Sc,S1)))
+%%	+ exception(error(permission_error(input, binary_stream, S1), Imp_dep))
+%%# "[Non-ISO] get_char/1: expected(error) bug(wrong_error)".
+%%
+%%getchar_test19 :- get_char(_).
+%%
+%%setup_gch19(S,Sc,S1):- ( open('/tmp/tmp.in', write, S, [type(binary)]),
+%%	    close(S),
+%%	    open_to_read('/tmp/tmp.in', read, Sc, S1,
+%%		[type(binary), eof_action(error)]),
+%%	    current_input(S1) ).
+%%
+%%cleanup_gch19(Sc,S1):- (close_instreams(Sc, S1)).
 
 %% REVIEW:PENDING                            **Label_6**
 %test 20
-:- test getchar_test20 :
-	( open('/tmp/tmp.in', write, S, [type(text)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    current_input(S1),
-	    get_char(X) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(permission_error(input, past_end_of_stream, S1),
-		Imp_dep))
+:- test getchar_test20(auxvar(Sc,S1)) 
+   + (setup(setup_gch20(Sc,S1)),
+      cleanup(cleanup_gch20(Sc,S1)),
+      exception(error(permission_error(input, past_end_of_stream, S1),
+                      Imp_dep)))
 # "[Non-ISO] get_char/1: expected(error) bug(wrong_error)".
 
-getchar_test20 :- get_char(_).
+getchar_test20(_) :-
+    get_char(_).
+
+setup_gch20(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(text)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]),
+    current_input(S1),
+    get_char(_X).
+
+cleanup_gch20(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                               **Label_6**
 %test 21
 :- test getchar_test21(S1, Char1, Char2) :
-	( open_and_write('/tmp/t', write, S, [type(text)], text, ''),
-	    close(S),
-	    open('/tmp/t', read, S1, [eof_action(eof_code)]) )
-	=>(Char1=end_of_file, Char2=end_of_file)
+   true =>
+   (Char1 = end_of_file ,
+    Char2 = end_of_file) +
+   (setup(setup_gch21(S1)),
+    cleanup(cleanup_gch21(S1))) 
+
 # "[Non-ISO] get_char/2: expected(succeed) bug(error)".
 
-getchar_test21(S1, Char1, Char2) :- get_char(S1, Char1), get_char(S1, Char2).
+getchar_test21(S1, Char1, Char2) :-
+    get_char(S1, Char1),
+    get_char(S1, Char2).
 
-%% REVIEW:PENDING                                       **Nothrow_vs_iso**
+setup_gch21(S1):-
+    open_and_write('/tmp/t', write, S, [type(text)], text, ''),
+    close(S),
+    open('/tmp/t', read, S1, [eof_action(eof_code)]).
+
+cleanup_gch21(S1):-
+    close(S1).
+
+%% REVIEW:PENDING                                       **Label_2**
 %%   [gprolog]: throws exception: error(existence_error(procedure,open_and_write/6),getchar_test22/0)
 %%   [ciao]: no throws
-%test 22
-:- test getchar_test22(S1) :
-	( open_and_write('/tmp/t', write, S, [type(binary)], binary, [0]),
-	    close(S),
-	    open('/tmp/t', read, S1) )
-	+ exception(error(representation_error(character), Imp_dep))
+% test 22
+:- test getchar_test22(S1) 
+   + (setup(setup_gch22(S1)),
+      cleanup(cleanup_gch22(S1)),
+      exception(error(representation_error(character), Imp_dep)))
 # "[Non-ISO] get_char/2: expected(error) bug(wrong_error)".
 
-getchar_test22(S1) :- get_char(S1, _).
+getchar_test22(S1) :-
+    get_char(S1, _).
+
+setup_gch22(S1):-
+    open_and_write('/tmp/t', write, S, [type(binary)], binary, [0]),
+    close(S),
+    open('/tmp/t', read, S1).
+
+cleanup_gch22(S1):-
+    close(S1).
 
 %test 23
 :- test getcode_test23 + exception(error(instantiation_error, Imp_dep))
@@ -2727,7 +3008,7 @@ getchar_test22(S1) :- get_char(S1, _).
 
 getcode_test23 :- get_code(_, _).
 
-%% REVIEW:PENDING                                            **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                            **Label_3**
 %%   [gprolog]: throws exception(error(type_error(integer, p), _))
 %%   [ciao]: throws exception(error(permission_error(access,past_end_of_stream,[]),'io_basic:get_code'/1))
 %test 24  
@@ -2736,7 +3017,7 @@ getcode_test23 :- get_code(_, _).
 
 getcode_test24 :- get_code(p).
 
-%% REVIEW:PENDING                                         **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                         **Label_3**
 %%   [gprolog]: throws exception(error(type_error(integer, p), _))
 %%   [ciao]: throws exception(error(permission_error(access,past_end_of_stream,user_input),'io_basic:get_code'/2-1))
 %test 25 
@@ -2745,7 +3026,7 @@ getcode_test24 :- get_code(p).
 
 getcode_test25 :- get_code(user_input, p).
 
-%% REVIEW:PENDING                                          **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                          **Label_3**
 %%   [gprolog]: throws exception(error(representation_error(in_character_code), _))
 %%   [ciao]: throws exception(error(permission_error(access,past_end_of_stream,[]),'io_basic:get_code'/1))
 %test 26 
@@ -2763,233 +3044,382 @@ getcode_test26 :- get_code(-2).
 getcode_test27 :- get_code(foo, _).
 
 %test 28 
-:- test getcode_test28(S1) :
-	( open('/tmp/foo', write, S, []),
-	    close(S),
-	    open('/tmp/foo', read, S1, []),
-	    close(S1) )
-	+ exception(error(existence_error(stream, S1), Imp_dep)).
+:- test getcode_test28(S1) 
+   + (setup(setup_gco28(S1)),
+      exception(error(existence_error(stream, S1), Imp_dep))).
 
-getcode_test28(S1) :- get_code(S1, _).
+getcode_test28(S1) :-
+    get_code(S1, _).
 
-%% REVIEW:PENDING                                              **Diffthrow_vs_iso**
+setup_gco28(S1):-
+    open('/tmp/foo', write, S, []),
+    close(S),
+    open('/tmp/foo', read, S1, []),
+    close(S1).
+
+%% REVIEW:PENDING                                              **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(input, stream, S), _))
 %%   [ciao]: throws  exception(error(permission_error(access,stream,user_output),'io_basic:get_code'/2-1))
 %test 29 
-:- test getcode_test29(S) : (current_output(S))
-	+ exception(error(permission_error(input, stream, S), Imp_dep))
+:- test getcode_test29(S) 
+   + (setup(setup_gco29(S)),
+      exception(error(permission_error(input, stream, S), Imp_dep)))
 # "[Non-ISO] get_code/1: expected(error) bug(wrong_error)".
 
-getcode_test29(S) :- get_code(S, _).
+getcode_test29(S) :-
+    get_code(S, _).
+
+setup_gco29(S):-
+    current_output(S).
 
 %% REVIEW:PENDING                                **Label_6**
 %test 30 
-:- test getcode_test30 :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(binary), eof_action(error)]),
-	    current_input(S1) ) => (close_instreams(Sc, S1))
-	+ exception(error(permission_error(input, binary_stream, S1), Imp_dep))
+:- test getcode_test30(auxvar(Sc,S1))
+   + (setup(setup_gco30(Sc,S1)),
+      cleanup(cleanup_gco30(Sc,S1)))
 # "[Non-ISO] get_code/1: expected(error) bug(succeed)".
 
-getcode_test30 :- get_code(_).
+getcode_test30(_) :-
+    get_code(_).
+
+setup_gco30(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(binary), eof_action(error)]),
+    current_input(S1).
+
+cleanup_gco30(Sc, S1):-
+    close_instreams(Sc, S1).    
 
 %% REVIEW:PENDING                                     **Label_6**
 %test 31
-:- test getcode_test31 :
-	( open('/tmp/tmp.in', write, S, [type(text)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    current_input(S1),
-	    get_code(X) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(permission_error(input, past_end_of_stream, S1),
-		Imp_dep))
+:- test getcode_test31(auxvar(Sc,S1)) 
+   + (setup(setup_gco31(Sc,S1)),
+      cleanup(cleanup_gco31(Sc,S1)),
+      exception(error(permission_error(input, past_end_of_stream, S1),
+                      Imp_dep)))
 # "[Non-ISO] get_code/1: expected(error) bug(wrong_error)".
 
-getcode_test31 :- get_code(_).
+getcode_test31(_) :-
+    get_code(_).
+
+setup_gco31(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(text)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]),
+    current_input(S1),
+    get_code(_X).
+
+cleanup_gco31(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                   **Label_6**
 %test 32 
 :- test getcode_test32(S1, Code1, Code2) :
-	( open_and_write('/tmp/t', write, S, [type(text)], text, ''),
-	    close(S),
-	    open('/tmp/t', read, S1, [eof_action(eof_code)]) )
-	=>(Code1=(-1), Code2=(-1), close(S1))
+   true =>
+   (Code1=(-1), Code2=(-1)) +
+   (setup(setup_gco32(S1)),
+    cleanup(cleanup_gco32(S1)))
 # "[Non-ISO] get_code/2: expected(succeed) bug(error)".
 
-getcode_test32(S1, Code1, Code2) :- get_code(S1, Code1), get_code(S1, Code2).
+getcode_test32(S1, Code1, Code2) :-
+    get_code(S1, Code1),
+    get_code(S1, Code2).
 
-%% REVIEW:PENDING                              **Nothrow_vs_iso**
+setup_gco32(S1):-
+    open_and_write('/tmp/t', write, S, [type(text)], text, ''),
+    close(S),
+    open('/tmp/t', read, S1, [eof_action(eof_code)]).
+
+cleanup_gco32(S1):-
+    close(S1).
+
+%% REVIEW:PENDING                              **Label_2**
 %%   [gprolog]: throws exception: error(existence_error(procedure,open_and_write/6),getcode_test33/0)
 %%   [ciao]: no throws
 %test 33
-:- test getcode_test33(S1) :
-	( open_and_write('/tmp/t', write, S, [type(binary)], binary, [0]),
-	    close(S),
-	    open('/tmp/t', read, S1) )
-	+ exception(error(representation_error(character), Imp_dep))
-# "[Non-ISO] get_code/2: expected(error) bug(succeed)".
+:- test getcode_test33(S1) 
+   + (setup(setup_gco33(S1)),
+      cleanup(cleanup_gco33(S1)),
+      exception(error(representation_error(character), Imp_dep)))
+   # "[Non-ISO] get_code/2: expected(error) bug(succeed)".
 
-getcode_test33(S1) :- get_code(S1, _).
+getcode_test33(S1) :-
+    get_code(S1, _).
 
+setup_gco33(S1):-
+    open_and_write('/tmp/t', write, S, [type(binary)], binary, [0]),
+    close(S),
+    open('/tmp/t', read, S1).
 
+cleanup_gco33(S1) :-
+    close(S1).
 
 % ===========================================================================
 %% 8.12.2.4 These tests are specified in page 93 of the ISO standard. %%%
 
 %% REVIEW:PENDING                             **Label_6**
 %test 1
-:- test peekchar_test1(Char) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(text)], text, 'qwerty.'),
-	    close(S1),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text)]) )
-	=> (read(X), Char='q', X='qwerty', close_instreams(Sc, S2))
-# "[ISO] peek_char/1: expected(succeed)".
+:- test peekchar_test1(Char, X, auxvar(S2,Sc)) :
+   true =>
+   (Char='q',
+    X='qwerty') +
+   (setup(setup_pc1(S2,Sc)),
+    cleanup(cleanup_pc1(Sc,S2)))
+   # "[ISO] peek_char/1: expected(succeed)".
 
-peekchar_test1(Char) :- peek_char(Char).
+peekchar_test1(Char, X, _) :-
+    peek_char(Char),
+    read(X).
+
+setup_pc1(S2,Sc):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text)], text, 'qwerty.'),
+    close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text)]).
+
+cleanup_pc1(Sc,S2):-
+    close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                                **Label_6**
 %test 2
-:- test peekcode_test2(Code) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(text)], text, 'qwerty.'),
-	    close(S1),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text)]) )
-	=> (read(X), Code=0'q, X='qwerty', close_instreams(Sc, S2))
+:- test peekcode_test2(Code, X, auxvar(S2,Sc)) :
+   true =>
+   (Code=0'q,
+    X='qwerty') +
+   (setup(setup_pco2(S2,Sc)),
+    cleanup(cleanup_pco2(Sc,S2)))
 # "[ISO] peek_code/1: expected(succeed)".
 
-peekcode_test2(Code) :- peek_code(Code).
+peekcode_test2(Code, X, _) :-
+    peek_code(Code),
+    read(X).
+
+setup_pco2(S2,Sc):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text)], text, 'qwerty.'),
+    close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text)]).
+
+cleanup_pco2(Sc,S2):-
+    close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                               **Label_6**
 %test 3 
-:- test peekchar_test3(Char) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
-		text, 'qwerty.'),
-	    close(S1),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_i)]) )
-	=> (read(X), Char='q', X='qwerty', close_instreams(Sc, S2))
-# "[ISO] peek_char/2: expected(succeed) bug(error)".
+:- test peekchar_test3(Char, X, auxvar(S2,Sc)) :
+   true =>
+   ( Char='q',
+    X='qwerty') +
+   (setup(setup_pc3(S2,Sc)),
+    cleanup(cleanup_pc3(Sc,S2)))
+   # "[ISO] peek_char/2: expected(succeed) bug(error)".
 
-peekchar_test3(Char) :- peek_char(st_i, Char).
+peekchar_test3(Char, X, _) :-
+    peek_char(st_i, Char),
+    read(X).
+
+setup_pc3(S2,Sc):-
+     open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
+                    text, 'qwerty.'),
+     close(S1),
+     open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_i)]) .
+
+cleanup_pc3(Sc,S2):-
+    close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                            **Label_6**
 %test 4 
-:- test peekcode_test4(Code) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
-		text, 'qwerty.'),
-	    close(S1),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_i)]) )
-	=> (read(X), Code=0'q, X='qwerty', close_instreams(Sc, S2))
+:- test peekcode_test4(Code, X, auxvar(S2,Sc)) :
+   true =>
+   (Code=0'q,
+    X='qwerty') +
+   (setup(setup_pco4(S2,Sc)),
+    cleanup(cleanup_pco4(S2,Sc)))
 # "[ISO] peek_code/2: expected(succeed) bug(error)".
 
-peekcode_test4(Code) :- peek_code(st_i, Code).
+peekcode_test4(Code, X, _) :-
+    peek_code(st_i, Code),
+    read(X).
+
+setup_pco4(S2,Sc):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
+                   text, 'qwerty.'),
+    close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_i)]).
+
+cleanup_pco4(S2,Sc):-
+    close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                         **Label_6**
 %test 5 
-:- test peekchar_test5(Char) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(binary), alias(st_i)],
-		binary, "'qwerty'."),
-	    close(S1),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(binary), alias(st_i)]) )
-	=> (Char='''', read(X), X='qwerty', close_instreams(Sc, S2))
-# "[ISO] peek_char/2: expected(succeed) bug(error)".
+:- test peekchar_test5(X,Char,auxvar(S2,Sc)) :
+   true =>
+   (Char='''',
+    X='qwerty') +
+   (setup(setup_pc5(S2,Sc)),
+    cleanup(cleanup_pc5(S2,Sc)))
+   # "[ISO] peek_char/2: expected(succeed) bug(error)".
 
-peekchar_test5(Char) :- peek_char(st_i, Char).
+peekchar_test5(X,Char,_) :-
+    peek_char(st_i, Char),
+    read(X).
+
+setup_pc5(S2,Sc):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
+                   text, "'qwerty'."),
+    close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_i)]).
+
+cleanup_pc5(S2,Sc):-
+    close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                            **Label_6**
 %test 6 
-:- test peekcode_test6(Code) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(binary), alias(st_i)],
-		binary, "'qwerty'."),
-	    close(S1),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(binary), alias(st_i)]) )
-	=> (Code=0''', read(X), X='qwerty', close_instreams(Sc, S2))
+:- test peekcode_test6(Code, X, auxvar(S2,Sc)) :
+   true =>
+   (Code=0''',
+    X='qwerty') +
+   (setup(setup_pco6(S2,Sc)),
+    cleanup(cleanup_pco6(Sc,S2))) 
 # "[ISO] peek_code/2: expected(succeed) bug(error)".
 
-peekcode_test6(Code) :- peek_code(st_i, Code).
+peekcode_test6(Code, X,_) :-
+    peek_code(st_iii, Code),
+    read(X).
+
+setup_pco6(S2,Sc):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_iii)],
+                   text, "'qwerty'."),
+    close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_iii)]).
+
+cleanup_pco6(Sc,S2):- 
+    close_instreams(Sc, S2).
+
+
+
 
 %% REVIEW:PENDING                            **Label_6**
 %test 7  
-:- test peekchar_test7 :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
-		text, 'qwerty.'),
-	    close(S1),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_i)]) )
-	=> (read(X), close_instreams(Sc, S2), X=qwerty) + fails
+:- test peekchar_test7(X,auxvar(S2,Sc)) :
+   true =>
+   (X='qwerty') +
+   (setup(setup_pc7(S2,Sc)),
+    cleanup(cleanup_pc7(Sc,S2))) 
 # "[ISO] peek_char/2: expected(fail) bug(error)".
 
-peekchar_test7 :- peek_char(st_i, p).
+peekchar_test7(X, _):-    
+    (peek_char(st_i, p)-> fail ; true),
+    read(X).
+
+setup_pc7(S2,Sc):- 
+      open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
+		text, 'qwerty.'),
+      close(S1),
+      open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_i)]).
+
+cleanup_pc7(Sc,S2):- 
+      close_instreams(Sc, S2).
+     
 
 %% REVIEW:PENDING                              **Label_6**
 %test 8 
-:- test peekcode_test8 :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(binary), alias(st_i)],
-		text, 'qwerty.'),
-	    close(S1),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(binary), alias(st_i)]) )
-	=> (read(X), close_instreams(Sc, S2), X=qwerty) + fails
+:- test peekcode_test8(X,auxvar(S2,Sc)) :
+    true =>
+    (X = 'qwerty') +
+    (setup(setup_pco8(S2,Sc)),
+     cleanup(cleanup_pco8(Sc,S2))) 
 # "[ISO] peek_code/2: expected(fail) bug(error)".
 
-peekcode_test8 :- peek_code(st_i, 0'p).
+peekcode_test8(X, _) :- 
+    (peek_code(st_i, 0'p) -> fail;true),
+    read(X).
+
+setup_pco8(S2,Sc):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(text), alias(st_i)],
+                   text, 'qwerty.'),
+    close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_i)]).
+
+cleanup_pco8(Sc,S2):-
+    close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                                  **Label_6**
 %test 9 
-:- test peekchar_test9(Char) :
-	( open('/tmp/tmp.in', write, S1, [type(text), alias(st_i)]),
-	    close(S1),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_i),
-		    eof_action(error)]) )
-	=> ( Char=(end_of_file), stream_property(st_i, end_of_stream(at)),
-	    close_instreams(Sc, S2) )
-# "[ISO] peek_char/2: expected(succeed) bug(error)".
+:- test peekchar_test9(Char,auxvar(S2,Sc)) :
+   true =>
+   (Char=(end_of_file)) +
+   (setup(setup_pc9(Sc,S2)),
+    cleanup(cleanup_pc9(Sc,S2)))
+   # "[ISO] peek_char/2: expected(succeed) bug(error)".
 
-peekchar_test9(Char) :- peek_char(st_i, Char).
+peekchar_test9(Char,_) :-
+    peek_char(st_i, Char).
+    
+setup_pc9(Sc,S2):-
+    open('/tmp/tmp.in', write, S1, [type(text), alias(st_i)]),
+    close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_i),
+                                               eof_action(error)]).
+
+cleanup_pc9(Sc,S2):-
+    close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                                **Label_6**
 %test 10 
-:- test peekcode_test10(Code) :
-	( open('/tmp/tmp.in', write, S1, [type(text), alias(st_i)]),
-	    close(S1),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_i),
-		    eof_action(error)]) )
-	=> ( Code=(-1), stream_property(st_i, end_of_stream(at)),
-	    close_instreams(Sc, S2) )
+:- test peekcode_test10(Code,auxvar(S2,Sc)) :
+   true =>
+   (Code=(-1)) +
+   (setup(setup_pco10(S2,Sc)),
+    cleanup(cleanup_pco10(Sc,S2)))
 # "[ISO] peek_code/2: expected(succeed) bug(error)".
 
-peekcode_test10(Code) :- peek_code(st_i, Code).
+peekcode_test10(Code,_) :-
+    peek_code(st_i, Code).
+
+setup_pco10(S2,Sc):-
+    open('/tmp/tmp.in', write, S1, [type(text), alias(st_i)]),
+    close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text), alias(st_i),
+                                               eof_action(error)]).
+
+cleanup_pco10(Sc,S2):-
+    close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                                   **Label_6**
 %test 11 
-:- test peekchar_test11 :
-	( open('/tmp/tmp.in', write, S, [type(text)]),
-	    close(S),
-	    open('/tmp/tmp.in', read, S2, [type(text), eof_action(error),
-		    alias(s)]), get_code(s, P) )
-	+ exception(error(permission_error(input, past_end_of_stream, S),
-		Imp_dep))
+:- test peekchar_test11 
+   + (setup(setup_pc11(S2,P)),
+      exception(error(permission_error(input, past_end_of_stream, S),
+                      Imp_dep)))
 # "[ISO] peek_char/2: expected(error) bug(wrong_error)".
 
-peekchar_test11 :- peek_char(s, _).
+peekchar_test11 :-
+    peek_char(s, _).
 
-%% REVIEW:PENDING                                             **Diffthrow_vs_iso**
+setup_pc11(S2,P):-
+    open('/tmp/tmp.in', write, S, [type(text)]),
+    close(S),
+    open('/tmp/tmp.in', read, S2, [type(text), eof_action(error),
+                                   alias(s)]), get_code(s, P).
+
+%% REVIEW:PENDING                                             **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(input, stream, user_ouput),_))
 %%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_code'/2-1))
 %test 12
 :- test peekchar_test12
-	+ exception(error(permission_error(input, stream, user_ouput),
+	+ exception(error(permission_error(input, stream, user_output),
 		Imp_dep))
 # "[ISO] peek_char/2: expected(error) bug(wrong_error)".
 
 peekchar_test12 :- peek_char(user_output, _).
 
-%% REVIEW:PENDING                                              **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                              **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(input, stream, user_ouput),_))
 %%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_code'/2-1))
 %test 13 
 :- test peekcode_test13
-	+ exception(error(permission_error(input, stream, user_ouput),
+	+ exception(error(permission_error(input, stream, user_output),
 		Imp_dep))
 # "[ISO] peek_char/2: expected(error) bug(wrong_error)".
 
@@ -3003,7 +3433,7 @@ peekcode_test13 :- peek_code(user_output, _).
 
 peekchar_test14 :- peek_char(_, _).
 
-%% REVIEW:PENDING                                          **Nothrow_vs_iso**
+%% REVIEW:PENDING                                          **Label_2**
 %%   [gprolog]: throws exception(error(type_error(in_character, 1),_))
 %%   [ciao]: no throws
 %test 15 
@@ -3013,7 +3443,7 @@ peekchar_test14 :- peek_char(_, _).
 
 peekchar_test15 :- peek_char(1).
 
-%% REVIEW:PENDING                                              **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                              **Label_3**
 %%   [gprolog]: throws exception(error(type_error(in_character, 1), _))
 %%   [ciao]: throws  exception(error(permission_error(access,past_end_of_stream,user_input),'io_basic:peek_code'/2-1))
 %test 16 
@@ -3031,14 +3461,20 @@ peekchar_test16 :- peek_char(user_input, 1).
 peekchar_test17 :- peek_char(foo, _).
 
 % %test 18 
-:- test peekchar_test18(S1) : ( open('/tmp/foo', write, S),
- 	    close(S),
- 	    open('/tmp/foo', read, S1),
- 	    close(S1) )
- 	+ exception(error(existence_error(stream, S1), Imp_dep)).
-peekchar_test18(S1) :- peek_char(S1, _).
+:- test peekchar_test18(S1) 
+   + (setup(setup_pc18(S,S1)),
+      exception(error(existence_error(stream, S1), Imp_dep))).
 
-%% REVIEW:PENDING                                             **Diffthrow_vs_iso**
+peekchar_test18(S1) :-
+    peek_char(S1, _).
+
+setup_pc18(S,S1):-
+    open('/tmp/foo', write, S),
+    close(S),
+    open('/tmp/foo', read, S1),
+    close(S1).
+
+%% REVIEW:PENDING                                             **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(input, stream, S), _))
 %%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_code'/2-1))
 %test 19 
@@ -3050,39 +3486,61 @@ peekchar_test19(S) :- peek_char(S, _).
 
 %% REVIEW:PENDING                                                    **Label_6**
 %test 20 
-:- test peekchar_test20 :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open('/tmp/tmp.in', read, S1, [type(binary), eof_action(error),
-		    alias(s)]) )
-	+ exception(error(permission_error(input, binary_stream, S1), Imp_dep))
-# "[Non-ISO] peek_char/2: expected(error) bug(wrong_error)".
+:- test peekchar_test20(auxvar(S1)) 
+   + (setup(setup_pc20(S1)),
+      cleanup(cleanup_pc20(S1)))
+   # "[Non-ISO] peek_char/2: expected(error) bug(wrong_error)".
 
-peekchar_test20 :- peek_char(s, _).
+peekchar_test20(_) :-
+    peek_char(st_i, _).
+
+setup_pc20(S1) :-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open('/tmp/tmp.in', read, S1, [type(binary), eof_action(error),
+                                   alias(st_i)]).
+
+cleanup_pc20(S1) :-
+    close(S1).
 
 %test 21 
-:- test peekchar_test21(S1, Char1, Char2)
-	: ( open('/tmp/t', write, S, [type(text)]),
-	    close(S),
-	    open('/tmp/t', read, S1) )
-	=> (Char1=end_of_file, Char2=end_of_file)
-# "[Non-ISO] peek_char/2: expected(succeed) bug(error)".
+:- test peekchar_test21(S1, Char1, Char2):
+   true =>
+   (Char1=end_of_file,
+    Char2=end_of_file) +
+   (setup(setup_pc21(S1)),
+    cleanup(cleanup_pc21(S1))) 
+  # "[Non-ISO] peek_char/2: expected(succeed) bug(error)".
 
-peekchar_test21(S1, Char1, Char2) :- peek_char(S1, Char1), peek_char(S1, Char1
-	), get_char(S1, Char2).
+peekchar_test21(S1, Char1, Char2) :-
+    peek_char(S1, Char1),
+    peek_char(S1, Char1),
+    get_char(S1, Char2).
 
-%% REVIEW:PENDING                               **Nothrow_vs_iso**
+setup_pc21(S1):-
+    open('/tmp/t', write, S, [type(text)]),
+    close(S),
+    open('/tmp/t', read, S1).
+
+cleanup_pc21(S1):-
+    close(S1).
+
+%% REVIEW:PENDING                               **Label_2**
 %%   [gprolog]: throws exception(existence_error(procedure,open_and_write/6))
 %%   [ciao]: no throws
 %test 22 
-:- test peekchar_test22(S1) :
-	( open_and_write('/tmp/t', write, S, [type(binary)], binary, [0]),
-	    close(S),
-	    open('/tmp/t', read, S1) )
-	+ exception(error(representation_error(character), Imp_dep))
-# "[Non-ISO] peek_char/2: expected(error) bug(wrong_error)".
+:- test peekchar_test22(S1) 
+   + (setup(setup_pc22(S,S1)),
+      exception(error(representation_error(character), Imp_dep)))
+   # "[Non-ISO] peek_char/2: expected(error) bug(wrong_error)".
 
-peekchar_test22(S1) :- peek_char(S1, _).
+peekchar_test22(S1) :-
+    peek_char(S1, _).
+
+setup_pc22(S,S1):-
+    open_and_write('/tmp/t', write, S, [type(binary)], binary, [0]),
+    close(S),
+    open('/tmp/t', read, S1).
 
 %test 23
 :- test peekcode_test23 + exception(error(instantiation_error, Imp_dep))
@@ -3090,7 +3548,7 @@ peekchar_test22(S1) :- peek_char(S1, _).
 
 peekcode_test23 :- peek_code(_, _).
 
-%% REVIEW:PENDING                                             **Nothrow_vs_iso**
+%% REVIEW:PENDING                                             **Label_2**
 %%   [gprolog]: throws exception(error(type_error(integer, p), _))
 %%   [ciao]: no throws
 %test 24
@@ -3099,7 +3557,7 @@ peekcode_test23 :- peek_code(_, _).
 
 peekcode_test24 :- peek_code(p).
 
-%% REVIEW:PENDING                                                **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                **Label_3**
 %%   [gprolog]: throws exception(error(type_error(integer, p), _))
 %%   [ciao]: throws  exception(error(permission_error(access,past_end_of_stream,user_input),'io_basic:peek_code'/2-1))
 %test 25 
@@ -3108,7 +3566,7 @@ peekcode_test24 :- peek_code(p).
 
 peekcode_test25 :- peek_code(user_input, p).
 
-%% REVIEW:PENDING                                                  **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                  **Label_2**
 %%   [gprolog]: throws exception(error(representation_error(in_character_code), _))
 %%   [ciao]: no throws
 %test 26 
@@ -3125,16 +3583,22 @@ peekcode_test26 :- peek_code(-2).
 
 peekcode_test27 :- peek_code(foo, _).
 
-% %test 28 
-:- test peekcode_test28(S1) : ( open('/tmp/foo', write, S, []),
- 	    close(S),
- 	    open('/tmp/foo', read, S1, []),
- 	    close(S1) )
- 	+ exception(error(existence_error(stream, S1), Imp_dep)).
+%test 28 
+:- test peekcode_test28(S1) 
+   + (setup(setup_pco28(S1,S)),
+      exception(error(existence_error(stream, S1), Imp_dep)))
+   # "[Non-ISO] peek_code/2: expected(error)".
 
-peekcode_test28(S1) :- peek_code(S1, _).
+peekcode_test28(S1) :-
+    peek_code(S1, _).
 
-%% REVIEW:PENDING                                                  **Diffthrow_vs_iso**
+setup_pco28(S1,S) :-
+    open('/tmp/foo', write, S, []),
+    close(S),
+    open('/tmp/foo', read, S1, []),
+    close(S1).
+
+%% REVIEW:PENDING                                                  **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(input, stream, S), Imp_dep))
 %%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_code'/2-1))
 %test 29
@@ -3142,153 +3606,232 @@ peekcode_test28(S1) :- peek_code(S1, _).
 	+ exception(error(permission_error(input, stream, S), Imp_dep))
 # "[Non-ISO] peek_code/2: expected(error) bug(wrong_error)".
 
-peekcode_test29(S) :- peek_code(S, _).
+peekcode_test29(S) :-
+    peek_code(S, _).
 
 %% REVIEW:PENDING                                   **Label_6**
 %test 30 
-:- test peekcode_test30(S1) :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(binary), eof_action(error)]),
-	    current_input(S1) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(permission_error(input, binary_stream, S1), Imp_dep))
-# "[Non-ISO] peek_code/2: expected(error) bug(succeed)".
+:- test peekcode_test30(S1, auxvar(Sc)) 
+   + (setup(setup_pco30(S1,Sc)),
+      cleanup(cleanup_pco30(Sc,S1)),
+      exception(error(permission_error(input, binary_stream, S1), Imp_dep)))
+   # "[Non-ISO] peek_code/2: expected(error) bug(succeed)".
 
-peekcode_test30(S1) :- peek_code(S1, _).
+peekcode_test30(S1, _) :-
+    peek_code(S1, _).
+
+setup_pco30(S1,Sc):-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(binary), eof_action(error)]),
+    current_input(S1).
+
+cleanup_pco30(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                      **Label_6**
 %test 31  
-:- test peekcode_test31 :
-	( open('/tmp/tmp.in', write, S, [type(text)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    current_input(S1),
-	    get_code(X) )
-	=> (close_instreams(Sc, S1)) + exception(error(permission_error(input,
-		    past_end_of_stream, S1), Imp_dep))
-# "[Non-ISO] peek_code/1: expected(error) bug(wrong_error)".
+:- test peekcode_test31(auxvar(S1,Sc)) 
+   + (setup(setup_pco31(S1, Sc)),
+      cleanup(cleanup_pco31(S1, Sc)),
+      exception(error(permission_error(input,
+                                       past_end_of_stream, S1), Imp_dep)))
+   # "[Non-ISO] peek_code/1: expected(error) bug(wrong_error)".
 
-peekcode_test31 :- peek_code(_).
+peekcode_test31(_) :-
+    peek_code(_).
+
+setup_pco31(S1,Sc):-
+    open('/tmp/tmp.in', write, S, [type(text)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]),
+    current_input(S1),
+    get_code(_X).
+
+cleanup_pco31(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                             **Label_6**
 %test 32 
-:- test peekcode_test32(Code1, Code2) :
-	( open('/tmp/t', write, S, [type(text)]),
-	    close(S),
-	    open_to_read(t, read, Sc,
-		S1, [type(text), eof_action(error)]) )
-	=> (close_instreams(Sc, S1), Code1=(-1), Code2=(-1))
+:- test peekcode_test32(Code1, Code2, auxvar(Sc,S1)) :
+   true =>
+   (Code1=(-1),
+    Code2=(-1)) +
+   (setup(setup_pco32(Sc,S1)),
+    cleanup(cleanup_pco32(Sc,S1)))
 # "[Non-ISO] peek_code/1: expected(succeed)".
 
-peekcode_test32(Code1, Code2) :- peek_code(Code1), get_code(Code2).
+peekcode_test32(Code1, Code2,_) :-
+    peek_code(Code1),
+    peek_code(Code2).
 
-%% REVIEW:PENDING                                       **Nothrow_vs_iso**
-%%   [gprolog]: throws  exception(existence_error(procedure,open_to_read/5))
-%%   [ciao]: no throws
+setup_pco32(Sc,S1):-
+    open('/tmp/t', write, S, [type(text)]),
+    close(S),
+    open_to_read('/tmp/t', read, Sc,
+                 S1, [type(text), eof_action(error)]).
+
+cleanup_pco32(Sc,S1):-
+    close_instreams(Sc, S1).
+
+%% REVIEW:PENDING                                       **Label_2**
 %test 33 
-:- test peekcode_test33(S1) :
-	( open_and_write('/tmp/t', write, S, [type(binary)], binary, [0]),
-	    close(S),
-	    open('/tmp/t', read, S1) )
-	+ exception(error(representation_error(character), Imp_dep))
-# "[Non-ISO] peek_code/2: expected(error) bug(succeed)".
+:- test peekcode_test33(S1) 
+   + (setup(setup_pco33(S1)),
+      cleanup(cleanup_pco33(S1)),
+      exception(error(representation_error(character), Imp_dep)))
+   # "[Non-ISO] peek_code/2: expected(error) bug(succeed)".
 
-peekcode_test33(S1) :- peek_code(S1, _).
+peekcode_test33(S1) :-
+    peek_code(S1, _).
 
+setup_pco33(S1):-
+    open_and_write('/tmp/t', write, S, [type(binary)], binary, [0]),
+    close(S),
+    open('/tmp/t', read, S1).
 
+cleanup_pco33(S1) :-
+    close(S1).
 
 % ===========================================================================
 %% 8.12.3.4 These tests are specified in page 94 of the ISO standard. %%%
 
 %% REVIEW:PENDING                                   **Label_6**
 %test 1
-:- test putchar_test1 :
-	( open_and_write('/tmp/tmp.out', write, S, [type(text)], text, 'qwer'),
-	    current_output(Sc), set_output(S) )
-	=>
-	( write_contents(text, '.', S),
-	    close_outstreams(Sc, S),
-	    open_to_read('/tmp/tmp.out', read, Sc1, S1, [type(text)]),
-	    read(L),
-	    close_instreams(Sc1, S1), L='qwert' )
+:- test putchar_test1(S, Sc1, S1, L, auxvar(Sc)) :
+   true =>
+   (L='qwert') +
+   (setup(setup_putch1(S,Sc)),
+    cleanup(cleanup_putch1(S1,S,Sc,Sc1)))
 # "[ISO] put_char/1: expected(succeed) bug(error)".
 
-putchar_test1 :- put_char(t).
+putchar_test1(S, Sc1, S1, L, _) :-
+    put_char(t),
+    write_contents(text, '.', S),
+    open_to_read('/tmp/tmp.out', read, Sc1, S1, [type(text)]),
+    read(L).
+
+setup_putch1(S,Sc):-
+    open_and_write('/tmp/tmp.out', write, S, [type(text)], text, 'qwer'),
+    current_output(Sc),
+    set_output(S).
+
+cleanup_putch1(S1,S,Sc,Sc1):-
+    close_outstreams(Sc, S),
+    close_instreams(Sc1, S1).
 
 %% REVIEW:PENDING                               **Label_6**
 %test 2 
-:- test putchar_test2 :
-	( open_and_write('/tmp/tmp.out', write, S, [type(text), alias(st_o)],
-		text, 'qwer') )
-	=>
-	( write_contents(text, '.', S),
-	    close(S),
-	    open_to_read('/tmp/tmp.out', read, Sc, S1, [type(text)]),
-	    read(L),
-	    close_instreams(Sc, S1),
-	    L='qwerA' )
+:- test putchar_test2(S,Sc,S1,L) :
+   true =>
+   (L='qwerA') +
+   (setup(setup_putch2(S)),
+    cleanup(cleanup_putch2(S,Sc,S1)))
 # "[ISO] put_char/2: expected(succeed) bug(error)".
 
-putchar_test2 :- put_char(st_o, 'A').
+putchar_test2(S,Sc,S1,L) :-
+    put_char(st_o, 'A'),
+    write_contents(text, '.', S),
+    open_to_read('/tmp/tmp.out', read, Sc, S1, [type(text)]),
+    read(L).
+
+setup_putch2(S):-
+    open_and_write('/tmp/tmp.out', write, S, [type(text), alias(st_o)],
+                   text, 'qwer').
+
+cleanup_putch2(S,Sc,S1):-
+    close(S),
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                             **Label_6**
 %test 3
-:- test putcode_test3 :
-	( open_and_write('/tmp/tmp.out', write, S, [type(text)], text, 'qwer'),
-	    current_output(Sc),
-	    set_output(S) )
-	=>
-	( write_contents(text, '.', S),
-	    close_outstreams(Sc, S),
-	    open_to_read('/tmp/tmp.out', read, Sc1, S1, [type(text)]),
-	    read(L),
-	    close_instreams(Sc1, S1), L='qwert' )
+:- test putcode_test3(S, Sc1, S1, L, auxvar(Sc)) :
+   true =>
+   (L='qwert') +
+   (setup(setup_putco3(S,Sc)),
+    cleanup(cleanup_putco3(S,Sc,S1,Sc1)))
 # "[ISO] put_code/1: expected(succeed) bug(error)".
 
-putcode_test3 :- put_code(0't).
+putcode_test3(S, Sc1, S1, L, _) :-
+    put_code(0't),
+    write_contents(text, '.', S),
+    open_to_read('/tmp/tmp.out', read, Sc1, S1, [type(text)]),
+    read(L).
+
+setup_putco3(S,Sc):-
+    open_and_write('/tmp/tmp.out', write, S, [type(text)], text, 'qwer'),
+    current_output(Sc),
+    set_output(S).
+
+cleanup_putco3(S,Sc,S1,Sc1):-
+    close_outstreams(Sc, S),
+    close_instreams(Sc1, S1).
 
 %% REVIEW:PENDING                                 **Label_6**
 %test 4 
-:- test putcode_test4 :
-	( open_and_write('/tmp/tmp.out', write, S, [type(text), alias(st_o)],
-		text, 'qwer') )
-	=> ( write_contents(text, '.', S),
-	    close(S),
-	    open_to_read('/tmp/tmp.out', read, Sc, S1, [type(text)]),
-	    read(L),
-	    close_instreams(Sc, S1),
-	    L='qwert' )
+:- test putcode_test4(S,Sc,S1,L) :
+   true =>
+   (L='qwert') +
+   (setup(setup_putco4(S)),
+    cleanup(cleanup_putco4(Sc,S1,S)))
 # "[ISO] put_code/2: expected(succeed) bug(error)".
 
-putcode_test4 :- put_code(st_o, 0't).
+putcode_test4(S,Sc,S1,L) :-
+    put_code(st_o, 0't),
+    write_contents(text, '.', S),
+    open_to_read('/tmp/tmp.out', read, Sc, S1, [type(text)]),
+    read(L).
+
+setup_putco4(S):-
+    open_and_write('/tmp/tmp.out', write, S, [type(text), alias(st_o)],
+                   text, 'qwer').
+
+cleanup_putco4(Sc,S1,S):-
+    close(S),
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                              **Label_6**
 %test 5 
-:- test putchar_test5 :
-	( open_and_write('/tmp/tmp.out', write, S, [type(text)], text, 'qwer'),
-	    current_output(Sc),
-	    set_output(S) )
-	=> ( close_outstreams(Sc, S),
-	    open('/tmp/tmp.out', read, S1, [type(text)]),
-	    read_no_term(S1, "qwer\na") )
-# "[ISO] put_char/1: expected(succeed) bug(error)".
+:- test putchar_test5(auxvar(S,Sc)) 
+   + (setup(setup_putch5(S,Sc)),
+      cleanup(cleanup_putch5(S,Sc)))
+   # "[ISO] put_char/1: expected(succeed) bug(error)".
 
-putchar_test5 :- nl, put_char(a).
+putchar_test5(_) :-
+    nl, put_char(a).
+
+setup_putch5(S,Sc):-
+    open_and_write('/tmp/tmp.out', write, S, [type(text)], text, 'qwer'),
+    current_output(Sc),
+    set_output(S).
+
+cleanup_putch5(S,Sc):-
+    close_outstreams(Sc, S),
+    open('/tmp/tmp.out', read, S1, [type(text)]),
+    read_no_term(S1, "qwer\na"),
+    close(S1).
 
 %% REVIEW:PENDING                               **Label_6**
 %test 6
-:- test putchar_test6 :
-	( open_and_write('/tmp/tmp.out', write, S, [type(text), alias(st_o)],
-		text, 'qwer') )
-	=> ( close(S),
-	    open('/tmp/tmp.out', read, S1, [type(text)]),
-	    read_no_term(S1, "qwer\na") )
-# "[ISO] put_char/2: expected(succeed) bug(error)".
+:- test putchar_test6(auxvar(S)) 
+   + (setup(setup_putch6(S)),
+      cleanup(cleanup_putch6(S)))
+   # "[ISO] put_char/2: expected(succeed) bug(error)".
 
-putchar_test6 :- nl(st_o), put_char(st_o, a).
+putchar_test6(_) :-
+    nl(st_o), put_char(st_o, a).
+
+setup_putch6(S):-
+    open_and_write('/tmp/tmp.out', write, S, [type(text), alias(st_o)],
+                   text, 'qwer').
+
+cleanup_putch6(S):-
+    close(S),
+    open('/tmp/tmp.out', read, S1, [type(text)]),
+    read_no_term(S1, "qwer\na"),
+    close(S1).
 
 %test 7
 :- test putchar_test7 + exception(error(instantiation_error, Imp_dep))
@@ -3296,7 +3839,7 @@ putchar_test6 :- nl(st_o), put_char(st_o, a).
 
 putchar_test7 :- put_char(my_file, _).
 
-%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(type_error(character, ty), _))
 %%   [ciao]: no throws
 %test 8
@@ -3312,7 +3855,7 @@ putchar_test8 :- put_char(st_o, 'ty').
 
 putcode_test9 :- put_code(my_file, _).
 
-%% REVIEW:PENDING                                            **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                            **Label_3**
 %%   [gprolog]: throws exception(error(type_error(integer,ty),'io_basic:put_code'/2-2))
 %%   [ciao]: throws  exception(error(type_error(integer,ty),'io_basic:put_code'/2-2))
 %test 10
@@ -3328,7 +3871,7 @@ putcode_test10 :- put_code(st_o, 'ty').
 
 nl_test11 :- nl(_).
 
-%% REVIEW:PENDING                                                         **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                         **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(output, stream, user_input), _))
 %%   [ciao]: throws exception(error(permission_error(modify,stream,user_input),'io_basic:nl'/1-1))
 %test 12 
@@ -3356,35 +3899,50 @@ putchar_test13 :- put_char(_, t).
 putchar_test14 :- put_char(_).
 
 %test 15 
-:- test putchar_test15(S) : (open('/tmp/foo', write, S), close(S))
-	+ exception(error(existence_error(stream, S), Imp_dep))
-# "[Non-ISO] put_char/2: expected(error) bug(wrong_error)".
+:- test putchar_test15(S) 
+   + (setup(setup_putch15(S)),
+      exception(error(existence_error(stream, S), Imp_dep)))
+   # "[Non-ISO] put_char/2: expected(error) bug(wrong_error)".
 
-putchar_test15(S) :- put_char(S, a).
+putchar_test15(S) :-
+    put_char(S, a).
 
-%% REVIEW:PENDING                                      **Diffthrow_vs_iso**
+setup_putch15(S):-
+    open('/tmp/foo', write, S),
+    close(S).
+
+%% REVIEW:PENDING                                      **Label_3**
 %%   [gprolog]: throws  exception(error(permission_error(output, stream, S), _))
 %%   [ciao]: throws  exception(error(permission_error(modify,stream,'$stream'(int,int)),'io_basic:put_code'/2-1))
 %test 16 
-:- test putchar_test16(S) : (current_input(S))
-	+ exception(error(permission_error(output, stream, S), Imp_dep))
-# "[Non-ISO] put_char/2: expected(error) bug(wrong_error)".
+:- test putchar_test16(S) 
+   + (setup(setup_putch16(S)),
+      exception(error(permission_error(output, stream, S), Imp_dep)))
+   # "[Non-ISO] put_char/2: expected(error) bug(wrong_error)".
 
-putchar_test16(S) :- put_char(S, a).
+putchar_test16(S) :-
+    put_char(S, a).
 
-%% REVIEW:PENDING                                       **Nothrow_vs_iso**
+setup_putch16(S):-
+    current_input(S).
+
+%% REVIEW:PENDING                                       **Label_2**
 %%   [gprolog]: throws exception(existence_error(procedure,open_and_write/6))
 %%   [ciao]: no throws
 %test 17 
-:- test putchar_test17 :
-	( open_and_write('/tmp/tmp.out', write, S, [type(binary)], binary, []),
-	    current_output(Sc),
-	    set_output(S),
-	    current_output(S) )
-	+ exception(error(permission_error(output, binary_stream, S), Imp_dep))
-# "[Non-ISO] put_char/1: expected(error) bug(succeed)".
+:- test putchar_test17 
+   + (setup(setup_putch17(S,Sc)),
+      exception(error(permission_error(output, binary_stream, S), Imp_dep)))
+   # "[Non-ISO] put_char/1: expected(error) bug(succeed)".
 
-putchar_test17 :- put_char(a).
+putchar_test17 :-
+    put_char(a).
+
+setup_putch17(S,Sc):-
+    open_and_write('/tmp/tmp.out', write, S, [type(binary)], binary, []),
+    current_output(Sc),
+    set_output(S),
+    current_output(S).
 
 %test 18 
 :- test putcode_test18
@@ -3400,31 +3958,51 @@ putcode_test18 :- put_code(_, 0't).
 putcode_test19 :- put_code(_).
 
 %test 20 
-:- test putcode_test20(S) : (open('/tmp/foo', write, S), close(S))
-	+ exception(error(existence_error(stream, S), Imp_dep))
-# "[Non-ISO] put_code/2: expected(error) bug(wrong_error)".
+:- test putcode_test20(S) 
+   + (setup(setup_putco20(S)),
+      exception(error(existence_error(stream, S), Imp_dep)))
+   # "[Non-ISO] put_code/2: expected(error) bug(wrong_error)".
 
-putcode_test20(S) :- put_code(S, 0'a).
+putcode_test20(S) :-
+    put_code(S, 0'a).
 
-%% REVIEW:PENDING                                       **Diffthrow_vs_iso**
+setup_putco20(S):-
+    open('/tmp/foo', write, S),
+    close(S).
+
+%% REVIEW:PENDING                                       **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(output, stream, S), _))
 %%   [ciao]: throws  exception(error(permission_error(modify,stream,'$stream'(int,int)),'io_basic:put_code'/2-1))
 %test 21 
-:- test putcode_test21(S) : (current_input(S))
-	+ exception(error(permission_error(output, stream, S), Imp_dep))
-# "[Non-ISO] put_code/2: expected(error) bug(wrong_error)".
+:- test putcode_test21(S) 
+   + (setup(setup_putco21(S)),
+      exception(error(permission_error(output, stream, S), Imp_dep)))
+   # "[Non-ISO] put_code/2: expected(error) bug(wrong_error)".
 
-putcode_test21(S) :- put_code(S, 0'a).
+putcode_test21(S) :-
+    put_code(S, 0'a).
 
-%% REVIEW:PENDING                                          **Nothrow_vs_iso**
+setup_putco21(S):-
+    current_input(S).
+
+%% REVIEW:PENDING                                          **Label_2**
 %%   [gprolog]: throws exception(error(permission_error(output, binary_stream, S),_))
 %%   [ciao]: no throws
 %test 22 
-:- test putcode_test22(S) : (open('/tmp/t', write, S, [type(binary)]))
-	+ exception(error(permission_error(output, binary_stream, S), Imp_dep))
-# "[Non-ISO] put_code/2: expected(error) bug(succeed)".
+:- test putcode_test22(S) 
+   + (setup(setup_putco22(S)),
+      cleanup(cleanup_putco22(S)),
+      exception(error(permission_error(output, binary_stream, S), Imp_dep)))
+   # "[Non-ISO] put_code/2: expected(error) bug(succeed)".
 
-putcode_test22(S) :- put_code(S, 0'a).
+putcode_test22(S) :-
+    put_code(S, 0'a).
+
+setup_putco22(S):-
+    open('/tmp/t', write, S, [type(binary)]).
+
+cleanup_putco22(S) :-
+    close(S).
 
 %test 23 .
 :- test putcode_test23
@@ -3447,50 +4025,90 @@ putcode_test24 :- put_code(foo, -1).
 
 %% REVIEW:PENDING                             **Label_6**
 %test 1 
-:- test getbyte_test1(Byte) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary, [113, 119,
-		    101, 114]), close(S1), open('/tmp/tmp.in', read, S2, [type(
-			binary)]) )
-	=> (read_no_term(S2, [119, 101, 114]), Byte=113)
+:- test getbyte_test1(Byte,S2,auxvar(Sc)) :
+   true =>
+   (Byte=113) +
+   (setup(setup_getbyte1(Sc,S2)),
+    cleanup(cleanup_getbyte1(Sc,S2))) 
 # "[ISO] get_byte/1: expected(succeed)".
 
-getbyte_test1(Byte) :- get_byte(Byte).
+getbyte_test1(Byte,S2,_) :-
+    get_byte(Byte),
+    read_no_term(S2, [119, 101, 114]).
+
+setup_getbyte1(Sc,S2):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary, [113, 119, 101, 114]),
+    close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text)]).
+
+cleanup_getbyte1(Sc,S2):-
+    close_instreams(Sc,S2).
 
 %% REVIEW:PENDING                               **Label_6**
 %test 2 
-:- test getbyte_test2(Byte) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(binary)],
-		binary, [113, 119, 101, 114]),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i)]) )
-	=> (read_no_term(S2, [119, 101, 114]), Byte=113)
+:- test getbyte_test2(Byte,S2) :
+   true =>
+   (Byte=113) +
+   (setup(setup_getbyte2(S2)),
+    cleanup(cleanup_getbyte2(S2)))
 # "[ISO] get_byte/2: expected(succeed) bug(error)".
 
-getbyte_test2(Byte) :- get_byte(st_i, Byte).
+getbyte_test2(Byte,S2) :-
+    get_byte(st_i, Byte),
+    read_no_term(S2, [119, 101, 114]).
+
+setup_getbyte2(S2):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(binary)],
+                   binary, [113, 119, 101, 114]),
+    close(S1),
+    open('/tmp/tmp.in', read, S2, [type(text), alias(st_i)]).
+
+cleanup_getbyte2(S2):-
+    close(S2).
 
 %% REVIEW:PENDING                                **Label_6**
 %test 3
-:- test getbyte_test3 :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(binary)],
-		binary, [113, 119, 101, 114, 116, 121]),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]) )
-	=> (read_no_term(S2, [113, 119, 101, 114, 116, 121])) + fails
-# "[ISO] get_byte/2: expected(fail) bug(error)".
+:- test getbyte_test3(S2) 
+   + (setup(setup_getbyte3(S2)),
+      cleanup(cleanup_getbyte3(S2))) 
+   # "[ISO] get_byte/2: expected(fail) bug(error)".
 
-getbyte_test3 :- get_byte(st_i, 114).
+getbyte_test3(S2) :-
+    (get_byte(st_i, 114)-> fail; true),
+    read_no_term(S2, [ 119, 101, 114, 116, 121]).
+
+setup_getbyte3(S2):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(binary)],
+                   binary, [113, 119, 101, 114, 116, 121]),
+    close(S1),
+    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]).
+
+cleanup_getbyte3(S2):-
+    close(S2).
 
 %% REVIEW:PENDING                                **Label_6**
 %test 4 
-:- test getbyte_test4(Byte)
-	: ( open('/tmp/tmp.in', write, S1, [type(binary)]),
-	    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]) )
-	=> (Byte=(-1), stream_property(S2, end_of_stream(past)))
+:- test getbyte_test4(Byte,auxvar(S2)):
+   true =>
+   (Byte=(-1)) +
+   (setup(setup_getbyte4(S2)),
+    cleanup(cleanup_getbyte4(S2))) 
 # "[ISO] get_byte/2: expected(succeed) bug(error)".
 
-getbyte_test4(Byte) :- get_byte(st_i, Byte).
+getbyte_test4(Byte,_) :-
+    get_byte(st_i, Byte).
 
-%% REVIEW:PENDING                                                   **Diffthrow_vs_iso**
+setup_getbyte4(S2):-
+    open('/tmp/tmp.in', write, S1, [type(binary)]),
+    close(S1),
+    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]) .
+
+cleanup_getbyte4(S2):-
+    %{past}
+    % stream_property(S2, end_of_stream(past)),
+    close(S2).
+
+%% REVIEW:PENDING                                                   **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(input, stream, user_output),_))
 %%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:get_byte'/2-1))
 %test 5 
@@ -3514,29 +4132,44 @@ getbyte_test6 :- get_byte(_, _).
 
 %% REVIEW:PENDING                                  **Label_6**
 %test 7 
-:- test getbyte_test7 :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(binary), eof_action(error)]) )
-	=> (close_instreams(Sc, S1)) + exception(error(type_error(in_byte, p),
-		Imp_dep))
-# "[Non-ISO] get_byte/1: expected(error) bug(fail)".
+:- test getbyte_test7(auxvar(Sc,S1)) 
+   + (setup(setup_getbyte7(Sc,S1)),
+      cleanup(cleanup_getbyte7(Sc,S1)),
+      exception(error(type_error(in_byte, p),Imp_dep)))
+   # "[Non-ISO] get_byte/1: expected(error) bug(fail)".
 
-getbyte_test7 :- get_byte(p).
+getbyte_test7(_) :-
+    get_byte(p).
+
+setup_getbyte7(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(binary), eof_action(error)]).
+
+cleanup_getbyte7(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                 **Label_6**
 %test 8 
-:- test getbyte_test8 :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(binary), eof_action(error)]) )
-	=> (close_instreams(Sc, S1)) + exception(error(type_error(in_byte, -2),
-		Imp_dep))
+:- test getbyte_test8(auxvar(Sc,S1)) 
+   + (setup(setup_getbyte8(Sc,S1)),
+      cleanup(cleanup_getbyte8(Sc,S1)),
+      exception(error(type_error(in_byte, -2),
+                      Imp_dep)))
 # "[Non-ISO] get_code/1: expected(error) bug(fail)".
 
-getbyte_test8 :- get_byte(-2).
+getbyte_test8(_) :-
+    get_byte(-2).
+
+setup_getbyte8(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(binary), eof_action(error)]).
+
+cleanup_getbyte8(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %test 9
 :- test getbyte_test9
@@ -3546,49 +4179,75 @@ getbyte_test8 :- get_byte(-2).
 getbyte_test9 :- get_byte(foo, _).
 
 % test 10 
-:- test getbyte_test10(S1) : ( open('/tmp/foo', write, S, [type(text)]),
-	    close(S),
-	    open('/tmp/foo', read, S1, [type(binary)]), close(S1) )
-	+ exception(error(existence_error(stream, S1), Imp_dep)).
+:- test getbyte_test10(S1) 
+   + (setup(setup_getbyte10(S1)),
+      exception(error(existence_error(stream, S1), Imp_dep))).
 
-getbyte_test10(S1) :- get_byte(S1, _).
+getbyte_test10(S1) :-
+    get_byte(S1, _).
 
-%% REVIEW:PENDING                                               **Diffthrow_vs_iso**
+setup_getbyte10(S1):-
+    open('/tmp/foo', write, S, [type(text)]),
+    close(S),
+    open('/tmp/foo', read, S1, [type(binary)]),
+    close(S1).
+
+%% REVIEW:PENDING                                               **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(input, stream, S), _))
 %%   [ciao]: throws  exception(error(permission_error(access,stream,user_output),'io_basic:get_byte'/2-1))
 %test 11 
-:- test getbyte_test11(S) : (current_output(S))
-	+ exception(error(permission_error(input, stream, S), Imp_dep))
-# "[Non-ISO] get_byte/2: expected(error) bug(wrong_error)".
+:- test getbyte_test11(S) 
+   + (setup(setup_getbyte11(S)),
+      exception(error(permission_error(input, stream, S), Imp_dep)))
+   # "[Non-ISO] get_byte/2: expected(error) bug(wrong_error)".
 
-getbyte_test11(S) :- get_byte(S, _).
+getbyte_test11(S) :-
+    get_byte(S, _).
+
+setup_getbyte11(S):-
+    current_output(S).
 
 %% REVIEW:PENDING                                        **Label_6**
 %test 12 
-:- test getbyte_test12 :
-	( open('/tmp/tmp.in', write, S, [type(text)]), close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    current_input(S1) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(permission_error(input, text_stream, S1), Imp_dep))
-# "[Non-ISO] get_byte/2: expected(error) bug(succeed)".
+:- test getbyte_test12(auxvar(Sc,S1)) 
+   + (setup(setup_getbyte12(Sc,S1)),
+      cleanup(cleanup_getbyte12(Sc,S1)))
+   # "[Non-ISO] get_byte/2: expected(error) bug(succeed)".
 
-getbyte_test12 :- get_byte(_).
+getbyte_test12(_) :-
+    get_byte(_).
+
+setup_getbyte12(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(text)]), close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]),
+    current_input(S1).
+
+cleanup_getbyte12(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                        **Label_6**
 %test 13 .
-:- test getbyte_test13 :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(bnary), eof_action(error)]),
-	    current_input(S1) )
-	=> (close_instreams(Sc, S1)) + exception(error(permission_error(input,
-		    past_end_of_stream, S1), Imp_dep))
-# "[Non-ISO] get_byte1: expected(error) bug(wrong_error)".
+:- test getbyte_test13(auxvar(Sc,S1)) 
+   + (setup(setup_getbyte13(Sc,S1)),
+      cleanup(cleanup_getbyte13(Sc,S1)),
+      exception(error(permission_error(input,
+                                       past_end_of_stream, S1), Imp_dep)))
+   # "[Non-ISO] get_byte1: expected(error) bug(wrong_error)".
 
-getbyte_test13 :- get_byte(_), get_byte(_).
+getbyte_test13(_) :-
+    get_byte(_),
+    get_byte(_).
+
+setup_getbyte13(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(binary), eof_action(error)]),
+    current_input(S1).
+
+cleanup_getbyte13(Sc,S1):-
+    close_instreams(Sc, S1).
 
 
 % ===========================================================================
@@ -3596,52 +4255,88 @@ getbyte_test13 :- get_byte(_), get_byte(_).
 
 %% REVIEW:PENDING                                            **Label_4**
 %test 1 
-:- test peekbyte_test1(Byte) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(binary)],
-		binary, [113, 119, 101, 114]),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2, [type(binary)]) )
-	=> (read_no_term(S2, [113, 119, 101, 114]), Byte=113)
+:- test peekbyte_test1(Byte,S2,auxvar(Sc)) :
+   true =>
+   (Byte=113) + 
+   (setup(setup_pb1(Sc,S2)),
+    cleanup(cleanup_pb1(Sc,S2)))
 # "[ISO] peek_byte/1: expected(succeed) bug(error)".
 
-peekbyte_test1(Byte) :- peek_byte(Byte).
+peekbyte_test1(Byte,S2,_) :-
+    peek_byte(Byte),
+    read_no_term(S2, [113, 119, 101, 114]).
+
+setup_pb1(Sc,S2):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(binary)],
+                   binary, [113, 119, 101, 114]),
+    close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text)]).
+
+cleanup_pb1(Sc,S2):-
+    close_instreams(Sc,S2).
 
 %% REVIEW:PENDING                                           **Label_6**
 %test 2
-:- test peekbyte_test2(Byte) :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary,
-		[113, 119, 101, 114]),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]) )
-	=> (read_no_term(S2, [113, 119, 101, 114]), Byte=113)
+:- test peekbyte_test2(Byte,S2) :
+   true =>
+   (Byte=113) +
+   (setup(setup_pb2(S2)),
+    cleanup(cleanup_pb2(S2)))
 # "[ISO] peek_byte/2: expected(succeed) bug(error)".
 
-peekbyte_test2(Byte) :- peek_byte(st_i, Byte).
+peekbyte_test2(Byte,S2) :-
+    peek_byte(st_i, Byte),
+    read_no_term(S2, [113, 119, 101, 114]).
+
+setup_pb2(S2):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary,
+                   [113, 119, 101, 114]),
+    close(S1),
+    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]).
+
+cleanup_pb2(S2):-
+    close(S2).       
 
 %% REVIEW:PENDING                                     **Label_6**
 %test 3 
-:- test peekbyte_test3 :
-	( open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary,
-		[113, 119, 101, 114, 116, 121]),
-	    close(S1),
-	    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]) )
-	=> (read_no_term(S2, [113, 119, 101, 114, 116, 121])) + fails
-# "[ISO] peek_byte/2: expected(succeed) bug(error)".
+:- test peekbyte_test3(S2) 
+   + (setup(setup_pb3(S2)),
+      cleanup(cleanup_pb3(S2)))
+   # "[ISO] peek_byte/2: expected(succeed) bug(error)".
 
-peekbyte_test3 :- peek_byte(st_i, 114).
+peekbyte_test3(S2) :-
+    (peek_byte(st_i, 114) -> fail ; true),
+    read_no_term(S2, [113, 119, 101, 114, 116, 121]).
+
+setup_pb3(S2):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary,
+                   [113, 119, 101, 114, 116, 121]),
+    close(S1),
+    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]).
+
+cleanup_pb3(S2):-
+    close(S2).
 
 %% REVIEW:PENDING                                      **Label_6**
 %test 4 
-:- test peekbyte_test4 :
-	( open('/tmp/tmp.in', write, S1, [type(binary)]),
-	    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(binary), alias(st_i)]) )
-	=> ( Byte=(-1), stream_property(S2, end_of_stream(past)),
-	    close_instreams(Sc, S2) )
+:- test peekbyte_test4(Byte,auxvar(S2,Sc)) :
+   true =>
+   (Byte=(-1)) +
+   (setup(setup_pb4(Sc,S2)),
+    cleanup(cleanup_pb4(S2,Sc))) 
 # "[ISO] peek_byte/2: expected(succeed) bug(error)".
 
-peekbyte_test4 :- peek_byte(st_i, _).
+peekbyte_test4(Byte,_) :-
+    peek_byte(st_i, Byte).
 
-%% REVIEW:PENDING                                                     **Diffthrow_vs_iso**
+setup_pb4(Sc,S2):-
+    open('/tmp/tmp.in', write, _S1, [type(binary)]),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(binary), alias(st_i)]).
+
+cleanup_pb4(S2,Sc):-
+    close_instreams(Sc, S2).
+
+%% REVIEW:PENDING                                                     **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(input, stream, user_output),_))
 %%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_byte'/2-1))
 %test 5 
@@ -3664,29 +4359,43 @@ peekbyte_test6 :- peek_byte(_, _).
 
 %% REVIEW:PENDING                                            **Label_6**
 %test 7 
-:- test peekbyte_test7 :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(binary), eof_action(error)]) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(type_error(in_byte, p), Imp_dep))
-# "[Non-ISO] peek_byte/1: expected(error) bug(fail)".
+:- test peekbyte_test7(auxvar(Sc,S1)) 
+   + (setup(setup_pb7(Sc,S1)),
+      cleanup(cleanup_pb7(Sc,S1)),
+      exception(error(type_error(in_byte, p), Imp_dep)))
+   # "[Non-ISO] peek_byte/1: expected(error) bug(fail)".
 
-peekbyte_test7 :- peek_byte(p).
+peekbyte_test7(_) :-
+    peek_byte(p).
+
+setup_pb7(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(binary), eof_action(error)]).
+
+cleanup_pb7(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                   **Label_6**
 %test 8 
-:- test peekbyte_test8 :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(binary), eof_action(error)]) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(type_error(in_byte, -2), Imp_dep))
-# "[Non-ISO] peek_byte/1: expected(error) bug(fail)".
+:- test peekbyte_test8(auxvar(Sc,S1)) 
+   + (setup(setup_pb8(Sc,S1)),
+      cleanup(cleanup_pb8(Sc,S1)),
+      exception(error(type_error(in_byte, -2), Imp_dep)))
+   # "[Non-ISO] peek_byte/1: expected(error) bug(fail)".
 
-peekbyte_test8 :- peek_byte(-2).
+peekbyte_test8(_) :-
+    peek_byte(-2).
+
+setup_pb8(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(binary), eof_action(error)]).
+
+cleanup_pb8(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %test 9
 :- test peekbyte_test9
@@ -3696,85 +4405,122 @@ peekbyte_test8 :- peek_byte(-2).
 peekbyte_test9 :- peek_byte(foo, _).
 
 %test 10 
-:- test peekbyte_test10(S1) :
-	( open('/tmp/foo', write, S, [type(text)]),
-	    close(S),
-	    open('/tmp/foo', read, S1, [type(binary)]),
-	    close(S1) )
-	+ exception(error(existence_error(stream, S1), Imp_dep)).
+:- test peekbyte_test10(S1) 
+   + (setup(setup_pb10(S, S1)),
+      exception(error(existence_error(stream, S1), Imp_dep))).
 
-peekbyte_test10(S1) :- peek_byte(S1, _).
+peekbyte_test10(S1) :-
+    peek_byte(S1, _).
 
-%% REVIEW:PENDING                                            **Diffthrow_vs_iso**
+setup_pb10(S, S1) :-
+    open('/tmp/foo', write, S, [type(text)]),
+    close(S),
+    open('/tmp/foo', read, S1, [type(binary)]),
+    close(S1).
+
+%% REVIEW:PENDING                                            **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(input, stream, S),_))
 %%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_byte'/2-1))
 %test 11
-:- test peekbyte_test11(S, _) : (current_output(S))
-	+ exception(error(permission_error(input, stream, S), Imp_dep))
-# "[Non-ISO] peek_byte/2: expected(error) bug(wrong_error)".
+:- test peekbyte_test11(S, _) 
+   + (setup(setup_pb11(S)),
+      exception(error(permission_error(input, stream, S), Imp_dep)))
+   # "[Non-ISO] peek_byte/2: expected(error) bug(wrong_error)".
 
-peekbyte_test11(S, _) :- peek_byte(S, _).
+peekbyte_test11(S, _) :-
+    peek_byte(S, _).
+
+setup_pb11(S):-
+    current_output(S).
 
 %% REVIEW:PENDING                                  **Label_6**
 %test 12 
-:- test peekbyte_test12 :
-	( open('/tmp/tmp.in', write, S, [type(text)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    current_input(S1) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(permission_error(input, text_stream, S1), Imp_dep))
-# "[Non-ISO] peek_byte/1: expected(error) bug(succeed)".
+:- test peekbyte_test12(auxvar(Sc,S1))
+   + (setup(setup_pb12(Sc,S1)),
+      cleanup(cleanup_pb12(Sc,S1)))
+   # "[Non-ISO] peek_byte/1: expected(error) bug(succeed)".
 
-peekbyte_test12 :- peek_byte(_).
+peekbyte_test12(_) :-
+    peek_byte(_).
+
+setup_pb12(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(text)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]),
+    current_input(S1).
+
+cleanup_pb12(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                       **Label_6**
 %test 13
-:- test peekbyte_test13 :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(bnary), eof_action(error)]),
-	    current_input(S1) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(permission_error(input, past_end_of_stream, S1),
-		Imp_dep))
-# "[Non-ISO] peek_byte/1: expected(error) bug(wrong_error)".
+:- test peekbyte_test13(auxvar(Sc,S1)) 
+   + (setup(setup_pb13(Sc,S1)),
+    cleanup(cleanup_pb13(Sc,S1)),
+    exception(error(permission_error(input, past_end_of_stream, S1),Imp_dep)))
+   # "[Non-ISO] peek_byte/1: expected(error) bug(wrong_error)".
 
-peekbyte_test13 :- get_byte(_), peek_byte(_).
+peekbyte_test13(_) :-
+    get_byte(_),
+    peek_byte(_).
 
+setup_pb13(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(binary), eof_action(error)]),
+    current_input(S1).
+
+cleanup_pb13(Sc,S1):-
+    close_instreams(Sc, S1).
 
 % ===========================================================================
 %% 8.13.2.4 These tests are specified in page 98 of the ISO standard. %%%
 
 %% REVIEW:PENDING                                     **Label_6**
 %test 1 
-:- test putbyte_test1 :
-	( open_and_write('/tmp/tmp.out', write, S, [type(binary)], binary,
-		[113, 119, 101, 114]),
-	    current_output(Sc),
-	    set_output(S) )
-	=> ( close_outstreams(Sc, S),
-	    open('/tmp/tmp.out', read, S1, [type(binary)]),
-	    read_no_term(S1, [113, 119, 101, 114, 84]) )
-# "[ISO] put_byte/1: expected(succeed) bug(error)".
+:- test putbyte_test1(auxvar(S,Sc)) 
+   + (setup(setup_ptb1(S,Sc)),
+      cleanup(cleanup_ptb1(S,Sc)))
+   # "[ISO] put_byte/1: expected(succeed) bug(error)".
 
-putbyte_test1 :- put_byte(84).
+putbyte_test1(_) :-
+    put_byte(116).
+
+setup_ptb1(S,Sc):-
+    open_and_write('/tmp/tmp.out', write, S, [type(binary)], binary,
+                   [113, 119, 101, 114]),
+    current_output(Sc),
+    set_output(S).
+
+cleanup_ptb1(S,Sc):-
+    close_outstreams(Sc, S),
+    open('/tmp/tmp.out', read, S1, [type(binary)]),
+    read_no_term(S1, [113, 119, 101, 114, 116]),
+    close(S1).
 
 %% REVIEW:PENDING                                       **Label_6**
 %test 2
-:- test putbyte_test2 :
-	( open_and_write('/tmp/tmp.out', write, S, [type(binary), alias(st_i)],
-		binary, [113, 119, 101, 114]) )
-	=> ( close(S),
-	    open('/tmp/tmp.out', read, S1, [type(binary)]),
-	    read_no_term(S1, [113, 119, 101, 114, 84]) )
-# "[ISO] put_byte/2: expected(succeed) bug(error)".
+:- test putbyte_test2(auxvar(S)) 
+   + (setup(setup_ptb2(S)),
+      cleanup(cleanup_ptb2(S)))
+   # "[ISO] put_byte/2: expected(succeed) bug(error)".
 
-putbyte_test2 :- put_byte(st_i, 84).
+putbyte_test2(_) :-
+    put_byte(st_i, 84).
 
-%% REVIEW:PENDING                                          **Diffthrow_vs_iso**
+setup_ptb2(S):-
+    open_and_write('/tmp/tmp.out', write, S, [type(binary), alias(st_i)],
+                   binary, [113, 119, 101, 114]).
+
+cleanup_ptb2(S):-
+    close(S),
+    open('/tmp/tmp.out', read, S1, [type(binary)]),
+    read_no_term(S1, [113, 119, 101, 114, 84]),
+    close(S1).
+
+%% REVIEW:PENDING                                          **Label_3**
 %%   [gprolog]: throws existence_error(stream,my_file),put_byte/2)
 %%   [ciao]: throws exception(error(domain_error(stream_or_alias,my_file),'io_basic:put_byte'/2-1))
 %test 3 
@@ -3798,54 +4544,81 @@ putbyte_test4 :- put_byte(user_output, 'ty').
 putbyte_test5 :- put_byte(_, 118).
 
 %% REVIEW:PENDING                                  **Label_6**
-%test 6
-:- test putbyte_test6 :
-	( open('/tmp/tmp.out', write, S, [tye(binary)]),
-	    current_output(Sc),
-	    set_output(S) )
-	+ exception(error(instantiation_error, Imp_dep))
-# "[Non-ISO] put_byte/2: expected(error)".
+:- test putbyte_test6(auxvar(S, Sc)) 
+   + (setup(setup_ptb6(S, Sc)),
+      exception(error(instantiation_error, Imp_dep)))
+   # "[Non-ISO] put_byte/2: expected(error)".
 
-putbyte_test6 :- put_byte(_).
+putbyte_test6(_) :-
+    put_byte(_).
+
+setup_ptb6(S, Sc):-
+    open('/tmp/tmp.out', write, S, [type(binary)]),
+    current_output(Sc),
+    set_output(S).
 
 %test 7 
-:- test putbyte_test7(S) : (open('/tmp/foo', write, S), close(S))
-	+ exception(error(existence_error(stream, S), Imp_dep))
-# "[Non-ISO] catch: expected(error) bug(wrong_error)".
+:- test putbyte_test7(S) 
+   + (setup(setup_ptb7(S)),
+      exception(error(existence_error(stream, S), Imp_dep)))
+   # "[Non-ISO] catch: expected(error) bug(wrong_error)".
 
-putbyte_test7(S) :- put_byte(S, 77).
+putbyte_test7(S) :-
+    put_byte(S, 77).
+
+setup_ptb7(S):-
+    open('/tmp/foo', write, S),
+    close(S).
 
 %% REVIEW:PENDING                                      **Label_6**
 %test 8 
-:- test putbyte_test8(S1) :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(binary), eof_action(error)]),
-	    current_input(S1) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(permission_error(output, stream, S1), Imp_dep))
-# "[Non-ISO] put_byte/2: expected(error) bug(wrong_error)".
+:- test putbyte_test8(S1, auxvar(Sc, S1)) 
+   + (setup(setup_ptb8(Sc,S1)),
+      cleanup(cleanup_ptb8(Sc,S1)),
+      exception(error(permission_error(output, stream, S1), Imp_dep)))
+   # "[Non-ISO] put_byte/2: expected(error) bug(wrong_error)".
 
-putbyte_test8(S1) :- put_byte(S1, 99).
+putbyte_test8(S1, _) :-
+    put_byte(S1, 99).
 
-%% REVIEW:PENDING                                                   **Nothrow_vs_iso**
+setup_ptb8(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(binary), eof_action(error)]),
+    current_input(S1).
+
+cleanup_ptb8(Sc,S1):-
+    close_instreams(Sc, S1).
+
+% TODO: this should be fixed when integrating into the engine (stream type = text in user_output)
+%% REVIEW:PENDING                                                   **Label_2**
 %%   [gprolog]: throws exception(error(permission_error(output, text_stream, S), _))
 %%   [ciao]: no throws
 %test 9 
-:- test putbyte_test9 : (current_output(S))
-	+ exception(error(permission_error(output, text_stream, S), Imp_dep))
-# "[Non-ISO] put_byte/1: expected(error) bug(succeed)".
+:- test putbyte_test9 
+   + (setup(setup_ptb9(S)),
+      exception(error(permission_error(output, text_stream, S), Imp_dep)))
+   # "[Non-ISO] put_byte/1: expected(error) bug(succeed)".
 
-putbyte_test9 :- put_byte(99).
+putbyte_test9 :-
+    put_byte(99).
+
+setup_ptb9(S):-
+    current_output(S).
 
 %test 10 
-:- test putbyte_test10 : ( open('/tmp/tmp.out', write, S, [type(binary)]),
-	    set_output(S) )
-	+ exception(error(type_error(byte, -1), Imp_dep))
-# "[Non-ISO] put_byte/2: expected(error)".
+:- test putbyte_test10 
+   + (setup(setup_ptb10(S)),
+      exception(error(type_error(byte, -1), Imp_dep)))
+   # "[Non-ISO] put_byte/2: expected(error)".
 
-putbyte_test10 :- put_byte(-1).
+putbyte_test10 :-
+    put_byte(-1).
+
+setup_ptb10(S):-
+    open('/tmp/tmp.out', write, S, [type(binary)]),
+    set_output(S).
 
 %test 11
 :- test putbyte_test11 + exception(error(instantiation_error, Imp_dep))
@@ -3873,97 +4646,165 @@ putbyte_test13 :- put_byte(user_output, 'ty').
 
 %% REVIEW:PENDING                                      **Label_6**
 %test 1 
-:- test read_test1(X) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)],
-		text, 'term1. term2.'),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text)]) )
-	=> (X='term1', read(Y), Y='term2', close_instreams(Sc, S1))
+:- test read_test1(Y,X,auxvar(Sc,S1)) :
+   true =>
+   (X='term1',Y='term2') +
+   (setup(setup_read1(Sc,S1)),
+    cleanup(cleanup_read1(Sc,S1)))
 # "[ISO] read/1: expected(succeed)".
 
-read_test1(X) :- read(X).
+read_test1(Y,X,_) :-
+    read(X),
+    read(Y).
+
+setup_read1(Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)],
+                   text, 'term1. term2.'),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text)]).
+
+cleanup_read1(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                         **Label_6**
 %test 2
-:- test read_test2(X) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)],
-		text, 'term1. term2.'),
-	    close(S),
-	    open('/tmp/tmp.in', read, S1, [type(text), alias(st_o)]) )
-	=> (X='term1', read(Y), Y='term2')
+:- test read_test2(Y,X,auxvar(S1)) :
+   true =>
+   (X='term2') +
+   (setup(setup_read2(S1)),
+    cleanup(cleanup_read2(S1)))
 # "[ISO] read/2: expected(succeed) bug(error)".
 
-read_test2(X) :- read(st_o, X).
+read_test2(Y,X,_) :-
+    read(st_i, Y),
+    read(st_i,X).
+
+setup_read2(S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)],
+                   text, 'term1. term2.'),
+    close(S),
+    open('/tmp/tmp.in', read, S1, [type(text), alias(st_i)]).
+
+cleanup_read2(S1):- 
+    close(S1). 
 
 %% REVIEW:PENDING                                             **Label_6**
 %test 3
-:- test read_test3(T, VL, VN, VS) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text,
-		'foo(A+Roger,A+_). term2.'),
-	    close(S),
-	    open('/tmp/tmp.in', read, S1, [type(text), alias(st_o)]) )
-	=> ( T=foo(X1+X2, X1+X3), VL=[X1, X2, X3], VN=['A'=X1, 'Roger'=X2],
-	    VS=['Roger'=X2], read(Y), Y='term2' )
+:- test read_test3(T, VL, VN, VS,auxvar(S1),Y) :
+   true =>
+   (T=foo(X1+X2, X1+X3),
+    VL=[X1, X2, X3],
+    VN=['A'=X1, 'Roger'=X2],
+    VS=['Roger'=X2],
+    Y='term2') +
+   (setup(setup_read3(S1)),
+    cleanup(cleanup_read3(S1)))
 # "[ISO] read_term/2: expected(succeed) bug(error)".
 
-read_test3(T, VL, VN, VS) :-
-	read_term(st_o, T, [variables(VL), variable_names(VN),
-		singletons(VS)]).
+read_test3(T, VL, VN, VS,_,Y) :-
+   read_term(st_i, T, [variables(VL), variable_names(VN),
+                         singletons(VS)]),
+   read(st_i,Y).
+   
+setup_read3(S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text,
+                   'foo(A+Roger,A+_). term2.'),
+    close(S),
+    open('/tmp/tmp.in', read, S1, [type(text), alias(st_i)]).
 
-%% REVIEW FAILURE EXPECTED
-%test 4 
-:- test read_test4 :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '3.1. term2.'),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text)]) )
-	=> (read(Y), close_instreams(Sc, S1), Y='term2') + fails
+cleanup_read3(S1):-
+    close(S1).
+
+%test 4
+:- test read_test4(Y, auxvar(Sc,S1)) :
+   true =>
+   (Y='term2') +
+   (setup(setup_read4(Sc,S1)),
+    cleanup(cleanup_read4(Sc,S1)))
 # "[ISO] read/1: expected(fail)".
 
-read_test4 :- read(4.1).
+read_test4(Y,_) :-
+    (read(4.1) -> fail ; true),
+    read(Y).
 
-%% REVIEW:PENDING                                      **Diffthrow_vs_iso**
+setup_read4(Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '3.1. term2.'),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text)]).
+
+cleanup_read4(Sc,S1):-
+    close_instreams(Sc, S1).
+
+%% REVIEW:PENDING                                      **Label_3**
 %%   [gprolog]: throws existence_error(procedure,open_and_write/6)
 %%   [ciao]: throws exception(error(syntax_error([1,1,['operator expected after expression'],['',foo,'\n','** here **','\n','',123,' ','.']]),read/1))
 %test 5 
-:- test read_test5(X) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)],
-		text, 'foo 123. term2.'),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text)]) )
-	=> (read(Y), close_instreams(Sc, S1), Y='term2')
-	+ exception(error(syntax_error(Imp_dep), Imp_dep))
+:- test read_test5(X, Y, auxvar(Sc,S1)) :
+   true =>
+   (Y='term2') +
+   (setup(setup_read5(Sc,S1)),
+    cleanup(cleanup_read5(Sc,S1)),
+    exception(error(syntax_error(S), Imp_dep)))
 # "[ISO] read/1: expected(error) bug(wrong_error)".
 
-read_test5(X) :- read(X).
+read_test5(X, Y, _) :-
+    read(X),
+    read(Y).
 
-%% REVIEW:PENDING                                          **Diffthrow_vs_iso**
+setup_read5(Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)],
+                   text, 'foo 123. term2.'),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text)]).
+
+cleanup_read5(Sc, S1):-
+    close_instreams(Sc, S1).
+
+%% REVIEW:PENDING                                          **Label_3**
 %%   [gprolog]: throws existence_error(procedure,open_and_write/6)
 %%   [ciao]: throws  exception(error(syntax_error([1,1,['operator expected after expression'],['',3.1,'\n','** here **','\n']]),read/1))
-%test 6 
-:- test read_test6(X) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '3.1'),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text)]) )
-	=>(stream_property(S, end_of_stream(past)), close_instreams(Sc, S1))
-	+ exception(error(syntax_error(Imp_dep), Imp_dep))
-# "[ISO] read/1: expected(error) bug(wrong_error)".
+:- test read_test6(X, auxvar(Sc,S1)) 
+   + (setup(setup_read6(Sc,S1)),
+      cleanup(cleanup_read6(Sc,S1)),
+      exception(error(syntax_error(S), Imp_dep)))
+   # "[ISO] read/1: expected(error) bug(wrong_error)".
 
-read_test6(X) :- read(X).
+read_test6(X, _) :-
+    read(X).
 
+setup_read6(Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '3.1'),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text)]).
+
+cleanup_read6(Sc,S1):-
+    %{past}
+    %stream_property(S, end_of_stream(past)),
+    close_instreams(Sc, S1).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
 %% REVIEW:PENDING                                             **Label_6**
 %test 7
-:- test read_test7(T, L) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, 'foo(bar).'),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]) )
-	=> (T=foo(bar), L=[], close_instreams(Sc, S1))
+:- test read_test7(T, L, auxvar(Sc, S1)) :
+   true =>
+   (T=foo(bar),
+    L=[]) +
+   (setup(setup_read7(Sc,S1)),
+    cleanup(cleanup_read7(Sc,S1)))
 # "[Non-ISO] read_term/2: expected(succeed)".
 
-read_test7(T, L) :- read_term(T, [singletons(L)]).
+read_test7(T, L, _) :-
+    read_term(T, [singletons(L)]).
+    
+setup_read7(Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, 'foo(bar).'),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]).
+
+cleanup_read7(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %test 8
 :- test read_test8 + exception(error(instantiation_error, Imp_dep))
@@ -4010,12 +4851,12 @@ read_test13 :- read_term(user_input, _, bar).
 
 read_test14 :- read_term(user_input, _, [bar]).
 
-%% REVIEW:PENDING                                      **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                      **Label_3**
 %%   [gprolog]: throws exception(error(permissioin_error(input, stream, user_output),_))
 %%   [ciao]: throws exception(error(permission_error(access,stream,user_output),read_term/3))
 %test 15 
 :- test read_test15
-	+ exception(error(permissioin_error(input, stream, user_output),
+	+ exception(error(permission_error(input, stream, user_output),
 		Imp_dep))
 # "[Non-ISO] read_term/3: expected(error) bug(wrong_error)".
 
@@ -4023,228 +4864,345 @@ read_test15 :- read_term(user_output, _, []).
 
 %% REVIEW:PENDING                                            **Label_6**
 %test 16
-:- test read_test16(T) :
-	( open('/tmp/tmp.in', write, S, [type(text)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]) )
-	=> (T=end_of_file, close_instreams(Sc, S1))
+:- test read_test16(T, auxvar(Sc, S1)) :
+   true =>
+   (T=end_of_file) +
+   (setup(setup_read16(Sc,S1)),
+    cleanup(cleanup_read16(Sc,S1))) 
 # "[Non-ISO] read/1: expected(succeed)".
 
-read_test16(T) :- read(T).
+read_test16(T, _) :-
+    read(T).
+
+setup_read16(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(text)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]).
+
+cleanup_read16(Sc,S1):- 
+    close_instreams(Sc, S1).
 
 %test 17  
-:- test read_test17(S1) : ( open('/tmp/foo', write, S, [type(text)]),
-	    close(S),
-	    open('/tmp/foo', read, S1, [type(text)]),
-	    close(S1) )
-	+ exception(error(existence_error(stream, S1), Imp_dep)).
+:- test read_test17(S1) 
+   + (setup(setup_read17(S,S1)),
+      exception(error(existence_error(stream, S1), Imp_dep))).
 
-read_test17(S1) :- read_term(S1, _, []).
+read_test17(S1) :-
+    read_term(S1, _, []).
 
+setup_read17(S,S1):-
+    open('/tmp/foo', write, S, [type(text)]),
+    close(S),
+    open('/tmp/foo', read, S1, [type(text)]),
+    close(S1).
+
+%%REMOVE exception??
 %% REVIEW:PENDING                                         **Label_6**
 %test 18
-:- test read_test18 :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(binary), eof_action(error)]),
-	    current_input(S1) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(permission_error(input, binary_stream, S1), Imp_dep))
-# "[Non-ISO] read_term/2: expected(error) bug(succeed)".
+:- test read_test18(auxvar(Sc, S1))
+   + (setup(setup_read18(Sc,S1)),
+      cleanup(cleanup_read18(Sc,S1)),
+      exception(error(permission_error(input, binary_stream, S1), Imp_dep)))
+   # "[Non-ISO] read_term/2: expected(error) bug(succeed)".
 
-read_test18 :- read_term(_, []).
+read_test18(_) :-
+    read_term(_, []).
 
+setup_read18(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(binary), eof_action(error)]),
+    current_input(S1).
+
+cleanup_read18(Sc,S1):-
+    close_instreams(Sc, S1).
+
+%%REMOVE exception??
 %% REVIEW:PENDING                                         **Label_6**
 %test 19 
-:- test read_test19 :
-	( open('/tmp/tmp.in', write, S, [type(binary)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(binary), eof_action(error)]),
-	    current_input(S1) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(permission_error(input, binary_stream, S1), Imp_dep))
-# "[Non-ISO] read/1: expected(error) bug(succeed)".
+:- test read_test19(auxvar(Sc, S1)) 
+   + (setup(setup_read19(Sc,S1)),
+      cleanup(cleanup_read19(Sc,S1)),
+      exception(error(permission_error(input, binary_stream, S1), Imp_dep)))
+   # "[Non-ISO] read/1: expected(error) bug(succeed)".
 
-read_test19 :- read(_).
+read_test19(_) :-
+    read(_).
+
+setup_read19(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(binary), eof_action(error)]),
+    current_input(S1).
+
+cleanup_read19(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                        **Label_6**
 %test 20 
-:- test read_test20(S1) :
-	( open('/tmp/tmp.in', write, S, [type(text)]),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    current_input(S1),
-	    get_code(_) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(permission_error(input, past_end_of_stream, S1),
-		Imp_dep))
-# "[Non-ISO] read_term/3: expected(error) bug(wrong_error)".
+:- test read_test20(S1, auxvar(Sc, S1)) 
+   + (setup(setup_read20(Sc,S1)),
+      cleanup(cleanup_read20(Sc,S1)),
+      exception(error(permission_error(input, past_end_of_stream, S1),
+                      Imp_dep)))
+   # "[Non-ISO] read_term/3: expected(error) bug(wrong_error)".
 
-read_test20(S1) :- read_term(S1, _, []).
+read_test20(S1, _) :-
+    read_term(S1, _, []).
+
+setup_read20(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(text)]),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]),
+    current_input(S1),
+    get_code(_).
+
+cleanup_read20(Sc,S1):-
+    close_instreams(Sc, S1).
 
 % Reformatted to avoid new lines in atoms. --MH
 aux_read_test21('foo(\n 	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n 	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,\n	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1).').
 
 %% REVIEW:PENDING                                            **Label_6**
 %test 21
-:- test read_test21(Ops) :
-	( Ops=[],
-	    open('/tmp/tmp.in', write, S, [type(text)]),
-	    aux_read_test21(T),
-	    write_contents(text, T, S),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]) )
-	+ exception(error(representation_error(max_arity), Imp_dep))
-# "[Non-ISO] read_term/2: expected(error) bug(wrong_error)".
+:- test read_test21(Ops) 
+   + (setup(setup_read21(Ops,S,T,Sc,S1)),
+      exception(error(representation_error(max_arity), Imp_dep)))
+   # "[Non-ISO] read_term/2: expected(error) bug(wrong_error)".
 
-read_test21(Ops) :- read_term(_, Ops).
+read_test21(Ops) :-
+    read_term(_, Ops).
+
+setup_read21(Ops,S,T,Sc,S1):-
+    Ops=[],
+    open('/tmp/tmp.in', write, S, [type(text)]),
+    aux_read_test21(T),
+    write_contents(text, T, S),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]).
 
 %% REVIEW:PENDING                                         **Label_6**
 %test 22
-:- test read_test22 :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'a."),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]) )
-	=> (close_instreams(Sc, S1))
-	+ exception(error(syntax_error, Imp_dep))
-# "[Non-ISO] read_term/2: expected(error) bug(wrong_error)".
+:- test read_test22(auxvar(Sc,S1)) 
+   + (setup(setup_read22(Sc,S1)),
+      cleanup(cleanup_read22(Sc,S1)),
+      exception(error(syntax_error(S), Imp_dep)))
+   # "[Non-ISO] read_term/2: expected(error) bug(wrong_error)".
 
-read_test22 :- read_term(_, []).
+read_test22(_):-
+    read_term(_, []).
+
+setup_read22(Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'a."),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]).
+
+cleanup_read22(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                              **Label_6**
 %test 23
-:- test read_test23(T) :
-	( (current_prolog_flag(max_integer, M) ->true;M=0),
-	    number_codes(M, L),
-	    atom_codes(Atm, L),
-	    open_and_write('/tmp/tmp.in', write, S, [ype(text)], text, Atm),
-	    write_contents(text, '.', S),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]) )
-	=> (T=M, close_instreams(Sc, S1))
+:- test read_test23(T, auxvar(Sc, S1)) :
+   true =>
+   (T=M) +
+   (setup(setup_read23(Sc,S1)),
+    cleanup(cleanup_read23(Sc,S1))) 
 # "[Non-ISO] read/1: expected(succeed)".
 
-read_test23(T) :- read(T).
+read_test23(T, _) :-
+    read(T).
+
+setup_read23(Sc,S1):-
+    (current_prolog_flag(max_integer, M) ->true;M=0),
+    number_codes(M, L),
+    atom_codes(Atm, L),
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, Atm),
+    write_contents(text, '.', S),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]).
+
+cleanup_read23(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                          **Label_6**
 %test 24
-:- test read_test24(T) :
-	( (current_prolog_flag(min_integer, M) ->true;M=0),
-	    number_codes(M, L),
-	    atom_codes(Atm, L),
-	    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, Atm),
-	    write_contents(text, '.', S),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]) )
-	=> (T=M, close_instreams(Sc, S1))
+:- test read_test24(T, auxvar(Sc, S1) ) :
+   true =>
+   (T=M) +
+   (setup(setup_read24(Sc,S1)),
+    cleanup(cleanup_read24(Sc,S1)))
 # "[Non-ISO] read/1: expected(succeed)".
 
-read_test24(T) :- read(T).
+read_test24(T, _) :-
+    read(T).
 
+setup_read24(Sc,S1):-
+    (current_prolog_flag(min_integer, M) ->true;M=0),
+    number_codes(M, L),
+    atom_codes(Atm, L),
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, Atm),
+    write_contents(text, '.', S),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]).
 
+cleanup_read24(Sc,S1):-
+    close_instreams(Sc, S1).
 
 % ===========================================================================
 %% 8.14.2.4 These tests are specified in page 100 of the ISO standard. %%
 
 %% REVIEW:PENDING                                                  **Label_6**
 %test 1 
-:- test write_test1(S) :
-	( open('/tmp/tmp.out', write, S, [type(text)]),
-	    current_output(Sc),
-	    set_output(S) )
-	=> ( write_contents(text, '.', S),
-	    close_outstreams(Sc, S),
-	    open_to_read('/tmp/tmp.out', read, Sc1, S1,
-		[type(text)]), read(X), X=[1, 2, 3],
-	    close_instreams(Sc1, S1) )
-# "[ISO] write_term/3: expected(succeed)".
+:- test write_test1(S, S1, Sc1, X, auxvar(Sc)) 
+   + (setup(setup_write1(S,Sc)),
+      cleanup(cleanup_write1(S,Sc,Sc1,S1)))
+   # "[ISO] write_term/3: expected(succeed)".
 
-write_test1(S) :- write_term(S, [1, 2, 3], []).
+write_test1(S, S1, Sc1, X, _) :-
+    write_term(S, [1, 2, 3], []),
+    write_contents(text, '.', S),
+    open_to_read('/tmp/tmp.out', read, Sc1, S1,
+                 [type(text)]), read(X), X=[1, 2, 3].
+
+setup_write1(S,Sc):-
+    open('/tmp/tmp.out', write, S, [type(text)]),
+    current_output(Sc),
+    set_output(S).
+
+cleanup_write1(S,Sc,Sc1,S1):-
+    close_outstreams(Sc, S),
+    close_instreams(Sc1, S1).
 
 %% REVIEW:PENDING                                        **Label_6**
 %test 2 
-:- test write_test2 :
-	( open('/tmp/tmp.out', write, S, [type(text)]),
-	    current_output(Sc),
-	    set_output(S) )
-	=> ( close_outstreams(Sc, S),
-	    open('/tmp/tmp.out', read, S1, [type(text)]),
-	    read_no_term(S1, "'.'(1,'.'(2,'.'(3,[])))") )
-# "[ISO] write_canonical/1: expected(succeed) bug(error)".
+:- test write_test2(auxvar(S,Sc)) 
+   + (setup(setup_write2(S,Sc)),
+      cleanup(cleanup_write2(Sc,S)))
+   # "[ISO] write_canonical/1: expected(succeed) bug(error)".
 
-write_test2 :- write_canonical([1, 2, 3]).
+write_test2(_) :-
+    write_canonical([1, 2, 3]).
+
+setup_write2(S,Sc):-
+    open('/tmp/tmp.out', write, S, [type(text)]),
+    current_output(Sc),
+    set_output(S).
+
+cleanup_write2(Sc,S):-
+    open('/tmp/tmp.out', read, S1, [type(text)]),
+    close_outstreams(Sc, S),
+    read_no_term(S1, "'.'(1,'.'(2,'.'(3,[])))"),
+    close(S1).
 
 %% REVIEW:PENDING                                      **Label_6**
 %test 3
-:- test write_test3(S) :
-	( open('/tmp/tmp.out', write, S, [type(text)]),
-	    current_output(Sc),
-	    set_output(S) )
-	=> ( close_outstreams(Sc, S),
-	    open('/tmp/tmp.out', read, S1, [type(text)]),
-	    read_no_term(S1, "1<2") )
-# "[ISO] write_term/3: expected(succeed)".
+:- test write_test3(S,S1,auxvar(Sc)) 
+   + (setup(setup_write3(S,Sc)),
+      cleanup(cleanup_write3(Sc,S)))
+   # "[ISO] write_term/3: expected(succeed)".
 
-write_test3(S) :- write_term(S, '1<2', []).
+write_test3(S,S1,_) :-
+    write_term(S, '1<2', []),
+    open('/tmp/tmp.out', read, S1, [type(text)]),
+    read_no_term(S1, "1<2").
+
+setup_write3(S,Sc):-
+    open('/tmp/tmp.out', write, S, [type(text)]),
+    current_output(Sc),
+    set_output(S).
+
+cleanup_write3(Sc,S):-
+    close_outstreams(Sc, S).
 
 %% REVIEW:PENDING                                          **Label_6**
 %test 4
-:- test write_test4(S) :
-	( open('/tmp/tmp.out', write, S, [type(text)]),
-	    current_output(Sc),
-	    set_output(S) )
-	=> ( close_outstreams(Sc, S), open('/tmp/tmp.out', read, S1, [type(text)]),
-	    read_no_term(S1, "'1<2'") )
-# "[ISO] writeq/2: expected(succeed)".
+:- test write_test4(S,S1,auxvar(Sc)) 
+   + (setup(setup_write4(S,Sc)),
+      cleanup(cleanup_write4(Sc,S)))
+   # "[ISO] writeq/2: expected(succeed)".
 
-write_test4(S) :- writeq(S, '1<2').
+write_test4(S,S1,_) :-
+    writeq(S, '1<2'),
+    open('/tmp/tmp.out', read, S1, [type(text)]),
+    read_no_term(S1, "'1<2'").
+
+setup_write4(S,Sc):-
+    open('/tmp/tmp.out', write, S, [type(text)]),
+    current_output(Sc),
+    set_output(S).
+
+cleanup_write4(Sc,S):-
+    close_outstreams(Sc, S).
 
 %% REVIEW:PENDING                                                **Label_6**
 %test 5 
-:- test write_test5 :
-	( open('/tmp/tmp.out', write, S, [type(text)]),
-	    current_output(Sc),
-	    set_output(S) )
-	=> ( close_outstreams(Sc, S),
-	    open('/tmp/tmp.out', read, S1, [type(text)]),
-	    read_no_term(S1, "A") )
-# "[ISO] writeq/1: expected(succeed) bug(error)".
+:- test write_test5(auxvar(S,Sc)) 
+   + (setup(setup_write5(S,Sc)),
+      cleanup(cleanup_write5(S,Sc)))
+   # "[ISO] writeq/1: expected(succeed) bug(error)".
 
-write_test5 :- writeq('$VAR'(0)).
+write_test5(_) :-
+    writeq('$VAR'(0)).
+
+setup_write5(S,Sc):-
+    open('/tmp/tmp.out', write, S, [type(text)]),
+    current_output(Sc),
+    set_output(S).
+
+cleanup_write5(S,Sc):-
+    close_outstreams(Sc, S),
+    open('/tmp/tmp.out', read, S1, [type(text)]),
+    read_no_term(S1, "A").
 
 %% REVIEW:PENDING                                                    **Label_6**
 %test 6 
-:- test write_test6(S) :
-	( open('/tmp/tmp.out', write, S, [type(text)]),
-	    current_output(Sc),
-	    set_output(S) )
-	=> ( close_outstreams(Sc, S),
-	    open('/tmp/tmp.out', read, S1, [type(text)]),
-	    read_no_term(S1, "$VAR(1)") )
-# "[ISO] write_term/3: expected(succeed)".
+:- test write_test6(S,auxvar(Sc)) 
+   + (setup(setup_write6(S,Sc)),
+      cleanup(cleanup_write6(Sc,S)))
+   # "[ISO] write_term/3: expected(succeed)".
 
-write_test6(S) :- write_term(S, '$VAR'(1), [numbervars(false)]).
+write_test6(S,_) :-
+    write_term(S, '$VAR'(1), [numbervars(false)]).
+
+setup_write6(S,Sc):-
+    open('/tmp/tmp.out', write, S, [type(text)]),
+    current_output(Sc),
+    set_output(S).
+
+cleanup_write6(Sc,S):-
+    close_outstreams(Sc, S),
+    open('/tmp/tmp.out', read, S1, [type(text)]),
+    read_no_term(S1, "$VAR(1)"),
+    close(S1).
 
 %% REVIEW:PENDING                                                **Label_6**
 %test 7
-:- test write_test7(S) :
-	( open('/tmp/tmp.out', write, S, [type(text)]),
-	    current_output(Sc),
-	    set_output(S) )
-	=> ( close_outstreams(Sc, S),
-	    open('/tmp/tmp.out', read, S1, [type(text)]),
-	    read_no_term(S1, "Z1") )
-# "[ISO] write_term/3: expected(succeed)".
+:- test write_test7(S,auxvar(Sc)) 
+   + (setup(setup_write7(S,Sc)),
+      cleanup(cleanup_write7(S,Sc)))
+   # "[ISO] write_term/3: expected(succeed)".
 
-write_test7(S) :- write_term(S, '$VAR'(51), [numbervars(true)]).
+write_test7(S,_) :-
+    write_term(S, '$VAR'(51), [numbervars(true)]).
+
+setup_write7(S,Sc):-
+    open('/tmp/tmp.out', write, S, [type(text)]),
+    current_output(Sc),
+    set_output(S).
+
+cleanup_write7(S,Sc):-
+    close_outstreams(Sc, S),
+    open('/tmp/tmp.out', read, S1, [type(text)]),
+    read_no_term(S1, "Z1"),
+    close(S1).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -4292,7 +5250,7 @@ write_test14 :- write_term(user_output,foo,[quoted(true),_]).
 :- test write_test15 + exception(error(type_error(list,2),Imp_dep)).
 write_test15 :- write_term(user_output,1,2).
 
-%% REVIEW:PENDING                                                       **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                       **Label_3**
 %%   [gprolog]: throws exception(error(type_error(list, [quoted(true)|foo]), _))
 %%   [ciao]: throws exception(error(type_error(list,foo),write_term/2-2))
 %test 16 
@@ -4317,36 +5275,54 @@ write_test17 :- write(foo, 1).
 write_test18 :- write_term(1, [quoted(true), foo]).
 
 %test 19 
-:- test write_test19(S) : (open('/tmp/foo', write, S), close(S))
-	+ exception(error(existence_error(stream, S), Imp_dep))
-# "[Non-ISO] write/2: expected(error) bug(wrong_error)".
+:- test write_test19(S) 
+   + (setup(setup_write19(S)),
+      exception(error(existence_error(stream, S), Imp_dep)))
+   # "[Non-ISO] write/2: expected(error) bug(wrong_error)".
 
-write_test19(S) :- write(S, a).
+write_test19(S) :-
+    write(S, a).
 
-%% REVIEW:PENDING                                                **Diffthrow_vs_iso**
+setup_write19(S):-
+    open('/tmp/foo', write, S),
+    close(S).
+
+%% REVIEW:PENDING                                                **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(output, stream, S), _))
 %%   [ciao]: throws  exception(error(permission_error(modify,stream,'$stream'(int,int)),write/2-1))
 %test 20 
-:- test write_test20(S) : (current_input(S))
-	+ exception(error(permission_error(output, stream, S), Imp_dep))
-# "[Non-ISO] write/2: expected(error) bug(wrong_error)".
+:- test write_test20(S) 
+   + (setup(setup_write20(S)),
+      exception(error(permission_error(output, stream, S), Imp_dep)))
+   # "[Non-ISO] write/2: expected(error) bug(wrong_error)".
 
-write_test20(S) :- write(S, a).
+write_test20(S) :-
+    write(S, a).
 
-%% REVIEW:PENDING                                              **Nothrow_vs_iso**
+setup_write20(S):-
+    current_input(S).
+
+%% REVIEW:PENDING                                              **Label_2**
 %%   [gprolog]: throws exception(error(permission_error(output, binary_stream, S), _))
 %%   [ciao]: no throws
 %test 21 
-:- test write_test21 :
-	( open('/tmp/tmp.out', write, S, [type(binary)]),
-	    current_output(Sc),
-	    set_output(S),
-	    current_output(S) )
-	+ exception(error(permission_error(output, binary_stream, S), Imp_dep))
+:- test write_test21(auxvar(S,Sc)) 
+   + (setup(setup_write21(S,Sc)),
+      cleanup(cleanup_write21(S)),
+      exception(error(permission_error(output, binary_stream, S), Imp_dep)))
 # "[Non-ISO] write/1: expected(error) bug(succeed)".
 
-write_test21 :- write(a).
+write_test21(_) :-
+    write(a).
 
+setup_write21(S,Sc):-
+    open('/tmp/tmp.out', write, S, [type(binary)]),
+    current_output(Sc),
+    set_output(S),
+    current_output(S).
+
+cleanup_write21(S):-
+    close(S).
 
 % ===========================================================================
 %% 8.14.3.4 These tests are specified in page 102 of the ISO standard. %%
@@ -4371,7 +5347,7 @@ op_test1(_) :- op(30, xfy, ++).
 
 op_test2 :- op(0, yfx, ++).
 
-%% REVIEW:PENDING                                     **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                     **Label_3**
 %%   [gprolog]: throws exception(error(type_error(integer, max), _))
 %%   [ciao]: throws  exception(error(domain_error(operator_priority,max),op/3-1))
 %test 3 
@@ -4424,15 +5400,19 @@ op_test9_poscond(_) :- (current_op(40, xfx, ++), op(0, xfx, ++)).
 
 op_test9(_) :- op(30, xfy, ++), op(40, xfx, ++).
 
-%% REVIEW:PENDING                                             **Nothrow_vs_iso**
+% NOTE: See op/3 documentation. Unlike in ISO-Prolog, it is allowed to
+% define two operators with the same name, one infix and the other
+% postfix.
+
+%% REVIEW:PENDING                                             **Label_2**
 %%   [gprolog]: throws exception(error(permission_error(create, operator, ++), _))
 %%   [ciao]: no throws
 %test 10 
-:- test op_test10
-	+ exception(error(permission_error(create, operator, ++), Imp_dep))
-# "[ISO] op/3: expected(error) bug(succeed)".
-
-op_test10 :- op(30, xfy, ++), op(50, yf, ++).
+%:- test op_test10
+%	+ exception(error(permission_error(create, operator, ++), Imp_dep))
+%# "[ISO] op/3: expected(error) bug(succeed)".
+%
+%op_test10 :- iso_incomplete:op(30, xfy, ++), iso_incomplete:op(50, yf, ++).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
@@ -4443,7 +5423,7 @@ op_test10 :- op(30, xfy, ++), op(50, yf, ++).
 
 op_test11 :- op(_, xfx, ++).
 
-%% REVIEW:PENDING                                   **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                   **Label_3**
 %%   [gprolog]: throws exception(error(instantiation_error,_))
 %%   [ciao]: throws exception(error(permission_error(modify,operator,','),op/3))
 %test 12
@@ -4452,7 +5432,7 @@ op_test11 :- op(_, xfx, ++).
 
 op_test12 :- op(100, xfx, _).
 
-%% REVIEW:PENDING                                              **Nothrow_vs_iso**
+%% REVIEW:PENDING                                              **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error,_))
 %%   [ciao]: no throws
 %test 13 
@@ -4496,7 +5476,7 @@ op_test17 :- op(100, xfx, [a, a+b]).
 
 op_test18 :- op(100, xfx, ',').
 
-%% REVIEW:PENDING                                                 **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                 **Label_2**
 %%   [gprolog]: throws exception(error(permission_error(modify, operator, ','), _))
 %%   [ciao]: no throws
 %test 19
@@ -4506,13 +5486,11 @@ op_test18 :- op(100, xfx, ',').
 
 op_test19 :- op(100, xfx, [a, ',']).
 
-
-
 % ===========================================================================
 %% 8.14.4.4 These tests are specified in page 103 of the ISO standard. %%
 
 
-%test 1                                               ** Wrong_vs_iso**
+%test 1                                               **Label_1**
 %%   [gprolog]: Result = [[1050,*->],[740,#==>],[1000,','],[600,:],[1100,;],[200,^],[1105,'|'],[740,#\==>],[730,##],[1050,->],[750,#\<=>],[750,#<=>]]
 %%   [ciao]: Result = [[1100,;],[1050,->],[200,^],[30,++]]
 :- test current_op_test1(Result)
@@ -4524,7 +5502,7 @@ current_op_test1(Result) :- findall([P, OP], current_op(P, xfy, OP), Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
-%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(operator_priority, 1201),_))
 %%   [ciao]: no throws
 %test 2 
@@ -4534,7 +5512,7 @@ current_op_test1(Result) :- findall([P, OP], current_op(P, xfy, OP), Result).
 
 current_op_test2 :- current_op(1201, _, _).
 
-%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(operator_specifier, yfy), Imp_dep))
 %%   [ciao]: no throws
 %test 3
@@ -4544,7 +5522,7 @@ current_op_test2 :- current_op(1201, _, _).
 
 current_op_test3 :- current_op(_, yfy, _).
 
-%% REVIEW:PENDING                                           **Nothrow_vs_iso**
+%% REVIEW:PENDING                                           **Label_2**
 %%   [gprolog]: throws error(domain_error(operator_specifier,0),current_op/3)
 %%   [ciao]: no throws
 %test 4 
@@ -4553,7 +5531,7 @@ current_op_test3 :- current_op(_, yfy, _).
 
 current_op_test4 :- current_op(_, 0, _).
 
-%% REVIEW:PENDING                                                             **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                             **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 5), _))
 %%   [ciao]: no throws
 %test 5 
@@ -4569,190 +5547,310 @@ current_op_test5 :- current_op(_, _, 5).
 
 %% REVIEW:PENDING                               **Label_6**      
 %test 1 
-:- test char_conversion_test1
-	: ( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, 'a&b. &'),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]) )
-	=> (read('a,b'), get_char(' '), get_char('&'), close_instreams(Sc, S1))
-# "[ISO] char_conversion/2: expected(succeed) bug(error)".
+:- test char_conversion_test1(auxvar(S,Sc,S1))
+   + (setup(setup_charconver1(S,Sc,S1)),
+      cleanup(cleanup_charconver1(Sc,S1)))
+   # "[ISO] char_conversion/2: expected(succeed) bug(error)".
 
-char_conversion_test1 :- char_conversion('&', ',').
+char_conversion_test1(_) :-
+    char_conversion('&', ','),
+    read('a,b'),
+    get_char(' '),
+    get_char('&').
+
+setup_charconver1(S,Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, 'a&b. &'),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]).
+
+cleanup_charconver1(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                    **Label_6**  
 %test 2 
-:- test char_conversion_test2
-	: ( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '^b+c^'),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]) )
-	=> (read('b+c'), get_char(' '), get_char('^'), close_instreams(Sc, S1))
-# "[ISO] char_conversion/2: expected(succeed) bug(error)".
+:- test char_conversion_test2(auxvar(S,Sc,S1)) 
+   + (setup(setup_charconver2(S,Sc,S1)),
+      cleanup(cleanup_charconver2(Sc,S1)))
+   # "[ISO] char_conversion/2: expected(succeed) bug(error)".
 
-char_conversion_test2 :- char_conversion('^', '''').
+char_conversion_test2(_) :-
+    char_conversion('^', '''').
+
+setup_charconver2(S,Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '^b+c^'),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]).
+
+cleanup_charconver2(Sc,S1):-
+    read('b+c'),
+    get_char(' '),
+    get_char('^'),
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                  **Label_6**  
 %test 3 
-:- test char_conversion_test3 :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'A+c'+A."),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]) )
-	=> (read('A+c'+a), close_instreams(Sc, S1))
-# "[ISO] char_conversion/2: expected(succeed) bug(error)".
+:- test char_conversion_test3(auxvar(S,Sc,S1)) 
+   + (setup(setup_charconver3(S,Sc,S1)),
+      cleanup(cleanup_charconver3(Sc,S1)))
+   # "[ISO] char_conversion/2: expected(succeed) bug(error)".
 
-char_conversion_test3 :- char_conversion('A', 'a').
+char_conversion_test3(_) :-
+    char_conversion('A', 'a'),
+    read('A+c'+a).
+
+setup_charconver3(S,Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'A+c'+A."),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]).
+
+cleanup_charconver3(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                      **Label_6**  
 %test 4 
-:- test char_conversion_test4(X, Y, Z) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text,
-		"A&A. 'AAA'. ^A&A^."),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read,
-		Sc, S1, [type(text), eof_action(error)]),
-	    char_conversion('&', ','),
-	    char_conversion('^', ''''),
-	    char_conversion('A', 'a') )
-	=>(close_instreams(Sc, S1), X=(a, a), Y='AAA', Z='a,a')
+:- test char_conversion_test4(X, Y, Z, auxvar(S, Sc, S1)) :
+   true =>
+   (X=(a, a),
+    Y='AAA',
+    Z='a,a') +
+   (setup(setup_charconver4(S,Sc,S1)),
+    cleanup(cleanup_charconver4(Sc,S1)))
 # "[ISO] char_conversion/2: expected(succeed) bug(error)".
 
-char_conversion_test4(X, Y, Z) :- read(X), read(Y), read(Z).
+char_conversion_test4(X, Y, Z, _) :-
+    read(X),
+    read(Y),
+    read(Z).
+
+setup_charconver4(S,Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text,
+                   "A&A. 'AAA'. ^A&A^."),
+    close(S),
+    open_to_read('/tmp/tmp.in', read,
+                 Sc, S1, [type(text), eof_action(error)]),
+    char_conversion('&', ','),
+    char_conversion('^', ''''),
+    char_conversion('A', 'a').
+
+cleanup_charconver4(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                  **Label_6**          
 %test 5  
-:- test char_conversion_test5 :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "& ."),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    char_conversion('&', ',') )
-	=>(read('&'), close_instreams(Sc, S1), \+current_char_conversion(_, _))
-# "[ISO] char_conversion/2: expected(succeed) bug(error)".
+:- test char_conversion_test5(auxvar(S,Sc,S1)) 
+   + (setup(setup_charconver5(S,Sc,S1)),
+      cleanup(cleanup_charconver5(Sc,S1)))
+   # "[ISO] char_conversion/2: expected(succeed) bug(error)".
 
-char_conversion_test5 :- char_conversion('&', '&').
+char_conversion_test5(_) :-
+    char_conversion('&', '&'),
+    read('&'),
+    \+current_char_conversion(_, _).
+
+setup_charconver5(S,Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "& ."),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]),
+    char_conversion('&', ',').
+
+cleanup_charconver5(Sc,S1):-
+    
+    close_instreams(Sc, S1).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
-%% REVIEW:PENDING                                              **Label_6**  
+%% REVIEW:PENDING!!                                             **Label_6**  
 %test 6 
-:- test char_conversion_test6(X) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "0'%%1."),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    char_conversion('%', '+'),
-	    char_conversion('^', '\'') )
-	=>(close_instreams(Sc, S1), X=(0'%) +1)
-# "[Non-ISO] char_conversion/2: expected(succeed) bug(error)".
+%:- test char_conversion_test6(X) :
+%   (setup(setup_charconver6(S,Sc,S1)))=>
+%   (cleanup(cleanup_charconver6(Sc,S1,X)))
+%# "[Non-ISO] char_conversion/2: expected(succeed) bug(error)".
 
-char_conversion_test6(X) :- read(X).
+%char_conversion_test6(X) :- read(X).
+%
+%setup_charconver6(S,Sc,S1):-
+%    ( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "0'%%1."),
+%	    close(S),
+%	    open_to_read('/tmp/tmp.in', read, Sc, S1,
+%		[type(text), eof_action(error)]),
+%	    char_conversion('%', '+'),
+ %           char_conversion('^', '\' )).
+
+%cleanup_charconver6(Sc,S1,X):- (close_instreams(Sc, S1), X=(0,%') +1).
+                            
 
 %% REVIEW:PENDING                                               **Label_6**  
 %test 7 
-:- test char_conversion_test7(X) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'%'%1."),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    char_conversion('%', '+'),
-	    char_conversion('^', '\'') )
-	=>(close_instreams(Sc, S1), X=('%' +1))
+:- test char_conversion_test7(X, auxvar(S,Sc,S1)) :
+   true =>
+   (X=('%' +1)) +
+   (setup(setup_charconver7(S,Sc,S1)),
+    cleanup(cleanup_charconver7(Sc,S1)))
 # "[Non-ISO] char_conversion/2: expected(succeed) bug(error)".
 
-char_conversion_test7(X) :- read(X).
+char_conversion_test7(X, _) :-
+    read(X).
+
+setup_charconver7(S,Sc,S1):- 
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'%'%1."),
+                   close(S),
+                   open_to_read('/tmp/tmp.in', read, Sc, S1,
+                                [type(text), eof_action(error)]),
+                   char_conversion('%', '+'),
+                                   char_conversion('^', '\'').
+
+cleanup_charconver7(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                                  **Label_6**  
 %test 8  
-:- test char_conversion_test8(X) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '"%"%1.'),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    char_conversion('%', '+'),
-	    char_conversion('^', '\'') )
-	=>(X=(close_instreams(Sc, S1), "%" +1))
-# "[Non-ISO] char_conversion/2: expected(succeed) bug(error)".
+:- test char_conversion_test8(X, auxvar(S,Sc,S1)) 
+   + (setup(setup_charconver8(S,Sc,S1)),
+      cleanup(cleanup_charconver8(X,Sc,S1)))
+   # "[Non-ISO] char_conversion/2: expected(succeed) bug(error)".
 
-char_conversion_test8(X) :- read(X).
+char_conversion_test8(X, _) :-
+    read(X).
+
+setup_charconver8(S,Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '"%"%1.'),
+                   close(S),
+                   open_to_read('/tmp/tmp.in', read, Sc, S1,
+                                [type(text), eof_action(error)]),
+                   char_conversion('%', '+'),
+                                   char_conversion('^', '\'').
+
+cleanup_charconver8(X,Sc,S1):-
+    X=(close_instreams(Sc, S1), "%" +1).
+                                   
 
 %% REVIEW:PENDING                                               **Label_6**  
 %test 9 
-:- test char_conversion_test9(X) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '1.#.'),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    op(100, xfx, '.'),
-	    char_conversion('#', '!') )
-	=>(close_instreams(Sc, S1), X='.'(1, !), op(0, xfx, '.'))
+:- test char_conversion_test9(X, auxvar( S, Sc,S1)) :
+   true =>
+   ( X='.'(1, !)) +
+   (setup(setup_charconver9(S,Sc,S1)),
+    cleanup(cleanup_charconver9(Sc,S1)))
 # "[Non-ISO] char_conversion/2: expected(succeed) bug(error)".
 
-char_conversion_test9(X) :- read(X).
+char_conversion_test9(X,_) :-
+    read(X),
+    op(0, xfx, '.').
+
+setup_charconver9(S,Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '1.#.'),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]),
+    op(100, xfx, '.'),
+    char_conversion('#', '!').
+
+cleanup_charconver9(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                                 **Label_6**  
 %test 10  
-:- test char_conversion_test10(X) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "^aa'+'bb^'."),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    char_conversion('%', '+'),
-	    char_conversion('^', '\'') )
-	=>(close_instreams(Sc, S1), X=('aa'+'bb^'))
+:- test char_conversion_test10(X, auxvar( S, Sc, S1)) :
+   true =>
+   (X=('aa'+'bb^')) +
+   (setup(setup_charconver10(S,Sc,S1)),
+    cleanup(cleanup_charconver10(Sc,S1)))
 # "[Non-ISO] char_conversion/2: expected(succeed) bug(error)".
 
-char_conversion_test10(X) :- read(X).
+char_conversion_test10(X,_) :-
+        read(X).
+
+setup_charconver10(S,Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "^aa'+'bb^'."),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]),
+    char_conversion('%', '+'),
+                    char_conversion('^', '\'').
+
+cleanup_charconver10(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                                **Label_6**  
 %test 11 
-:- test char_conversion_test11(X, Y) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "+ .% ."),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    char_conversion('%', '+'),
-	    char_conversion('^', '\'') )
-	=>(close_instreams(Sc, S1), X=(+), Y=(+))
+:- test char_conversion_test11(X, Y, auxvar(S,Sc,S1)) :
+   true =>
+   (X=(+), Y=(+)) +
+   (setup(setup_charconver11(S,Sc,S1)),
+    cleanup(cleanup_charconver11(Sc,S1)))
 # "[Non-ISO] char_conversion/2: expected(succeed) bug(error)".
 
-char_conversion_test11(X, Y) :- set_prolog_flag(char_conversion, off), read(X),
-	set_prolog_flag(char_conversion, on), read(Y).
+char_conversion_test11(X, Y, _) :-
+    set_prolog_flag(char_conversion, off),
+    read(X),
+    set_prolog_flag(char_conversion, on),
+    read(Y).
+
+setup_charconver11(S,Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "+ .% ."),
+                   close(S),
+                   open_to_read('/tmp/tmp.in', read, Sc, S1,
+                                [type(text), eof_action(error)]),
+                   char_conversion('%', '+'),
+                                   char_conversion('^', '\'').
+
+cleanup_charconver11(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                          **Label_6**  
 %test 12 
-:- test char_conversion_test12(X, Y) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "- .% ."),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    char_conversion('%', '+'),
-	    char_conversion('^', '\'') )
-	=>(close_instreams(Sc, S1), X=('-'('.+')), Y=end_of_file)
+:- test char_conversion_test12(X, Y, auxvar(S,Sc,S1)) :
+   true =>
+   (X=('-'('.+')), Y=end_of_file) +
+   (setup(setup_charconver12(S,Sc,S1)),
+    cleanup(cleanup_charconver12(Sc,S1)))
 # "[Non-ISO] char_conversion/2: expected(succeed) bug(error)".
 
-char_conversion_test12(X, Y) :- read(X), read(Y).
+char_conversion_test12(X, Y, _) :-
+    read(X),
+    read(Y).
+
+setup_charconver12(S,Sc,S1):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "- .% ."),
+                   close(S),
+                   open_to_read('/tmp/tmp.in', read, Sc, S1,
+                                [type(text), eof_action(error)]),
+                   char_conversion('%', '+'),
+                                   char_conversion('^', '\'').
+
+cleanup_charconver12(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% 8.14.6.4 These tests are specified in page 104 of the ISO standard. %%
 
 %% REVIEW:PENDING                               **Label_6**  
 %test 1  
-:- test current_char_conversion_test1(Result) :
-	( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'\\341\\'."),
-	    close(S),
-	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-		[type(text), eof_action(error)]),
-	    read(Aacute),
-	    char_conversion('A', 'a'),
-	    char_conversion(Aacute, 'a') )
-	=>(close_instreams(Sc, S1), Result=['A', Aacute])
+:- test current_char_conversion_test1(Result, auxvar(Aacute,S,Sc,S1)) :
+   true =>
+   (Result=['A', Aacute]) +
+   (setup(setup_currentcharconver1(S,Sc,S1,Aacute)),
+    cleanup(cleanup_currentcharconver1(Sc,S1)))
 # "[ISO] current_char_conversion/2: expected(succeed) bug(error)".
 
-current_char_conversion_test1(Result) :-
-	findall(C, current_char_conversion(C, a), Result).
+current_char_conversion_test1(Result,_) :-
+    findall(C, current_char_conversion(C, a), Result).
 
+setup_currentcharconver1(S,Sc,S1,Aacute):-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'\\341\\'."),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1,
+                 [type(text), eof_action(error)]),
+    read(Aacute),
+    char_conversion('A', 'a'),
+    char_conversion(Aacute, 'a').
 
+cleanup_currentcharconver1(Sc,S1):-
+    close_instreams(Sc, S1).
 
 %% 8.15.1.4 These tests are specified in page 105 of the ISO standard. %%
 %test1
@@ -4917,7 +6015,7 @@ atomlength_test7 :- atom_length(atom, '4').
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
-%% REVIEW:PENDING                                    **Nothrow_vs_iso**
+%% REVIEW:PENDING                                    **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -4), Imp_def))
 %%   [ciao]: no throws
 %test8 
@@ -4927,7 +6025,7 @@ atomlength_test7 :- atom_length(atom, '4').
 
 atomlength_test8 :- atom_length(atom, -4).
 
-%% REVIEW:PENDING                              ** Wrong_vs_iso**
+%% REVIEW:PENDING                              **Label_1**
 %%   [gprolog]: L = 13
 %%   [ciao]: L = 13
 %test9
@@ -5034,7 +6132,6 @@ atomconcat_test13(T2) :- atom_concat('Bartók ', T2, 'Bartók Béla').
 atomconcat_test14(Result) :-
 	findall([T1, T2], atom_concat(T1, T2, 'Pécs'), Result).
 :- endif.
-
 % ===========================================================================
 %% 8.16.3.4 These tests are specified in page 108 of the ISO standard. %%
 
@@ -5103,7 +6200,7 @@ subatom_test8 :- sub_atom(_W, 3, 2, _Z, _S).
 subatom_test9 :- sub_atom(f(a), 2, 2, _Z, _S).
 
 %% REVIEW:PENDING
-%test 10                                             **Nothrow_vs_iso**
+%test 10                                             **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 2), _))
 %%   [ciao]: no throws
 :- test subatom_test10 + exception(error(type_error(atom, 2), Imp_dep))
@@ -5111,7 +6208,7 @@ subatom_test9 :- sub_atom(f(a), 2, 2, _Z, _S).
 
 subatom_test10 :- sub_atom('Banana', 4, 2, _Z, 2).
 
-%% REVIEW:PENDING                                          **Nothrow_vs_iso**
+%% REVIEW:PENDING                                          **Label_2**
 %%   [gprolog]: throws exception(error(type_error(integer, a), _))
 %%   [ciao]: no throws
 %test 11 
@@ -5120,7 +6217,7 @@ subatom_test10 :- sub_atom('Banana', 4, 2, _Z, 2).
 
 subatom_test11 :- sub_atom('Banana', a, 2, _Z, _S).
 
-%% REVIEW:PENDING                                        **Nothrow_vs_iso**
+%% REVIEW:PENDING                                        **Label_2**
 %%   [gprolog]: throws exception(error(type_error(integer, n), _))
 %%   [ciao]: no throws
 %test 12
@@ -5129,7 +6226,7 @@ subatom_test11 :- sub_atom('Banana', a, 2, _Z, _S).
 
 subatom_test12 :- sub_atom('Banana', 4, n, _Z, _S).
 
-%% REVIEW:PENDING                                           **Nothrow_vs_iso**
+%% REVIEW:PENDING                                           **Label_2**
 %%   [gprolog]: throws exception(error(type_error(integer, m), _))
 %%   [ciao]: no throws
 %test 13 
@@ -5138,7 +6235,7 @@ subatom_test12 :- sub_atom('Banana', 4, n, _Z, _S).
 
 subatom_test13 :- sub_atom('Banana', 4, _Y, m, _S).
 
-%% REVIEW:PENDING                                     **Nothrow_vs_iso**
+%% REVIEW:PENDING                                     **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -2), _))
 %%   [ciao]: no throws
 %test 14 
@@ -5148,7 +6245,7 @@ subatom_test13 :- sub_atom('Banana', 4, _Y, m, _S).
 
 subatom_test14 :- sub_atom('Banana', -2, 3, 4, _S).
 
-%% REVIEW:PENDING                                          **Nothrow_vs_iso**
+%% REVIEW:PENDING                                          **Label_2**
 %%   [gprolog]: throws  exception(error(domain_error(not_less_than_zero, -3),_))
 %%   [ciao]: no throws
 %test 15 
@@ -5158,7 +6255,7 @@ subatom_test14 :- sub_atom('Banana', -2, 3, 4, _S).
 
 subatom_test15 :- sub_atom('Banana', 2, -3, 4, _S).
 
-%% REVIEW:PENDING                                     **Nothrow_vs_iso**
+%% REVIEW:PENDING                                     **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -4),_))
 %%   [ciao]: no throws
 %test 16.
@@ -5240,7 +6337,7 @@ subatom_test27 :- sub_atom('Banana', 7, 0, 0, _S).
 
 subatom_test28 :- sub_atom('Banana', 0, 0, 7, _S).
 
-%% REVIEW:PENDING                   **Failure due to accent marks**                               ** Wrong_vs_iso**
+%% REVIEW:PENDING                   **Failure due to accent marks**                               **Label_1**
 %%   [gprolog]: Y = 7
 %%   [ciao]: Y = 7
 %test 31
@@ -5249,7 +6346,7 @@ subatom_test28 :- sub_atom('Banana', 0, 0, 7, _S).
 
 subatom_test31(Z, S) :- sub_atom('Bartók Béla', 4, 2, Z, S).
 
-%% REVIEW:PENDING                   **Failure due to accent marks**                                ** Wrong_vs_iso**
+%% REVIEW:PENDING                   **Failure due to accent marks**                                **Label_1**
 %%   [gprolog]: Y = 4
 %%   [ciao]: Y = 4
 %test 32 
@@ -5258,7 +6355,7 @@ subatom_test31(Z, S) :- sub_atom('Bartók Béla', 4, 2, Z, S).
 
 subatom_test32(Y, S) :- sub_atom('Bartók Béla', 4, Y, 5, S).
 
-%% REVIEW:PENDING                   **Failure due to accent marks**                                ** Wrong_vs_iso**
+%% REVIEW:PENDING                   **Failure due to accent marks**                                **Label_1**
 %%   [gprolog]: Y = 6
 %%   [ciao]: Y = 6
 %test 33 
@@ -5330,7 +6427,7 @@ atomchars_test6(X) :- atom_chars('North', ['N'|X]).
 
 atomchars_test7 :- atom_chars('soap', ['s', 'o', 'p']).
 
-%% REVIEW:PENDING                                           **Nothrow_vs_iso**
+%% REVIEW:PENDING                                           **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
 %test 8 
@@ -5350,7 +6447,7 @@ atomchars_test8 :- atom_chars(_X, _Y).
 
 atomchars_test9 :- atom_chars(_A, [a, _E, c]).
 
-%% REVIEW:PENDING                                       **Nothrow_vs_iso**
+%% REVIEW:PENDING                                       **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, Imp_dep))
 %%   [ciao]: no throws
 %test 10
@@ -5365,7 +6462,7 @@ atomchars_test10 :- atom_chars(_A, [a, b|_L]).
 
 atomchars_test11 :- atom_chars(f(a), _L).
 
-%% REVIEW:PENDING                                           **Nothrow_vs_iso**
+%% REVIEW:PENDING                                           **Label_2**
 %%   [gprolog]: throws exception(error(type_error(list, iso), Imp_dep))
 %%   [ciao]: no throws
 %test 12 
@@ -5374,7 +6471,7 @@ atomchars_test11 :- atom_chars(f(a), _L).
 
 atomchars_test12 :- atom_chars(_A, iso).
 
-%% REVIEW:PENDING                                                  **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                  **Label_3**
 %%   [gprolog]: throws exception(error(type_error(character, f(b)), _))
 %%   [ciao]: throws exception(error(type_error(atom,f(b)),'atomic_basic:$constant_codes'/3-1))
 %test 13 
@@ -5399,8 +6496,6 @@ atomchars_test14(L) :- atom_chars('Pécs', L).
 
 atomchars_test15(A) :- atom_chars(A, ['P', 'é', 'c', 's']).
 :- endif.
-
-
 
 % ===========================================================================
 %% 8.16.5.4 These tests are specified in page 109 of the ISO standard. %%
@@ -5523,7 +6618,7 @@ atomcodes_test11 :- atom_codes(_X, [0'i, 0's, -1]).
 %:- test atomcodes_test13(A) => (A='Pécs').
 %atomcodes_test13(A) :- atom_codes(A,[0'P,0'é,0'c,0's]).
 
-%% REVIEW:PENDING                                                     **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                     **Label_3**
 %%   [gprolog]: throws exception(error(type_error(integer,a),'atomic_basic:$constant_codes'/3-2))
 %%   [ciao]: throws exception(error(type_error(integer,a),'atomic_basic:$constant_codes'/3-2))
 %test 16 
@@ -5568,7 +6663,7 @@ charcode_test4(X) :- char_code(X, 163).
 
 charcode_test5 :- char_code('b', 0'b).
 
-%% REVIEW:PENDING                                                        **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                        **Label_2**
 %%   [gprolog]: throws  exception(error(type_error(character, ab), _))
 %%   [ciao]: no throws
 %test 6 
@@ -5647,7 +6742,7 @@ numberchars_test6(A) :- number_chars(A, [-, '2', '5']).
 
 numberchars_test7(A) :- number_chars(A, ['\n', '', '3']).
 
-%% REVIEW:PENDING                                                **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                **Label_2**
 %%   [gprolog]: throws type_error(character,'')  
 %%   [ciao]: no throws
 %test8 
@@ -5698,7 +6793,7 @@ numberchars_test13 :- number_chars(_X, _Y).
 
 numberchars_test14 :- number_chars(a, _Y).
 
-%% REVIEW:PENDING                                                   **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                   **Label_2**
 %%   [gprolog]: throws exception(error(type_error(list, 4), _))
 %%   [ciao]: no throws
 %test 15 
@@ -5707,7 +6802,7 @@ numberchars_test14 :- number_chars(a, _Y).
 
 numberchars_test15 :- number_chars(_, 4).
 
-%% REVIEW:PENDING                                                **Diffthrow_vs_iso**
+%% REVIEW:PENDING                                                **Label_3**
 %%   [gprolog]: throws exception(error(type_error(character, 2), _))
 %%   [ciao]: throws exception(error(type_error(atom,2),'atomic_basic:$constant_codes'/3-1))
 %test 16
@@ -5751,7 +6846,7 @@ numberchars_test20(A) :- number_chars(A, [' ', '0', 'x', '1', '1']).
 
 numberchars_test21(A) :- number_chars(A, [' ', '0', 'b', '1', '1']).
 
-%% REVIEW:PENDING                                        **Nothrow_vs_iso**
+%% REVIEW:PENDING                                        **Label_2**
 %%   [gprolog]: throws error(syntax_error('constant term stream:1 (char:2) non numeric character'),number_chars/2)
 %%   [ciao]: no throws
 %test 22 
@@ -5761,7 +6856,7 @@ numberchars_test21(A) :- number_chars(A, [' ', '0', 'b', '1', '1']).
 
 numberchars_test22 :- number_chars(_A, ['0', 'o', '8']).
 
-%% REVIEW:PENDING                                             **Nothrow_vs_iso**
+%% REVIEW:PENDING                                             **Label_2**
 %%   [gprolog]: exception(error(syntax_error(_), _)) 
 %%   [ciao]: no throws
 %test 23 
@@ -5771,7 +6866,7 @@ numberchars_test22 :- number_chars(_A, ['0', 'o', '8']).
 
 numberchars_test23 :- number_chars(_A, [' ', 'b', '2']).
 
-%% REVIEW:PENDING                                             **Nothrow_vs_iso**
+%% REVIEW:PENDING                                             **Label_2**
 %%   [gprolog]: throws exception(error(syntax_error(_), _))
 %%   [ciao]: no throws
 %test 24 
@@ -5781,7 +6876,7 @@ numberchars_test23 :- number_chars(_A, [' ', 'b', '2']).
 
 numberchars_test24 :- number_chars(_A, [' ', 'x', 'g']).
 
-%% REVIEW:PENDING                                          **Nothrow_vs_iso**
+%% REVIEW:PENDING                                          **Label_2**
 %%   [gprolog]: throws  error(type_error(character,'\xc3\\xa1\'),number_chars/2)
 %%   [ciao]: no throws
 %test 25 
@@ -5791,7 +6886,7 @@ numberchars_test24 :- number_chars(_A, [' ', 'x', 'g']).
 
 numberchars_test25 :- number_chars(_A, ['á']).
 
-%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: throws exception(error(syntax_error(_), _))
 %%   [ciao]: no throws
 %test 26 
@@ -5801,7 +6896,7 @@ numberchars_test25 :- number_chars(_A, ['á']).
 
 numberchars_test26 :- number_chars(_A, ['a']).
 
-%% REVIEW:PENDING                                                                **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                                **Label_2**
 %%   [gprolog]: throws exception(error(syntax_error(_), _))
 %%   [ciao]: no throws
 %test 27 
@@ -5984,7 +7079,7 @@ numbercodes_test19(A, S) :-
 	number_chars(A, [' ', '0', 'b', '1', '1', '1']),
 	number_codes(A, S).
 
-%% REVIEW:PENDING                          **It's correct in GNU**                             **Nothrow_vs_iso**
+%% REVIEW:PENDING                          **It's correct in GNU**                             **Label_2**
 %%   [gprolog]: throws FOO
 %%   [ciao]: no throws
 %test 20 
@@ -5994,7 +7089,7 @@ numbercodes_test19(A, S) :-
 
 numbercodes_test20 :- number_codes(_X, "ä").
 
-%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(syntax_error(_), _))
 %%   [ciao]: no throws
 %test 21 
@@ -6014,7 +7109,7 @@ numbercodes_test21 :- number_codes(_A, [0'0, 0'x, 0'0, 0'., 0'0]).
 
 setflag_test1 :- set_prolog_flag(unknown, fail).
 
-%% REVIEW:PENDING                                                        **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                        **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
 %test 2 
@@ -6023,7 +7118,7 @@ setflag_test1 :- set_prolog_flag(unknown, fail).
 
 setflag_test2 :- set_prolog_flag(_X, off).
 
-%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 5), _))
 %%   [ciao]: no throws
 %test 3 
@@ -6032,7 +7127,7 @@ setflag_test2 :- set_prolog_flag(_X, off).
 
 setflag_test3 :- set_prolog_flag(5, decimals).
 
-%% REVIEW:PENDING                                                    **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(flag, date), _))
 %%   [ciao]: no throws
 %test 4 
@@ -6041,7 +7136,7 @@ setflag_test3 :- set_prolog_flag(5, decimals).
 
 setflag_test4 :- set_prolog_flag(date, 'July 1988').
 
-%% REVIEW:PENDING                                                       **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                       **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(flag_value, debug+trace), _))
 %%   [ciao]: no throws
 %test 5 
@@ -6053,7 +7148,7 @@ setflag_test5 :- set_prolog_flag(debug, trace).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
-%% REVIEW:PENDING                                                        **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                        **Label_2**
 %%   [gprolog]: throws exception(error(permission_error(modify, flag, max_arity), _))
 %%   [ciao]: no throws
 %test 6 
@@ -6070,10 +7165,15 @@ setflag_test6 :- set_prolog_flag(max_arity, 40).
 
 %% REVIEW:PENDING                                       **Label_4**
 %test 1 
-:- test currentflag_test1 : (X=debug, Y=off, set_prolog_flag(X, Y))
+:- test currentflag_test1 :
+   true =>
+   (X=debug, Y=off) +
+   (setup(setup_currentflag1(X,Y))) 
 # "[ISO] current_prolog_flag/2: expected(succeed) bug(fail)".
 
 currentflag_test1 :- current_prolog_flag(debug, off).
+
+setup_currentflag1(X,Y):- set_prolog_flag(X, Y).
 
 %test 2 
 :- test currentflag_test2(Result) => (Result\=[])
@@ -6082,7 +7182,7 @@ currentflag_test1 :- current_prolog_flag(debug, off).
 currentflag_test2(Result) :-
 	findall([X, Y], current_prolog_flag(X, Y), Result).
 
-%% REVIEW:PENDING                                                      **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                      **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 5), _))
 %%   [ciao]: no throws
 %test 3 
@@ -6095,17 +7195,23 @@ currentflag_test3 :- current_prolog_flag(5, _Y).
 
 
 %test 4
-:- test currentflag_test4 : (X=unknown, Y=warning, set_prolog_flag(X, Y))
+:- test currentflag_test4 +
+   (setup(setup_currentflag4(X,Y)))
 # "[Non-ISO] current_prolog_flag/2: expected(succeed)".
 
 currentflag_test4 :- current_prolog_flag(unknown, warning).
 
+setup_currentflag4(X,Y):- (X=unknown, Y=warning, set_prolog_flag(X, Y)).
+
 %test 5
-:- test currentflag_test5 : (X=unknown, Y=warning, set_prolog_flag(X, Y))
-	+ fails
+:- test currentflag_test5 +
+   (setup(setup_currentflag5(X,Y)),
+    fails)
 # "[Non-ISO] current_prolog_flag/2: expected(fail)".
 
 currentflag_test5 :- current_prolog_flag(unknown, error).
+
+setup_currentflag5(X,Y):- (X=unknown, Y=warning, set_prolog_flag(X, Y)).
 
 %% REVIEW:PENDING                                               **Label_4**
 %test 6 
@@ -6114,7 +7220,7 @@ currentflag_test5 :- current_prolog_flag(unknown, error).
 
 currentflag_test6 :- current_prolog_flag(debug, off).
 
-%% REVIEW:PENDING                                                 **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                 **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(prolog_flag, warning), _))
 %%   [ciao]: no throws
 %test 7 
@@ -6124,7 +7230,7 @@ currentflag_test6 :- current_prolog_flag(debug, off).
 
 currentflag_test7 :- current_prolog_flag(warning, _Y).
 
-%% REVIEW:PENDING                                                     **Nothrow_vs_iso**
+%% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 1 + 2), _))
 %%   [ciao]: no throws
 %test 8 
@@ -6171,9 +7277,6 @@ halt_test3 :- halt(a).
 # "[Non-ISO] halt/1: expected(error)".
 
 halt_test4 :- halt(_).
-
-
-
 
 
 
