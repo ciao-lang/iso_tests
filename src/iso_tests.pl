@@ -1,31 +1,9 @@
 :- module(iso_tests, _, [assertions, nativeprops, unittestdecls, iso_strict, dynamic]).
 
-% TODO: use a package containing all reexports so the file is cleaner
-
-% TODO: rewrite with use test modules?
-:- reexport(engine(runtime_control)).
-%:- reexport(library(streams)).
-:- reexport(library(streams), [
-    open/3
-                            ]).
-:- reexport(library(iso_incomplete)).
-
-:- reexport(library(write), [
-    writeq/1,
-    write_canonical/1
-]).
-
-:- reexport(library(iso_char), [
-    char_code/2, atom_chars/2, number_chars/2,char_codes/2
-]).
-:- reexport(library(iso_incomplete)).
-:- reexport(library(compiler)).
-%:- reexport(library(dynamic)).
-
 :- doc(title, "ISO tests for Ciao").
 :- doc(author, "The Ciao Development Team").
-:- doc(author, "Lorea Galech").
-:- doc(author, "Jose F. Morales (simplified)").
+:- doc(author, "Lorea Galech (first version)").
+:- doc(author, "Jose F. Morales").
 :- doc(author, "Jos@'{e} Luis Bueno").
 
 :- doc(module, "This module contains a collection of test assertions
@@ -60,6 +38,28 @@ and the current status in Ciao:
    it is not the expected.
 ").
 
+% TODO: use a package containing all reexports so the file is cleaner
+
+% TODO: rewrite with use test modules?
+:- reexport(engine(runtime_control)).
+%:- reexport(library(streams)).
+:- reexport(library(streams), [
+    open/3
+                            ]).
+:- reexport(library(iso_incomplete)).
+
+:- reexport(library(write), [
+    writeq/1,
+    write_canonical/1
+]).
+
+:- reexport(library(iso_char), [
+    char_code/2, atom_chars/2, number_chars/2,char_codes/2
+]).
+:- reexport(library(iso_incomplete)).
+:- reexport(library(compiler)).
+%:- reexport(library(dynamic)).
+
 % TODO:[JF] sending some of this data breaks the unit test runner!
 % :- compilation_fact(fixed_utf8). % TODO: Enable when UTF8 support is completed
 
@@ -77,10 +77,14 @@ and the current status in Ciao:
 %%Label_4: Warnings
 %%Label_5: Nondet
 %%Label_6: Aborted
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The following predicates are not implemented, but here a dummy
 % version is provided in order to avoid compilation errors. -- EMM
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ===========================================================================
+% TODO: fix, requires setting dynamic program (JF)
+
 moose(_) :- fail.
 x :- fail.
 f(_) :- fail.
@@ -98,21 +102,21 @@ bird(_) :- fail.
 :- load_test_module(iso_tests(iso_tests_common)).
 :- use_module(iso_tests_common).
 
-% ===========================================================================
-%% 7.8.1.4 These tests are specified in page 43 of the ISO standard. %%%%
-
-:- test true # "[ISO] true/0: expected(succeed)".
+% NOTE: ISOcore#pNNN means "ISO/IEC 13211-1. Part 1: General Core" page NNN
 
 % ===========================================================================
-%% 7.8.2.4 These tests are specified in page 44 of the ISO standard. %%%%
+%! # 7.8 Control constructs
+%! ## 7.8.1.4 ISOcore#p43
 
-:- test fail/0 + fails # "[ISO] fail/0: expected(fail)".
-
-% ===========================================================================
-
+:- test true + not_fails # "[ISO] true/0".
 
 % ===========================================================================
-%% 7.8.3.4 These tests are specified in page 45 of the ISO standard. %%%%
+%! ## 7.8.2.4 ISOcore#p44
+
+:- test fail/0 + fails # "[ISO] fail/0".
+
+% ===========================================================================
+%! ## 7.8.3.4 ISOcore#p45
 
 %test 1
 :- test call_test1
@@ -241,7 +245,7 @@ call_test15 :- call((1;true)).
 
 
 % ===========================================================================
-%% 7.8.4.4 These tests are specified in page 46 of the ISO standard %%%%
+%! ## 7.8.4.4 ISOcore#p46
 
 % ---------------------------------------------------------------------------
 % (these predicates are used in the following tests)
@@ -329,7 +333,7 @@ cut_test12 :- twice(_), call(!), write('Forwards '), fail.
 
 
 % ===========================================================================
-%% 7.8.5.4 These tests are specified in page 47 of the ISO standard %%%%
+%! ## 7.8.5.4 ISOcore#p47
 
 %test 1
 :- test and_test1 + fails
@@ -351,7 +355,7 @@ and_test3(X) :- ','(X=true, call(X)).
 
 
 % ===========================================================================
-%% 7.8.6.4 These tests are specified in page 48 of the ISO standard %%%%
+%! ## 7.8.6.4 ISOcore#p48
 
 %test 1
 :- test or_test1
@@ -385,7 +389,7 @@ or_test4(X) :- ';'((X=1, !), X=2).
 or_test5(Result) :- findall(X, call((;(X=1, X=2), ;(true, !))), Result).
 
 % ===========================================================================
-%% 7.8.7.4 These tests are specified in page 49 of the ISO standard %%%%
+%! ## 7.8.7.4 ISOcore#p49
 
 %test 1
 :- test ifthen_test1
@@ -425,7 +429,7 @@ ifthen_test6(Result) :- findall(X, '->'(true, ';'(X=1, X=2)), Result).
 
 
 % ===========================================================================
-%% 7.8.8.4 These tests are specified in page 51 of the ISO standard %%%%
+%! ## 7.8.8.4 ISOcore#p51
 
 %test 1
 :- test ifthenelse_test1
@@ -483,7 +487,7 @@ ifthenelse_test8(X) :- ';'('->'(';'(X=1, X=2), true), true).
 
 
 % ===========================================================================
-%% 7.8.9.4 These tests are specified in page 52 of the ISO standard %%%%
+%! ## 7.8.9.4 ISOcore#p52
 
 % ---------------------------------------------------------------------------
 % (these predicates are used in the following tests)
@@ -565,8 +569,8 @@ catch_test8(Y) :- catch(coo(_X), Y, true).
 
 
 % ===========================================================================
-%% 8.6.1.4 These tests are specified in page 74 of the ISO standard %%%%
-
+%! # 8.6 Arithmetic evaluation
+%! ## 8.6.1.4 ISOcore#p74
 
 %test 1
 :- test is_test1(Result) => (Result=14.0)
@@ -604,9 +608,9 @@ is_test5 :- 'is'(foo, 77).
 
 is_test6(N) :- 'is'(77, N).
 
-
 % ===========================================================================
-%% 8.7.1.4 These tests are specified in page 76 of the ISO standard %%%%
+%! # 8.7 Arithmetic comparison
+%! ## 8.7.1.4 ISOcore#p76
 
 
 %test 1
@@ -770,7 +774,8 @@ arithmetic_comparision_test24(X) :- '=<'(X, 5).
 
 
 % ===========================================================================
-%% 8.8.1.4 These tests are specified in page 77 of the ISO standard %%%%
+%! # 8.8 Clause retrieval and information
+%! ## 8.8.1.4 ISOcore#p77
 
 :- dynamic(cat/0).
 cat.
@@ -900,7 +905,7 @@ clause_test12 :- clause(f(_), 5).
 
 
 % ===========================================================================
-%% 8.8.2.4 These tests are specified in page 78 of the ISO standard %%%%
+%! ## 8.8.2.4 ISOcore#p78
 
 
 %test 1
@@ -982,7 +987,8 @@ currentpredicate_test9(X, Result) :- findall(X, current_predicate(X), Result).
 
 
 % ===========================================================================
-%% 8.9.1.4 These tests are specified in page 79 of the ISO standard %%%%
+%! # 8.9 Clause creation and destruction
+%! ## 8.9.1.4 ISOcore#p79
 
 
 %test 1
@@ -1043,7 +1049,7 @@ asserta_test7 :- asserta((atom(_) :- true)).
 
 
 % ===========================================================================
-%% 8.9.2.4 These tests are specified in page 80 of the ISO standard %%%%
+%! ## 8.9.2.4 ISOcore#p80
 
 
 %test 1
@@ -1107,7 +1113,7 @@ assertz_test7 :- assertz((atom(_) :- true)).
 
 
 % ===========================================================================
-%% 8.9.3.4 These tests are specified in page 81 of the ISO standard %%%%
+%! ## 8.9.3.4 ISOcore#p81
 
 %test 1
 :- test retract_test1
@@ -1202,7 +1208,7 @@ retract_test10(X) :- retract((4 :- X)).
 retract_test11(X) :- retract((atom(X) :- X == '[]')).
 
 % ===========================================================================
-%% 8.9.4.4 These tests are specified in page 82 of the ISO standard %%%%
+%! ## 8.9.4.4 ISOcore#p82
 
 %test 1                                                 
 :- test abolish_test1
@@ -1341,7 +1347,8 @@ abolish_test13 :- abolish(5/a).
 abolish_test14 :- abolish(insect).
 
 % ===========================================================================
-%% 8.10.1.4 These tests are specified in page 83 of the ISO standard %%%
+%! # 8.10 All solutions
+%! ## 8.10.1.4 ISOcore#p83
 
 %test 1
 :- test findall_test1(Result) => (Result=[1, 2])
@@ -1416,7 +1423,7 @@ findall_test9 :- findall(X, (X=1), [_|1]).
 
 
 % ===========================================================================
-%% 8.10.2.4 These tests are specified in page 84 of the ISO standard %%%
+%! ## 8.10.2.4 ISOcore#p84
 
 %%%%%%%% THE FOLLOWING PREDICATES WILL BE USED IN THE FOLLOWING TESTS %%%%%%%%
 :- dynamic(a/2).
@@ -1535,7 +1542,7 @@ bagof_test14(Result, X) :- bagof(X, 1, Result).
 
 
 % ===========================================================================
-%% 8.10.3.4 These tests are specified in page 85 of the ISO standard %%%
+%! ## 8.10.3.4 ISOcore#p85
 
 
 %%%%%%%% THE FOLLOWING PREDICATES WILL BE USED IN THE FOLLOWING TESTS %%%%%%%%
@@ -1767,8 +1774,8 @@ setof_test28(A) :- setof(X, X=1, [1|A]).
 setof_test29 :- setof(X, X=1, [_|1]).
 
 
-%% 8.11.1 (FROM SICTUS AND EDDBALI) These tests are specified in the         %%
-%% page 86 of the ISO standard.                                           %%
+%! # 8.11 Stream selection and control
+%! ## 8.11.1 (FROM SICTUS AND EDDBALI) ISOcore#p86
 
 :- test currentinput_test1(S)
 # "[Non-ISO] current_input/1: expected(succeed)".
@@ -1823,8 +1830,7 @@ currentinput_test5(S) :- current_input(S).
 
 currentinput_test5_setup(S) :- current_input(S).
 
-%% 8.11.2 (FROM SICTUS AND EDDBALI) These tests are specified in the         %%
-%% page 86 of the ISO standard.                                           %%
+%! ## 8.11.2 (FROM SICTUS AND EDDBALI) ISOcore#p86
 
 
 %test1
@@ -1872,8 +1878,7 @@ currentoutput_test5(S) :- current_output(S).
 
 
 
-%% 8.11.3 (FROM SICTUS AND EDDBALI) These tests are specified in the         %%
-%% page 87 of the ISO standard.                                           %%
+%! ## 8.11.3 (FROM SICTUS AND EDDBALI) ISOcore#p87
 
 % TODO:[JF] requires setup/cleanup
 %test1
@@ -1931,8 +1936,7 @@ setup_setinput(S) :-
 
 
 % ===========================================================================
-%% 8.11.4 (FROM SICTUS AND EDDBALI) These tests are specified in the         %%
-%% page 87 of the ISO standard.                                           %%
+%! ## 8.11.4 (FROM SICTUS AND EDDBALI) ISOcore#p87
 
 % TODO:[JF] missing setup/cleanup
 %test 1 
@@ -1986,7 +1990,7 @@ setoutput_test5(S) :- set_output(S).
 
 setoutput_test5_setup(S) :- current_input(S).
 
-%% 8.11.5.4 These tests are specified in page 88 of the ISO standard. %%
+%! ## 8.11.5.4 ISOcore#p88
 
 %% REVIEW:PENDING                                          **Label_6**
 %test1 
@@ -2171,8 +2175,7 @@ open_test17 :- open('/dev/tty', read, _, [reposition(true)]).
 % TODO: we will not implement reposition(true) in open/4 % TODO:[JF] why?
 
 % ===========================================================================
-%% 8.11.6 (FROM SICTUS AND EDDBALI) These tests are specified in the         %%
-%% page 88 of the ISO standard.                                           %%
+%! ## 8.11.6 (FROM SICTUS AND EDDBALI) ISOcore#p88
 
 %test 1
 :- test close_test1(S) : (open('/tmp/foo', write, S))
@@ -2280,8 +2283,7 @@ close_test9_setup(S) :-
     close(S).
 
 % ===========================================================================
-%% 8.11.7 (FROM SICTUS AND EDDBALI) These tests are specified in the         %%
-%% page 89 of the ISO standard.                                           %%
+%! ## 8.11.7 (FROM SICTUS AND EDDBALI) ISOcore#p89
 
 %% REVIEW:PENDING                                              **Label_6**
 %test 1
@@ -2366,7 +2368,7 @@ flush_output_test6_cleanup(S) :-
     close(S).
 
 % ===========================================================================
-%% 8.11.8.4 These tests are specified in page 90 of the ISO standard. %%%
+%! ## 8.11.8.4 ISOcore#p90
 
 %test 1 
 :- test stream_property_test1(L, auxvar(S1, S2))
@@ -2585,8 +2587,7 @@ setup_aeostr7(S1):-
 cleanup_aeostr7(S1):-
     close(S1).
 
-%% 8.11.9 (FROM SICTUS AND EDDBALI) These tests are specified in the         %%
-%% page 90 of the ISO standard.                                           %%
+%! ## 8.11.9 (FROM SICTUS AND EDDBALI) ISOcore#p90
 
 % TODO:[JF] implement position/1 property!
 %% REVIEW:PENDING                                                  **Label_6**
@@ -2690,7 +2691,8 @@ setup_ssp6(S,Pos):-
     current_input(S).
 
 % ===========================================================================
-%% 8.12.1.4 These tests are specified in page 91 of the ISO standard. %%%
+%! # 8.12 Character input/output
+%! ## 8.12.1.4 ISOcore#p91
 
 %% REVIEW:PENDING                           **Label_6**
 %test 1
@@ -3242,7 +3244,7 @@ cleanup_gco33(S1) :-
     close(S1).
 
 % ===========================================================================
-%% 8.12.2.4 These tests are specified in page 93 of the ISO standard. %%%
+%! ## 8.12.2.4 ISOcore#p93
 
 %% REVIEW:PENDING                             **Label_6**
 %test 1
@@ -3791,7 +3793,7 @@ cleanup_pco33(S1) :-
     close(S1).
 
 % ===========================================================================
-%% 8.12.3.4 These tests are specified in page 94 of the ISO standard. %%%
+%! ## 8.12.3.4 ISOcore#p94
 
 %% REVIEW:PENDING                                   **Label_6**
 %test 1
@@ -4148,7 +4150,8 @@ putcode_test23 :- put_code(-1).
 putcode_test24 :- put_code(foo, -1).
 
 % ===========================================================================
-%% 8.13.1.4 These tests are specified in page 96 of the ISO standard. %%%
+%! # 8.13 Byte input/output
+%! ## 8.13.1.4 ISOcore#p96
 
 %% REVIEW:PENDING                             **Label_6**
 %test 1 
@@ -4383,7 +4386,7 @@ cleanup_getbyte13(Sc,S1):-
 
 
 % ===========================================================================
-%% 8.13.2.4 These tests are specified in page 97 of the ISO standard. %%%
+%! ## 8.13.2.4 ISOcore#p97
 
 %% REVIEW:PENDING                                            **Label_4**
 %test 1 
@@ -4611,7 +4614,7 @@ cleanup_pb13(Sc,S1):-
     close_instreams(Sc, S1).
 
 % ===========================================================================
-%% 8.13.2.4 These tests are specified in page 98 of the ISO standard. %%%
+%! ## 8.13.2.4 ISOcore#p98
 
 %% REVIEW:PENDING                                     **Label_6**
 %test 1 
@@ -4779,7 +4782,8 @@ putbyte_test12 :- put_byte(foo, 1).
 putbyte_test13 :- put_byte(user_output, 'ty').
 
 % ===========================================================================
-%% 8.14.1.4 These tests are specified in page 99 of the ISO standard. %%X
+%! # 8.14 Term input/output
+%! ## 8.14.1.4 ISOcore#p99
 
 % TODO:[JF] REVIEWED UNTIL HERE
 
@@ -5202,7 +5206,7 @@ cleanup_read24(Sc,S1):-
     close_instreams(Sc, S1).
 
 % ===========================================================================
-%% 8.14.2.4 These tests are specified in page 100 of the ISO standard. %%
+%! ## 8.14.2.4 ISOcore#p100
 
 %% REVIEW:PENDING                                                  **Label_6**
 %test 1 
@@ -5478,7 +5482,7 @@ cleanup_write21(S):-
     close(S).
 
 % ===========================================================================
-%% 8.14.3.4 These tests are specified in page 102 of the ISO standard. %%
+%! ## 8.14.3.4 ISOcore#p102
 
 :- prop op_test1_poscond/1.
 
@@ -5647,7 +5651,7 @@ op_test18 :- op(100, xfx, ',').
 op_test19 :- op(100, xfx, [a, ',']).
 
 % ===========================================================================
-%% 8.14.4.4 These tests are specified in page 103 of the ISO standard. %%
+%! ## 8.14.4.4 ISOcore#p103
 
 
 %test 1                                               **Label_1**
@@ -5702,7 +5706,7 @@ current_op_test5 :- current_op(_, _, 5).
 
 
 % ===========================================================================
-%% 8.14.5.4 These tests are specified in page 103 of the ISO standard. %%
+%! ## 8.14.5.4 ISOcore#p103
 
 % TODO:[JF] won't fix (unless somebody really need them)
 char_conversion(_, _) :- fail.
@@ -5987,7 +5991,7 @@ setup_charconver12(S,Sc,S1):-
 cleanup_charconver12(Sc,S1):-
     close_instreams(Sc, S1).
 
-%% 8.14.6.4 These tests are specified in page 104 of the ISO standard. %%
+%! ## 8.14.6.4 ISOcore#p104
 
 %% REVIEW:PENDING                               **Label_6**  
 %test 1  
@@ -6015,7 +6019,9 @@ cleanup_currentcharconver1(Sc,S1):-
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 
-%% 8.15.1.4 These tests are specified in page 105 of the ISO standard. %%
+%! # 8.15 Logic and control
+%! ## 8.15.1.4 ISOcore#p105
+
 %test1
 :- test not_test1 + fails
 # "[ISO] '\\+': expected(fail)".
@@ -6067,7 +6073,7 @@ not_test7 :- '\\+'(_X).
 not_test8 :- '\\+'(X=f(X)).
 
 
-%% 8.15.2.4 These tests are specified in page 105 of the ISO standard. %%
+%! ## 8.15.2.4 ISOcore#p105
 
 %test1
 :- test once_test1
@@ -6117,7 +6123,7 @@ once_test7 :- once(_).
 
 
 % ===========================================================================
-%% 8.15.3.4 These tests are specified in page 105 of the ISO standard. %%
+%! ## 8.15.3.4 ISOcore#p105
 %test 1
 %:- test repeat_test1 + current_output("hello").
 %repeat_test1 :- repeat,write(hello),fails.
@@ -6131,7 +6137,8 @@ repeat_test2 :- repeat, !, fail.
 
 
 
-%% 8.16.1.4 These tests are specified in page 106 of the ISO standard. %%
+%! # 8.16 Atomic term processing
+%! ## 8.16.1.4 ISOcore#p106
 
 %test1
 :- test atomlength_test1(N) => (N=17)
@@ -6201,7 +6208,7 @@ atomlength_test8 :- atom_length(atom, -4).
 atomlength_test9(L) :- atom_length('Bartók Béla', L).
 :- endif.
 
-%% 8.16.2.4 These tests are specified in page 107 of the ISO standard. %%
+%! ## 8.16.2.4 ISOcore#p107
 
 %test1
 :- test atomconcat_test1(S3) => (S3='hello world')
@@ -6299,7 +6306,7 @@ atomconcat_test14(Result) :-
 	findall([T1, T2], atom_concat(T1, T2, 'Pécs'), Result).
 :- endif.
 % ===========================================================================
-%% 8.16.3.4 These tests are specified in page 108 of the ISO standard. %%
+%! ## 8.16.3.4 ISOcore#p108
 
 %test 1
 :- test subatom_test1(S) => (S='abrac')
@@ -6555,7 +6562,7 @@ subatom_test35(Result) :-
 
 
 % ===========================================================================
-%% 8.16.4.4 These tests are specified in page 108 of the ISO standard. %%
+%! ## 8.16.4.4 ISOcore#p108
 
 %test 1
 :- test atomchars_test1(L) => (L=[])
@@ -6670,7 +6677,7 @@ atomchars_test15(A) :- atom_chars(A, ['P', 'é', 'c', 's']).
 :- endif.
 
 % ===========================================================================
-%% 8.16.5.4 These tests are specified in page 109 of the ISO standard. %%
+%! ## 8.16.5.4 ISOcore#p109
 
 %test 1
 :- test atomcodes_test1(L) => (L=[])
@@ -6803,7 +6810,7 @@ atomcodes_test16 :- atom_codes(_A, [a, b, c]).
 
 
 % ===========================================================================
-%% 8.16.6.4 These tests are specified in page 110 of the ISO standard. %%
+%! ## 8.16.6.4 ISOcore#p110
 
 %test 1
 :- test charcode_test1(Code) => (Code=0'a)
@@ -6869,7 +6876,7 @@ charcode_test8 :- char_code(a, x).
 charcode_test9 :- char_code(_Str, -2).
 
 
-%% 8.16.7.4 These tests are specified in page 111 of the ISO standard. %%
+%! ## 8.16.7.4 ISOcore#p111
 
 %test1
 :- test numberchars_test1(L) => (L=['3', '3'])
@@ -7080,7 +7087,7 @@ numberchars_test27 :- number_chars(_A, ['0', 'x', '0', '.', '0']).
 
 
 % ===========================================================================
-%% 8.16.8.4 These tests are specified in page 112 of the ISO standard. %%
+%! ## 8.16.8.4 ISOcore#p112
 
 %test 1
 :- test numbercodes_test1(L) => (L=[0'3, 0'3])
@@ -7273,7 +7280,8 @@ numbercodes_test21 :- number_codes(_A, [0'0, 0'x, 0'0, 0'., 0'0]).
 
 
 % ===========================================================================
-%% 8.17.1.4 These tests are specified in page 112 of the ISO standard. %%
+%! # 8.17 Implementation defined hooks
+%! ## 8.17.1.4 ISOcore#p112
 
 %test 1
 :- test setflag_test1
@@ -7333,7 +7341,7 @@ setflag_test6 :- set_prolog_flag(max_arity, 40).
 
 
 % ===========================================================================
-%% 8.17.2.4 These tests are specified in page 113 of the ISO standard. %%
+%! ## 8.17.2.4 ISOcore#p113
 
 %% REVIEW:PENDING                                       **Label_4**
 %test 1 
@@ -7415,8 +7423,7 @@ currentflag_test8 :- current_prolog_flag(1 + 2, flag).
 
 
 % ===========================================================================
-%% 8.17.3.4 and 8.17.4.4 These tests are specified in page 113 from      %%
-%% the ISO standard.                                                        %%
+%! ## 8.17.3.4 and 8.17.4.4 ISOcore#p113 from the ISO standard.
 
 % TODO: Let us trust that halt/0 and halt/1 effectively stops the process.
 %   Testing those predicates require new comp properties. (JF)
