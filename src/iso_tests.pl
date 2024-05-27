@@ -103,6 +103,8 @@ bird(_) :- fail.
 
 % NOTE: ISOcore#pNNN means "ISO/IEC 13211-1. Part 1: General Core" page NNN
 
+% The tests follow the order specified in the ISO/IEC 13211-1 document.
+
 % ===========================================================================
 %! # 7.8 Control constructs
 %! ## 7.8.1 true/0 ISOcore#p43
@@ -316,7 +318,7 @@ goal((twice(_), !)).
 goal(write('Three ')).
 
 % ---------------------------------------------------------------------------
-%! ## 7.8.5 ISOcore#p47
+%! ## 7.8.5 (,)/2 ISOcore#p47
 
 %test 1
 :- test and_test1 + fails
@@ -336,9 +338,8 @@ and_test2(X) :- ','(var(X), X=1).
 
 and_test3(X) :- ','(X=true, call(X)).
 
-
-% ===========================================================================
-%! ## 7.8.6 ISOcore#p48
+% ---------------------------------------------------------------------------
+%! ## 7.8.6 (;)/2 ISOcore#p48
 
 %test 1
 :- test or_test1
@@ -371,8 +372,8 @@ or_test4(X) :- ';'((X=1, !), X=2).
 
 or_test5(Result) :- findall(X, call((;(X=1, X=2), ;(true, !))), Result).
 
-% ===========================================================================
-%! ## 7.8.7 ISOcore#p49
+% ---------------------------------------------------------------------------
+%! ## 7.8.7 (->)/2 if-then ISOcore#p49
 
 %test 1
 :- test ifthen_test1
@@ -410,9 +411,8 @@ ifthen_test5(Result) :- findall(X, '->'(';'(X=1, X=2), true), Result).
 
 ifthen_test6(Result) :- findall(X, '->'(true, ';'(X=1, X=2)), Result).
 
-
 % ===========================================================================
-%! ## 7.8.8 ISOcore#p51
+%! ## 7.8.8 (;)/2 if-then-else ISOcore#p51
 
 %test 1
 :- test ifthenelse_test1
@@ -468,12 +468,58 @@ ifthenelse_test8(X) :- ';'('->'(';'(X=1, X=2), true), true).
 %
 % ifthenelse_test9 :- ';'('->'(!,fail),true).
 
+% ---------------------------------------------------------------------------
+%! ## 7.8.9 catch/3 ISOcore#p52
 
-% ===========================================================================
-%! ## 7.8.9 ISOcore#p52
+:- test catch_test1(Y) => (Y=10)
+# "[ISO] catch: expected(succeed)".
+
+catch_test1(Y) :- catch(foo(5), test(Y), true).
+
+:- test catch_test2(Z) : (Z=3)
+# "[ISO] catch: expected(succeed)".
+
+catch_test2(Z) :- catch(bar(3), Z, true).
+
+:- test catch_test3
+# "[ISO] catch: expected(succeed)".
+
+catch_test3 :- catch(true, _, 3).
+
+%% REVIEW:PENDING                                **Label_3**
+%test4
+%%   [gprolog]: throws exception(bla)
+%%   [ciao]:  throws  exception(bla)
+:- test catch_test4 + exception(error(system_error, ImplDep))
+# "[ISO] catch: expected(error) bug(wrong_error)".
+
+catch_test4 :- catch(true, _C, write(demoen)), throw(bla). % TODO: wrong test?
+
+:- test catch_test5(Y) => (Y=1)
+# "[ISO] catch: expected(succeed)".
+
+catch_test5(Y) :- catch(car(_X), Y, true).
+
+:- test catch_test6 + fails
+# "[ISO] catch: expected(fail)".
+
+catch_test6 :-
+    catch(number_chars(_X, ['1', 'a', '0']), error(syntax_error(_), _),
+          fail).
+
+:- test catch_test7(Result) => (Result=[c]) + (user_output("h1"))
+# "[ISO] catch: expected(succeed)".
+
+catch_test7(Result) :- findall(C, catch(g, C, write(h1)), Result).
+
+:- test catch_test8(Y) => (Y=error(instantiation_error, Imp_def))
+# "[ISO] catch: expected(succeed)".
+
+catch_test8(Y) :- catch(coo(_X), Y, true).
 
 % ---------------------------------------------------------------------------
 % (these predicates are used in the following tests)
+
 :- push_prolog_flag(multi_arity_warnings, off).
 :- dynamic(foo/1).
 foo(X) :- Y is X*2, throw(test(Y)).
@@ -495,61 +541,11 @@ g :- catch(p, _B, write(h2)), coo(c).
 p.
 
 p :- throw(b).
+
 % ---------------------------------------------------------------------------
+%! ## 7.8.10 throw/1 ISOcore#p53
 
-%test1 
-:- test catch_test1(Y) => (Y=10)
-# "[ISO] catch: expected(succeed)".
-
-catch_test1(Y) :- catch(foo(5), test(Y), true).
-
-%test2 
-:- test catch_test2(Z) : (Z=3)
-# "[ISO] catch: expected(succeed)".
-
-catch_test2(Z) :- catch(bar(3), Z, true).
-
-%test3
-:- test catch_test3
-# "[ISO] catch: expected(succeed)".
-
-catch_test3 :- catch(true, _, 3).
-
-%% REVIEW:PENDING                                **Label_3**
-%test4
-%%   [gprolog]: throws exception(bla)
-%%   [ciao]:  throws  exception(bla)
-:- test catch_test4 + exception(error(system_error, ImplDep))
-# "[ISO] catch: expected(error) bug(wrong_error)".
-
-catch_test4 :- catch(true, _C, write(demoen)), throw(bla). % TODO: wrong test?
-
-%test5
-:- test catch_test5(Y) => (Y=1)
-# "[ISO] catch: expected(succeed)".
-
-catch_test5(Y) :- catch(car(_X), Y, true).
-
-%test6 
-:- test catch_test6 + fails
-# "[ISO] catch: expected(fail)".
-
-catch_test6 :-
-    catch(number_chars(_X, ['1', 'a', '0']), error(syntax_error(_), _),
-          fail).
-
-%test 7 
-:- test catch_test7(Result) => (Result=[c]) + (user_output("h1"))
-# "[ISO] catch: expected(succeed)".
-
-catch_test7(Result) :- findall(C, catch(g, C, write(h1)), Result).
-
-%tes 8
-:- test catch_test8(Y) => (Y=error(instantiation_error, Imp_def))
-# "[ISO] catch: expected(succeed)".
-
-catch_test8(Y) :- catch(coo(_X), Y, true).
-
+% (see 7.8.9 catch/3)
 
 % ===========================================================================
 %! # 8.6 Arithmetic evaluation
@@ -853,7 +849,7 @@ clause_test11 :- clause(legs(A, 6), insect(f(A))).
 clause_test12 :- clause(f(_), 5).
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.8.2 ISOcore#p78
 
 
@@ -997,7 +993,7 @@ asserta_test6 :- asserta((foo :- 4)).
 asserta_test7 :- asserta((atom(_) :- true)).
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.9.2 ISOcore#p80
 
 
@@ -1061,7 +1057,7 @@ assertz_test6 :- assertz((foo :- 4)).
 assertz_test7 :- assertz((atom(_) :- true)).
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.9.3 ISOcore#p81
 
 %test 1
@@ -1156,7 +1152,7 @@ retract_test10(X) :- retract((4 :- X)).
 
 retract_test11(X) :- retract((atom(X) :- X == '[]')).
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.9.4 ISOcore#p82
 
 %test 1                                                 
@@ -1371,7 +1367,7 @@ findall_test9 :- findall(X, (X=1), [_|1]).
 
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.10.2 ISOcore#p84
 
 %%%%%%%% THE FOLLOWING PREDICATES WILL BE USED IN THE FOLLOWING TESTS %%%%%%%%
@@ -1490,7 +1486,7 @@ bagof_test14(Result, X) :- bagof(X, 1, Result).
 
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.10.3 ISOcore#p85
 
 
@@ -1884,7 +1880,7 @@ setup_setinput(S) :-
     current_output(S).
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.11.4 (FROM SICTUS AND EDDBALI) ISOcore#p87
 
 % TODO:[JF] missing setup/cleanup
@@ -2123,7 +2119,7 @@ open_test16 :- open('/tmp/bar', write, _, [alias(a)]).
 open_test17 :- open('/dev/tty', read, _, [reposition(true)]).
 % TODO: we will not implement reposition(true) in open/4 % TODO:[JF] why?
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.11.6 (FROM SICTUS AND EDDBALI) ISOcore#p88
 
 %test 1
@@ -2231,7 +2227,7 @@ close_test9_setup(S) :-
     open('/tmp/foo', write, S, []),
     close(S).
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.11.7 (FROM SICTUS AND EDDBALI) ISOcore#p89
 
 %% REVIEW:PENDING                                              **Label_6**
@@ -2316,7 +2312,7 @@ flush_output_test6_setup(S) :-
 flush_output_test6_cleanup(S) :-
     close(S).
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.11.8 ISOcore#p90
 
 %test 1 
@@ -3192,7 +3188,7 @@ setup_gco33(S1):-
 cleanup_gco33(S1) :-
     close(S1).
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.12.2 ISOcore#p93
 
 %% REVIEW:PENDING                             **Label_6**
@@ -3741,7 +3737,7 @@ setup_pco33(S1):-
 cleanup_pco33(S1) :-
     close(S1).
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.12.3 ISOcore#p94
 
 %% REVIEW:PENDING                                   **Label_6**
@@ -4334,7 +4330,7 @@ cleanup_getbyte13(Sc,S1):-
     close_instreams(Sc, S1).
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.13.2 ISOcore#p97
 
 %% REVIEW:PENDING                                            **Label_4**
@@ -4562,7 +4558,7 @@ setup_pb13(Sc,S1):-
 cleanup_pb13(Sc,S1):-
     close_instreams(Sc, S1).
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.13.3 ISOcore#p98
 
 %% REVIEW:PENDING                                     **Label_6**
@@ -5152,7 +5148,7 @@ setup_read24(Sc,S1):-
 cleanup_read24(Sc,S1):-
     close_instreams(Sc, S1).
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.14.2 ISOcore#p100
 
 %% REVIEW:PENDING                                                  **Label_6**
@@ -5428,7 +5424,7 @@ setup_write21(S,Sc):-
 cleanup_write21(S):-
     close(S).
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.14.3 ISOcore#p102
 
 :- prop op_test1_poscond/1.
@@ -5597,7 +5593,7 @@ op_test18 :- op(100, xfx, ',').
 
 op_test19 :- op(100, xfx, [a, ',']).
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.14.4 ISOcore#p103
 
 
@@ -5652,7 +5648,7 @@ current_op_test5 :- current_op(_, _, 5).
 
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.14.5 ISOcore#p103
 
 % TODO:[JF] won't fix (unless somebody really need them)
@@ -6069,7 +6065,7 @@ once_test7 :- once(_).
 
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.15.3 ISOcore#p105
 %test 1
 %:- test repeat_test1 + current_output("hello").
@@ -6252,7 +6248,7 @@ atomconcat_test13(T2) :- atom_concat('Bartók ', T2, 'Bartók Béla').
 atomconcat_test14(Result) :-
 	findall([T1, T2], atom_concat(T1, T2, 'Pécs'), Result).
 :- endif.
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.16.3 ISOcore#p108
 
 %test 1
@@ -6508,7 +6504,7 @@ subatom_test35(Result) :-
 	findall([X, Y, Z], sub_atom('abracadabra', X, Y, Z, abra), Result).
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.16.4 ISOcore#p108
 
 %test 1
@@ -6623,7 +6619,7 @@ atomchars_test14(L) :- atom_chars('Pécs', L).
 atomchars_test15(A) :- atom_chars(A, ['P', 'é', 'c', 's']).
 :- endif.
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.16.5 ISOcore#p109
 
 %test 1
@@ -6756,7 +6752,7 @@ atomcodes_test16 :- atom_codes(_A, [a, b, c]).
 
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.16.6 ISOcore#p110
 
 %test 1
@@ -7033,7 +7029,7 @@ numberchars_test26 :- number_chars(_A, ['a']).
 numberchars_test27 :- number_chars(_A, ['0', 'x', '0', '.', '0']).
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.16.8 ISOcore#p112
 
 %test 1
@@ -7287,7 +7283,7 @@ setflag_test6 :- set_prolog_flag(max_arity, 40).
 
 
 
-% ===========================================================================
+% ---------------------------------------------------------------------------
 %! ## 8.17.2 ISOcore#p113
 
 %% REVIEW:PENDING                                       **Label_4**
@@ -7367,8 +7363,8 @@ currentflag_test7 :- current_prolog_flag(warning, _Y).
 
 currentflag_test8 :- current_prolog_flag(1 + 2, flag).
 
-% ===========================================================================
-%! ## 8.17.3 ISOcore#p113
+% ---------------------------------------------------------------------------
+%! ## 8.17.3 halt/0 ISOcore#p113
 
 % TODO: Let us trust that halt/0 and halt/1 effectively stops the process.
 %   Testing those predicates require new comp properties. (JF)
@@ -7378,17 +7374,17 @@ currentflag_test8 :- current_prolog_flag(1 + 2, flag).
 # "[ISO] halt/0: stops the process.".
 
 halt_test1 :- halt.
+:- endif.
 
-%! ## 8.17.4 ISOcore#p113
+%! ## 8.17.4 halt/1 ISOcore#p113
 
-%test 2 
+:- if(defined(testing_halt)).
 :- test halt_test2
 # "[ISO] halt/1: stops the process with error code 1.".
 
 halt_test2 :- halt(1).
 :- endif.
 
-%test 3 
 :- test halt_test3
 	+ exception(error(type_error(integer, a), ImplDep))
 # "[ISO] halt/1: expected(error)".
@@ -7397,7 +7393,6 @@ halt_test3 :- halt(a).
 
 %%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
-%test 4
 :- test halt_test4
 	+ exception(error(instantiation_error, ImplDep))
 # "[Non-ISO] halt/1: expected(error)".
