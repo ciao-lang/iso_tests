@@ -117,7 +117,7 @@ bird(_) :- fail.
 % ---------------------------------------------------------------------------
 %! ## 7.8.3.4 call/1 ISOcore#p45
 
-% NOTE: Current issues in Ciao
+% TODO: Current issues in Ciao
 %
 %  - The term to goal translation in `call/1` should set the right
 %    scope of cut.
@@ -223,100 +223,99 @@ call_test15 :- call((1;true)).
 
 % TODO:[JF] it should complain about non-callable when the term is translated to a goal,
 %   instead it executes the first branch
-:- test call_test16 + exception(error(type_error(callable, (1;true)), ImplDep))
+:- test call_test16 + exception(error(type_error(callable, (true;1)), ImplDep))
    # "[ISO-ciao] call/1: expected(error) bug(success)".
 
 call_test16 :- call((true;1)).
 
-% ===========================================================================
-%! ## 7.8.4.4 ISOcore#p46
-
 % ---------------------------------------------------------------------------
-% (these predicates are used in the following tests)
-:- dynamic(twice/1).
-twice(!) :- write('C ').
-twice(true) :- write('Moss ').
+%! ## 7.8.4.4 !/0 ISOcore#p46
 
-:- dynamic(goal/1).
-goal((twice(_), !)).
-goal(write('Three ')).
-% ---------------------------------------------------------------------------
+% TODO: Current issues in Ciao
+%
+%   - cut is not allowed in \+ or if-parts of ->, if/3
 
-%test 1
 :- test cut_test1
-# "[ISO] cut: expected(succeed)".
+   # "[ISO] cut".
 
 cut_test1 :- !.
 
-%test 2
 :- test cut_test2/0 + fails
-# "[ISO] cut: expected(fail)".
+   # "[ISO] cut".
 
 cut_test2 :- !, fail;true.
 
-%test 3
 :- test cut_test3/0
-# "[ISO] cut: expected(succeed)".
+   # "[ISO] cut".
 
 cut_test3 :- call(!), fail;true.
 
-%test 4  
 :- test cut_test4/0 + (user_output("C Forwards "), fails)
-# "[ISO] cut: expected(fail)".
+   # "[ISO] cut".
 
 cut_test4 :- twice(_), !, write('Forwards '), fail.
 
-%test 5
 :- test cut_test5 + (user_output("Cut disjunction"), fails)
-# "[ISO] cut: expected(fail)".
+   # "[ISO] cut".
 
-cut_test5 :- (! ;write('No ')), write('Cut disjunction'), fail.
+cut_test5 :- (! ; write('No ')), write('Cut disjunction'), fail.
 
-%test 6 
 :- test cut_test6 + (user_output("C No Cut Cut "), fails)
-# "[ISO] cut: expected(fail)".
+   # "[ISO] cut".
 
 cut_test6 :- twice(_), (write('No ') ; !), write('Cut '), fail.
 
-%test 7 
 :- test cut_test7 + (user_output("C "), fails)
-# "[ISO] cut: expected(fail)".
+   # "[ISO] cut".
 
 cut_test7 :- twice(_), (!, fail, write('No ')).
 
-%test 8 
 :- test cut_test8 + (user_output("C Forwards Moss Forwards "), fails)
-# "[ISO] cut: expected(fail)".
+   # "[ISO] cut".
 
 cut_test8 :- twice(X), call(X), write('Forwards '), fail.
 
-%test 9  
 :- test cut_test9 + (user_output("C Forwards Three Forwards "), fails)
-# "[ISO] cut: expected(fail)".
+   # "[ISO] cut".
 
 cut_test9 :- goal(X), call(X), write('Forwards '), fail.
 
-% % test 10 
-% :- test cut_test10 
-%       + (user_output("C Forwards Moss Forwards "),fails)
-% # "[ISO] cut: expected(fail)".
-%
-% cut_test10 :- twice(_),(\+(\+(!))),write('Forwards '),fail.
-
-%test 11 
-:- test cut_test11 + (user_output("C Forwards Moss Forwards "), fails)
+:- test cut_test10 
+      + (user_output("C Forwards Moss Forwards "),fails)
 # "[ISO] cut: expected(fail)".
+
+% TODO:[JF] commented out, in Ciao "! is illegal in \+ or if-parts of ->"
+% cut_test10 :- twice(_), (\+(\+(!))), write('Forwards '), fail.
+cut_test10 :- throw(bug_not_implemented).
+
+:- test cut_test11 + (user_output("C Forwards Moss Forwards "), fails)
+   # "[ISO] cut".
 
 cut_test11 :- twice(_), once(!), write('Forwards '), fail.
 
-%test 12 
 :- test cut_test12 + (user_output("C Forwards Moss Forwards "), fails)
-# "[ISO] cut: expected(fail)".
+   # "[ISO] cut".
 
 cut_test12 :- twice(_), call(!), write('Forwards '), fail.
 
+:- test cut_test13 + not_fails
+   # "[ISO-ciao] cut: bug(fails)".
 
-% ===========================================================================
+% TODO:[JF] reimplement without findall/3
+cut_test13 :-
+    findall(Y, ( member(X,[1,2]), !, X=2 -> Y=a ; Y=b ), Ys),
+    Ys = [b].
+
+% ---------------------------------------------------------------------------
+% (these predicates are used in the tests above)
+
+twice(!) :- write('C ').
+twice(true) :- write('Moss ').
+
+goal((twice(_), !)).
+goal(write('Three ')).
+
+% ---------------------------------------------------------------------------
 %! ## 7.8.5.4 ISOcore#p47
 
 %test 1
@@ -4768,8 +4767,6 @@ putbyte_test13 :- put_byte(user_output, 'ty').
 % ===========================================================================
 %! # 8.14 Term input/output
 %! ## 8.14.1.4 ISOcore#p99
-
-% TODO:[JF] REVIEWED UNTIL HERE
 
 %% REVIEW:PENDING                                      **Label_6**
 %test 1 
