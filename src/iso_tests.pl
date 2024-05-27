@@ -1,8 +1,9 @@
 :- module(iso_tests, _, [assertions, nativeprops, unittestdecls, iso_strict, dynamic]).
 
-:- doc(title, "ISO tests for Ciao").
+:- doc(title, "ISO Prolog tests for Ciao").
 :- doc(author, "The Ciao Development Team").
 :- doc(author, "Lorea Galech (first version)").
+:- doc(author, "R@'{e}my Haemmerl@'{e}").
 :- doc(author, "Jose F. Morales").
 :- doc(author, "Jos@'{e} Luis Bueno").
 
@@ -13,7 +14,8 @@ for checking compliance of Ciao with the ISO Prolog standard using the
  - the source of the test:
    - `[ISO]` for tests from the ISO Prolog standard document
    - `[Non-ISO]` for other tests (from A Ed-Dbali's, SICStus, or Péter Szabó).
-   - `[ISO-ciao]` other tests
+   - `[ISO-ciao]` other ISO tests unique to this test suite
+   - `[ISO-lg]` ISO tests from Logtalk
 
  - the predicate or feature to be tested:
    - `f/a`: tests for predicate `f/a`
@@ -38,6 +40,11 @@ and the current status in Ciao:
  - `bug(wrong_error)`: The predicate raises an exception (error), but
    it is not the expected.
 ").
+
+% Current state:
+%   Note: {Total:
+%   Passed: 842 (85.40%) Failed: 130 (13.18%) Precond Failed: 0 (0.00%) Aborted: 14 (1.42%) Timeouts: 0 (0.00%) Total: 986 Run-Time Errors: 130
+%   }
 
 % TODO: use a package containing all reexports so the file is cleaner
 
@@ -546,6 +553,1131 @@ p :- throw(b).
 %! ## 7.8.10 throw/1 ISOcore#p53
 
 % (see 7.8.9 catch/3)
+
+% ===========================================================================
+%! # 8.2 Term unification
+%! ## 8.2.1 ISOcore#p65
+
+%test 1
+:- test unify_test1 + not_fails
+# "[ISO] =/2: ...".
+
+unify_test1:- '='(1, 1).
+
+%test 2
+:- test unify_test2(X)
+    => (X=1)
+# "[ISO] =/2: ...".
+
+unify_test2(X) :- '='(X, 1).
+
+%test 3
+:- test unify_test3(X, Y)
+    => (X=Y)
+# "[ISO] =/2: ...".
+
+unify_test3(X, Y) :- '='(X, Y).
+
+%test 4
+:- test unify_test4 + not_fails
+# "[ISO] =/2: ...".
+
+unify_test4 :- '='(_, _).
+
+%test 5 
+:- test unify_test5(X, Y) => (X='abc', Y='abc')
+# "[ISO] =/2: ...".
+
+unify_test5(X, Y) :- '='(X, Y), '='(X, abc).
+
+%test 6
+:- test unify_test6(X, Y) => (X='def', Y='def')
+# "[ISO] =/2: ...".
+
+unify_test6(X, Y) :- '='(X, def), '='(def, Y).
+
+%test 7
+:- test unify_test7 + fails
+# "[ISO] =/2: ...".
+
+unify_test7 :- '='(1, 2).
+
+%test 8
+:- test unify_test8 + fails
+# "[ISO] =/2: ...".
+
+unify_test8 :- '='(1, 1.0).
+
+%test 9
+:- test unify_test9 + fails
+# "[ISO] =/2: ...".
+
+unify_test9 :- '='(g(X), f(f(X))).
+
+%test 10
+:- test unify_test10 + fails
+# "[ISO] =/2: ...".
+
+unify_test10 :- '='(f(X, 1), f(a(X))).
+
+%test 11
+:- test unify_test11 + fails
+# "[ISO] =/2: ...".
+
+unify_test11 :- '='(f(X, Y, X), f(a(X), a(Y), Y, 2)).
+
+%test 12 
+:- test unify_test12
+# "[ISO] =/2: expected(undefined)".
+
+unify_test12 :- '='(X, a(X)).
+
+%test 13 
+:- test unify_test13
+# "[ISO] =/2: expected(undefined)".
+
+unify_test13 :- '='(f(X, 1), f(a(X), 2)).
+
+%test 14 
+:- test unify_test14
+# "[ISO] =/2: expected(undefined)".
+
+unify_test14 :- '='(f(1, X, 1), f(2, a(X), 2)).
+
+%test 15 
+:- test unify_test15
+# "[ISO] =/2: expected(undefined)".
+
+unify_test15 :- '='(f(1, X), f(2, a(X))).
+
+%test 16 
+:- test unify_test16
+# "[ISO] =/2: expected(undefined)".
+
+unify_test16 :- '='(f(X, Y, X, 1), f(a(X), a(Y), Y, 2)).
+
+% ---------------------------------------------------------------------------
+%! ## 8.2.2 ISOcore#p66
+
+%test 1
+:- test unify_occurs_test1 + not_fails
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test1 :- unify_with_occurs_check(1, 1).
+
+%test 2
+:- test unify_occurs_test2(X) => (X=1)
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test2(X) :- unify_with_occurs_check(X, 1).
+
+%test 3
+:- test unify_occurs_test3(X, Y) => (X=Y)
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test3(X, Y) :- unify_with_occurs_check(X, Y).
+
+%test 4
+:- test unify_occurs_test4 + not_fails
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test4 :- unify_with_occurs_check(_, _).
+
+%test 5
+:- test unify_occurs_test5(X, Y) => (X=abc, Y=abc)
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test5(X, Y) :-
+    unify_with_occurs_check(X, Y),
+    unify_with_occurs_check(X, abc).
+
+%test 6
+:- test unify_occurs_test6(X, Y) => (X=def, Y=def)
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test6(X, Y) :- unify_with_occurs_check(f(X, def), f(def, Y)).
+
+%test 7
+:- test unify_occurs_test7 + fails
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test7 :- unify_with_occurs_check(1, 2).
+
+%test 8
+:- test unify_occurs_test8 + fails
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test8 :- unify_with_occurs_check(1, 1.0).
+
+%test 9
+:- test unify_occurs_test9 + fails
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test9 :- unify_with_occurs_check(g(X), f(X)).
+
+%test 10
+:- test unify_occurs_test10 + fails
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test10 :- unify_with_occurs_check(f(X, 1), f(a(X))).
+
+%test 11
+:- test unify_occurs_test11 + fails
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test11 :-
+    unify_with_occurs_check(f(X, Y, X), f(a(X), a(Y), Y, 2)).
+
+%test 12
+:- test unify_occurs_test12 + fails
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test12 :- unify_with_occurs_check(X, a(X)).
+
+%test 13
+:- test unify_occurs_test13 + fails
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test13 :-
+    unify_with_occurs_check(f(X, 1), f(a(X), 2)).
+
+%test 14
+:- test unify_occurs_test14 + fails
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test14 :- unify_with_occurs_check(f(1, X, 1), f(2, a(X), 2)).
+
+%test 15
+:- test unify_occurs_test15 + fails
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test15 :- unify_with_occurs_check(f(1, X), f(2, a(X))).
+
+%test 16
+:- test unify_occurs_test16 + fails
+# "[ISO] unify_with_occurs_check/2: ...".
+
+unify_occurs_test16 :-
+    unify_with_occurs_check(f(X, Y, X, 1), f(a(X), a(Y), Y, 2)).
+
+% ---------------------------------------------------------------------------
+%! ## 8.2.3 ISOcore#p67
+
+%test 1
+:- test not_uni_test1 + fails
+# "[ISO] '\='/2: ...".
+
+not_uni_test1 :- '\\='(1, 1).
+
+%test 2
+:- test not_uni_test2(X) + fails
+# "[ISO] '\='/2: ...".
+
+not_uni_test2(X) :- \=(X, 1).
+
+%test 3
+:- test not_uni_test3(X, Y) + fails
+# "[ISO] '\='/2: ...".
+
+not_uni_test3(X, Y) :- '\\='(X, Y).
+
+%test 4
+:- test not_uni_test4 + fails
+# "[ISO] '\='/2: ...".
+
+not_uni_test4 :- \=(_, _).
+
+%test 5
+:- test not_uni_test5(X, Y) + fails
+# "[ISO] '\='/2: ...".
+
+not_uni_test5(X, Y) :- \=(f(X, def), f(def, Y)).
+
+%test 6
+:- test not_uni_test6 + not_fails
+# "[ISO] '\='/2: ...".
+
+not_uni_test6 :- '\\='(1, 2).
+
+%test 7
+:- test not_uni_test7 + not_fails
+# "[ISO] '\='/2: ...".
+
+not_uni_test7:- \=(1, 1.0).
+
+%test 8
+:- test not_uni_test8(X) + not_fails
+# "[ISO] '\='/2: ...".
+
+not_uni_test8(X) :- '\\='(g(X), f(f(X))).
+
+%test 9
+:- test not_uni_test9(X) + not_fails
+# "[ISO] '\='/2: ...".
+
+not_uni_test9(X) :- \=(f(X, 1), f(a(X))).
+
+%test 10
+:- test not_uni_test10(X, Y) + not_fails
+# "[ISO] '\='/2: ...".
+
+not_uni_test10(X, Y) :- '\\='(f(X, Y, X), f(a(X), a(Y), Y, 2)).
+
+%test 11 
+:- test not_uni_test11(X) 
+# "[ISO] '\='/2: expected(undefined)".
+
+not_uni_test11(X) :- \=(X, a(X)).
+
+%test 12 
+:- test not_uni_test12(X) 
+# "[ISO] '\='/2: expected(undefined)".
+
+not_uni_test12(X) :- '\\='(f(X, 1), f(a(X), 2)).
+
+%test 13 
+:- test not_uni_test13(X)
+# "[ISO] '\='/2: expected(undefined)".
+
+not_uni_test13(X) :- '\\='(f(1, X, 1), f(2, a(X), 2)).
+
+%test 14 
+:- test not_uni_test14(X) 
+# "[ISO] '\='/2: expected(undefined)".
+
+not_uni_test14(X) :- \=(f(2, X), f(2, a(X))).
+
+%test 15 
+:- test not_uni_test15(X, Y) 
+# "[ISO] '\='/2: expected(undefined)".
+
+not_uni_test15(X, Y) :- '\\='(f(X, Y, X, 1), f(a(X), a(Y), Y, 2)).
+
+% ===========================================================================
+%! # 8.3 Type testing
+%! ## 8.3.1 ISOcore#p67
+
+%test 1
+:- test var_test1 + fails
+# "[ISO] var/1: ...".
+
+var_test1 :- var(foo).
+
+%test 2
+:- test var_test2(Foo) + not_fails
+# "[ISO] var/1: ...".
+
+var_test2(Foo) :- var(Foo).
+
+%test 3
+:- test var_test3 + fails
+# "[ISO] var/1: ...".
+
+var_test3 :- foo=Foo, var(Foo).
+
+% test 4
+:- test var_test4 + not_fails
+# "[ISO] var/1: ...".
+
+var_test4 :- var(_).
+
+% ---------------------------------------------------------------------------
+%! ## 8.3.2 ISOcore#p68
+
+%test 1
+:- test atom_test1 + not_fails
+# "[ISO] atom/1: ...".
+
+atom_test1 :- atom(atom).
+
+%test 2
+:- test atom_test2 + not_fails
+# "[ISO] atom/1: ...".
+
+atom_test2 :- atom('string').
+
+%test 3
+:- test atom_test3 + fails
+# "[ISO] atom/1: ...".
+
+atom_test3 :- atom(a(b)).
+
+%test 4
+:- test atom_test4(Var) + fails
+# "[ISO] atom/1: ...".
+
+atom_test4(Var) :- atom(Var).
+
+%test 5
+:- test atom_test5 + not_fails
+# "[ISO] atom/1: ...".
+
+atom_test5:- atom([]).
+
+%test 6
+:- test atom_test6 + fails
+# "[ISO] atom/1: ...".
+
+atom_test6 :- atom(6).
+
+%test 7
+:- test atom_test7 + fails
+# "[ISO] atom/1: ...".
+
+atom_test7 :- atom(3.3).
+
+% ---------------------------------------------------------------------------
+%! ## 8.3.3 ISOcore#p68
+
+%test 1
+:- test integer_test1 + not_fails
+# "[ISO] integer/1: ...".
+
+integer_test1 :- integer(3).
+
+%test 2
+:- test integer_test2 + not_fails
+# "[ISO] integer/1: ...".
+
+integer_test2 :- integer(-3).
+
+%test 3
+:- test integer_test3 + fails
+# "[ISO] integer/1: ...".
+
+integer_test3 :- integer(3.3).
+
+%test 4
+:- test integer_test4(X) + fails
+# "[ISO] integer/1: ...".
+
+integer_test4(X) :- integer(X).
+
+%test 5
+:- test integer_test5 + fails
+# "[ISO] integer/1: ...".
+
+integer_test5 :- integer(atom).
+
+% ---------------------------------------------------------------------------
+%! ## 8.3.4 ISOcore#p68
+
+%test 1
+:- test float_test1 + not_fails
+# "[ISO] float/1: ...".
+
+float_test1 :- float(3.3).
+
+%test 2
+:- test float_test2 + not_fails
+# "[ISO] float/1: ...".
+
+float_test2 :- float(-3.3).
+
+%test 3
+:- test float_test3 + fails
+# "[ISO] float/1: ...".
+
+float_test3 :- float(3).
+
+%test 4
+:- test float_test4 + fails
+# "[ISO] float/1: ...".
+
+float_test4 :- float(atom).
+
+%test 5
+:- test float_test5(X) + fails
+# "[ISO] float/1: ...".
+
+float_test5(X) :- float(X).
+
+% ---------------------------------------------------------------------------
+%! ## 8.3.5 ISOcore#p69
+
+%test 1
+:- test atomic_test1 + not_fails
+# "[ISO] atomic/1: ...".
+
+atomic_test1 :- atomic(atom).
+
+%test 2
+:- test atomic_test2 + fails
+# "[ISO] atomic/1: ...".
+
+atomic_test2 :- atomic(a(b)).
+
+%test 3
+:- test atomic_test3(Var) + fails
+# "[ISO] atomic/1: ...".
+
+atomic_test3(Var) :- atomic(Var).
+
+%test 4
+:- test atomic_test4 + not_fails
+# "[ISO] atomic/1: ...".
+
+atomic_test4 :- atomic(6).
+
+%test 5
+:- test atomic_test5 + not_fails
+# "[ISO] atomic/1: ...".
+
+atomic_test5 :- atomic(3.3).
+
+% ---------------------------------------------------------------------------
+%! ## 8.3.6 ISOcore#p69
+
+%test 1
+:- test compound_test1 + fails
+# "[ISO] compound/1: ...".
+
+compound_test1 :- compound(33.3).
+
+%test 2
+:- test compound_test2 + fails
+# "[ISO] compound/1: ...".
+
+compound_test2 :- compound(-33.3).
+
+%test 3
+:- test compound_test3 + not_fails
+# "[ISO] compound/1: ...".
+
+compound_test3 :- compound(-a).
+
+%test 4
+:- test compound_test4 + fails
+# "[ISO] compound/1: ...".
+
+compound_test4 :- compound(_).
+
+%test 5
+:- test compound_test5 + fails
+# "[ISO] compound/1: ...".
+
+compound_test5 :- compound(a).
+
+%test 6
+:- test compound_test6
+# "[ISO] compound/1: ...".
+
+compound_test6 :- compound(a(b)).
+
+%test 7
+:- test compound_test7 + fails
+# "[ISO] compound/1: ...".
+
+compound_test7 :- compound([]).
+
+%test 8
+:- test compound_test8 + not_fails
+# "[ISO] compound/1: ...".
+
+compound_test8 :- compound([a]).
+
+% ---------------------------------------------------------------------------
+%! ## 8.3.7 ISOcore#p69
+
+%test 1
+:- test nonvar_test1 + not_fails
+# "[ISO] nonvar/1: ...".
+
+nonvar_test1 :- nonvar(33.3).
+
+%test 2
+:- test nonvar_test2 + not_fails
+# "[ISO] nonvar/1: ...".
+
+nonvar_test2 :- nonvar(foo).
+
+%test 3
+:- test nonvar_test3(Foo) + fails
+# "[ISO] nonvar/1: ...".
+
+nonvar_test3(Foo) :- nonvar(Foo).
+
+%test 4
+:- test nonvar_test4(Foo) + not_fails
+# "[ISO] nonvar/1: ...".
+
+nonvar_test4(Foo) :- foo=Foo, nonvar(Foo).
+
+%test 5
+:- test nonvar_test5 + fails
+# "[ISO] nonvar/1: ...".
+
+nonvar_test5 :- nonvar(_).
+
+%test 6
+:- test nonvar_test6 + not_fails
+# "[ISO] nonvar/1: ...".
+
+nonvar_test6 :- nonvar(a(b)).
+
+% ---------------------------------------------------------------------------
+%! ## 8.3.8 ISOcore#p70
+
+%test 1
+:- test number_test1 + not_fails
+# "[ISO] number/1: ...".
+
+number_test1 :- number(3).
+
+%test 2
+:- test number_test2 + not_fails
+# "[ISO] number/1: ...".
+
+number_test2 :- number(3.3).
+
+%test 3
+:- test number_test3 + not_fails
+# "[ISO] number/1: ...".
+
+number_test3 :- number(-3).
+
+%test 4
+:- test number_test4 + fails
+# "[ISO] number/1: ...".
+
+number_test4 :- number(a).
+
+%test 5
+:- test number_test5(X) + fails
+# "[ISO] number/1: ...".
+
+number_test5(X) :- number(X).
+
+% ===========================================================================
+%! # 8.4 Term comparison
+%! ## 8.4.1 ISOcore#p70
+
+%test 1
+:- test termcomparision_test1 + not_fails
+# "[ISO] '@=<'/2: ...".
+
+termcomparision_test1:- '@=<'(1.0, 1).
+
+%test 2
+:- test termcomparision_test2 + not_fails
+# "[ISO] '@<'/2: ...".
+
+termcomparision_test2 :- '@<'(1.0, 1).
+
+%test 3
+:- test termcomparision_test3 + fails
+# "[ISO] '\\=='/2: ...".
+
+termcomparision_test3 :- '\\=='(1, 1).
+
+%test 4
+:- test termcomparision_test4 + not_fails
+# "[ISO] '@=<'/2: ...".
+
+termcomparision_test4 :- '@=<'(aardvark, zebra).
+
+
+%test 5
+:- test termcomparision_test5 + not_fails
+# "[ISO] '@=<'/2: ...".
+
+termcomparision_test5 :- '@=<'(short, short).
+
+%test 6
+:- test termcomparision_test6 + not_fails
+# "[ISO] '@=<'/2: ...".
+
+termcomparision_test6 :- '@=<'(short, shorter).
+
+%test 7
+:- test termcomparision_test7 + fails
+# "[ISO] '@>='/2: ...".
+
+termcomparision_test7 :- '@>='(short, shorter).
+
+%test 8
+:- test termcomparision_test8 + fails
+# "[ISO] '@>'/2: ...".
+
+termcomparision_test8 :- '@<'(foo(a, b), north(a)).
+
+%test 9
+:- test termcomparision_test9 + not_fails
+# "[ISO] '@>'/2: ...".
+
+termcomparision_test9 :- '@>'(foo(b), foo(a)).
+
+%test 10 
+:- test termcomparision_test10(X, Y) + not_fails
+# "[ISO] '@<'/2: ...".
+
+termcomparision_test10(X, Y) :- '@<'(foo(a, X), foo(b, Y)).
+
+%test 11 
+:- test termcomparision_test11(X, Y)
+# "[ISO] '@<'/2: expected(impldep)".
+
+termcomparision_test11(X, Y) :- '@<'(foo(X, a), foo(Y, b)).
+
+%tets 12
+:- test termcomparision_test12(X, X) + not_fails
+# "[ISO] '@=<'/2: ...".
+
+termcomparision_test12(X, X) :- '@=<'(X, X).
+
+%test 13
+:- test termcomparision_test13(X, X) + not_fails
+# "[ISO] '=='/2: ...".
+
+termcomparision_test13(X, X) :- '=='(X, X).
+
+%test 14 
+:- test termcomparision_test14(X, Y)
+# "[ISO] '@=<'/2: expected(impldep)".
+
+termcomparision_test14(X, Y) :- '@=<'(X, Y).
+
+%test 15
+:- test termcomparision_test15(X, Y) + fails
+# "[ISO] '=='/2: ...".
+
+termcomparision_test15(X, Y) :- '=='(X, Y).
+
+%test 16
+:- test termcomparision_test16 + not_fails
+# "[ISO] '\=='/2: ...".
+
+termcomparision_test16 :- \==(_, _).
+
+%test 17
+:- test termcomparision_test17 + fails
+# "[ISO] '=='/2: ...".
+
+termcomparision_test17 :- '=='(_, _).
+
+%test 18 
+:- test termcomparision_test18
+# "[ISO] '@=<'/2: expected(impldep)".
+
+termcomparision_test18 :- '@=<'(_, _).
+
+% test 19 
+:- test termcomparision_test19(X, Y) 
+# "[ISO] '@=<'/2: expected(impldep)".
+
+termcomparision_test19(X, Y) :- '@=<'(foo(X, a), foo(Y, b)).
+
+% ===========================================================================
+%! # 8.5 Term creation and decomposition
+%! ## 8.5.1 ISOcore#p71
+
+%test 1
+:- test functor_test1 + not_fails
+# "[ISO] functor/3: ...".
+
+functor_test1 :- functor(foo(a, b, c), foo, 3).
+
+
+%test 2
+:- test functor_test2(X, Y) => (X=foo, Y=3)
+# "[ISO] functor/3: ...".
+
+functor_test2(X, Y) :- functor(foo(a, b, c), X, Y).
+
+%test 3
+:- test functor_test3(X) => (X=foo(_, _, _))
+# "[ISO] functor/3: ...".
+
+functor_test3(X) :- functor(X, foo, 3).
+
+%test 4
+:- test functor_test4(X) => (X=foo)
+# "[ISO] functor/3: ...".
+
+functor_test4(X) :- functor(X, foo, 0).
+
+%test 5
+:- test functor_test5(A, B) => (A=mats, B=2)
+# "[ISO] functor/3: ...".
+
+functor_test5(A, B) :- functor(mats(A, B), A, B).
+
+%test 6
+:- test functor_test6 + fails
+# "[ISO] functor/3: ...".
+
+functor_test6 :- functor(foo(a), foo, 2).
+
+%test 7
+:- test functor_test7 + fails
+# "[ISO] functor/3: ...".
+
+functor_test7 :- functor(foo(a), fo, 1).
+
+%test 8
+:- test functor_test8(X, Y) => (X=1, Y=0)
+# "[ISO] functor/3: ...".
+
+functor_test8(X, Y) :- functor(1, X, Y).
+
+%test 9
+:- test functor_test9(X) => (X=1.1)
+# "[ISO] functor/3: ...".
+
+functor_test9(X) :- functor(X, 1.1, 0).
+
+%test 10
+:- test functor_test10 + not_fails
+# "[ISO] functor/3: ...".
+
+functor_test10 :- functor([_|_], '.', 2).
+
+%test 11
+:- test functor_test11 + not_fails
+# "[ISO] functor/3: ...".
+
+functor_test11 :- functor([], [], 0).
+
+%test 12 
+:- test functor_test12(X, Y)
+    + exception(error(instantiation_error, Imp_dep))
+# "[ISO] functor/3: ...".
+
+functor_test12(X, Y) :- functor(X, Y, 3).
+
+%test 13 
+:- test functor_test13(X, N)
+    + exception(error(instantiation_error, Imp_dep))
+# "[ISO] functor/3: ...".
+
+functor_test13(X, N) :- functor(X, foo, N).
+
+%test 14
+:- test functor_test14(X)
+    + exception(error(type_error(integer, a), Imp_dep))
+# "[ISO] functor/3: ...".
+
+functor_test14(X) :- functor(X, foo, a).
+
+%test 15 
+:- test functor_test15(X)
+    + exception(error(type_error(atom, 1.5), Imp_dep))
+# "[ISO] functor/3: ...".
+
+functor_test15(X) :- functor(X, 1.5, 1).
+
+%test 16 
+:- test functor_test16(X)
+    + exception(error(type_error(atomic, foo(a)), Imp_dep))
+# "[ISO] functor/3: ...".
+
+functor_test16(X) :- functor(X, foo(a), 1).
+
+%test 17 
+:- test functor_test17(T, X) :
+    (current_prolog_flag(max_arity, A), X is A +1)
+    + exception(error(representation_error(max_arity), Imp_dep))
+# "[ISO] functor/3: ...".
+
+functor_test17(T, X) :- functor(T, foo, X).
+
+%test 18 
+:- test functor_test18(F, Minus_1) :
+    (Minus_1 is (0 -1))
+    + exception(error(domain_error(not_less_than_zero, -1), Imp_dep))
+# "[ISO] functor/3: ...".
+
+functor_test18(F, Minus_1) :- functor(F, foo, Minus_1).
+
+% ---------------------------------------------------------------------------
+%! ## 8.5.2 ISOcore#p72
+
+%test 1
+:- test argument_test1 + not_fails
+# "[ISO] arg/3: ...".
+
+argument_test1 :- arg(1, foo(a, b), a).
+
+%test 2
+:- test argument_test2(X) => (X=a)
+# "[ISO] arg/3: ...".
+
+argument_test2(X) :- arg(1, foo(a, b), X).
+
+%test 3
+:- test argument_test3(X) => (X=a)
+# "[ISO] arg/3: ...".
+
+argument_test3(X) :- arg(1, foo(X, b), a).
+
+%test 4
+:- test argument_test4(X, Y) : (X=Y)
+# "[ISO] arg/3: ...".
+
+argument_test4(X, Y) :- arg(1, foo(X, b), Y).
+
+%test 5
+:- test argument_test5 + fails
+# "[ISO] arg/3: ...".
+
+argument_test5 :- arg(1, foo(a, b), b).
+
+%test 6
+:- test argument_test6 + fails
+# "[ISO] arg/3: ...".
+
+argument_test6 :- arg(0, foo(a, b), foo).
+
+%test 7
+:- test argument_test7(N) + fails
+# "[ISO] arg/3: ...".
+
+argument_test7(N) :- arg(3, foo(3, 4), N).
+
+%test 8 
+:- test argument_test8(X) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] arg/3: expected(error) bug(fail)".
+
+argument_test8(X) :- arg(X, foo(a, b), a).
+
+%test 9  
+:- test argument_test9(X) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] arg/3: expected(error) bug(fail)".
+
+argument_test9(X) :- arg(1, X, a).
+
+%test 10  
+:- test argument_test10(A)
+    + exception(error(type_error(compound, atom), Imp_dep))
+# "[ISO] arg/3: expected(error) bug(fail)".
+
+argument_test10(A) :- arg(0, atom, A).
+
+%test 11 
+:- test argument_test11(A) + exception(error(type_error(compound, 3), Imp_dep))
+# "[ISO] arg/3: expected(error) bug(fail)".
+
+argument_test11(A) :- arg(0, 3, A).
+
+%test 12 
+:- test argument_test12(X)
+# "[ISO] arg/3: expected(undefined)".
+
+argument_test12(X) :- arg(1, foo(X), u(X)).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
+
+%test 13
+:- test argument_test13
+    + exception(error(domain_error(not_less_than_zero, -3), Imp_dep))
+# "[Non-ISO] arg/3: ...".
+
+argument_test13 :- arg(-3, foo(a, b), _).
+
+% test 14 
+:- test argument_test14(X)
+    + exception(error(type_error(integer, a), Imp_dep))
+# "[Non-ISO] arg/3: ...".
+
+argument_test14(X) :- arg(a, foo(a, b), X).
+
+%test 15 
+:- test argument_test15(X, Y) => (X=a, Y=b)
+# "[Non-ISO] arg/3: ...".
+
+argument_test15(X, Y) :- arg(2, foo(a, f(X, b), c), f(a, Y)).
+
+%tets 16 
+:- test argument_test16 + exception(error(type_error(compound, 3), Imp_dep))
+# "[Non-ISO] arg/3: ...".
+
+argument_test16 :- arg(1, 3, _).
+
+
+
+
+% ---------------------------------------------------------------------------
+%! ## 8.5.3 ISOcore#p73
+
+%test 1
+:- test univ_test1 + not_fails
+# "[ISO] '=..'/2: ...".
+
+univ_test1 :- '=..'(foo(a, b), [foo, a, b]).
+
+%test 2
+:- test univ_test2(X) => (X=foo(a, b))
+# "[ISO] '=..'/2: ...".
+
+univ_test2(X) :- '=..'(X, [foo, a, b]).
+
+%test 3
+:- test univ_test3(L) => (L=[foo, a, b])
+# "[ISO] '=..'/2: ...".
+
+univ_test3(L) :- '=..'(foo(a, b), L).
+
+%test 4
+:- test univ_test4(X, Y) => (X=a, Y=b)
+# "[ISO] '=..'/2: ...".
+
+univ_test4(X, Y) :- '=..'(foo(X, b), [foo, a, Y]).
+
+%test 5
+:- test univ_test5 + not_fails
+# "[ISO] '=..'/2: ...".
+
+univ_test5 :- '=..'(1, [1]).
+
+%test 6
+:- test univ_test6 + fails
+# "[ISO] '=..'/2: ...".
+
+univ_test6 :- '=..'(foo(a, b), [foo, b, a]).
+
+
+%test 7 
+:- test univ_test7(X, Y) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '=..'/2: ...".
+
+univ_test7(X, Y) :- '=..'(X, Y).
+
+%test 8 
+:- test univ_test8(X, Y) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '=..'/2: ...".
+
+univ_test8(X, Y) :- '=..'(X, [foo, a|Y]).
+
+
+%test 9 
+:- test univ_test9(X) + exception(error(type_error(list, [foo|bar]), Imp_dep))
+# "[ISO] '=..'/2: ...".
+
+univ_test9(X) :- '=..'(X, [foo|bar]).
+
+
+%test 10 
+:- test univ_test10(X, Foo) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '=..'/2: ...".
+
+univ_test10(X, Foo) :- '=..'(X, [Foo, bar]).
+
+%test 11 
+:- test univ_test11(X) + exception(error(type_error(atom, 3), Imp_dep))
+# "[ISO] '=..'/2: ...".
+
+univ_test11(X) :- '=..'(X, [3, 1]).
+
+%test 12 
+:- test univ_test12(X) + exception(error(type_error(atom, 1.1), Imp_dep))
+# "[ISO] '=..'/2: ...".
+
+univ_test12(X) :- '=..'(X, [1.1, foo]).
+
+%test 13
+:- test univ_test13(X) + exception(error(type_error(atom, a(b)), Imp_dep))
+# "[ISO] '=..'/2: ...".
+
+univ_test13(X) :- '=..'(X, [a(b), 1]).
+
+%test 14 
+:- test univ_test14(X) + exception(error(type_error(list, 4), Imp_dep))
+# "[ISO] '=..'/2: ...".
+
+univ_test14(X) :- '=..'(X, 4).
+
+%test 15
+:- test univ_test15(X)
+# "[ISO] '=..'/2: expected(undefined)".
+
+univ_test15(X) :- '=..'(f(X), [f, u(X)]).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
+
+%test 16 
+:- test univ_test16(X) + exception(error(type_error(atomic, f(a)), Imp_dep))
+# "[Non-ISO] '=..'/2: ...".
+
+univ_test16(X) :- '=..'(X, [f(a)]).
+
+%test 17
+:- test univ_test17(X)
+    + exception(error(domain_error(non_empty_list, []), Imp_dep))
+# "[Non-ISO] '=..'/2: ...".
+
+univ_test17(X) :- '=..'(X, []).
+
+%test 18 
+:- test univ_test18(X, L) :
+    ( current_prolog_flag(max_arity, MAX),
+        N is (MAX+1),
+        my_list_of(N, 1, L)
+    ) + exception(error(representation_error(max_arity), Imp_dep))
+# "[Non-ISO] '=..'/2: ...".
+
+univ_test18(X, L) :- '=..'(X, [f|L]).
+
+
+
+% ---------------------------------------------------------------------------
+%! ## 8.5.4 ISOcore#p74
+
+%test 1
+:- test copyterm_test1(X, Y) + not_fails
+# "[ISO] copy_term/2: ...".
+
+copyterm_test1(X, Y) :- copy_term(X, Y).
+
+%test 2
+:- test copyterm_test2(X) + not_fails
+# "[ISO] copy_term/2: ...".
+
+copyterm_test2(X) :- copy_term(X, 3).
+
+%test 3
+:- test copyterm_test3 + not_fails
+# "[ISO] copy_term/2: ...".
+
+copyterm_test3 :- copy_term(_, a).
+
+%test 4
+:- test copyterm_test4(X) => (X=a)
+# "[ISO] copy_term/2: ...".
+
+copyterm_test4(X) :- copy_term(a+X, X+b).
+
+%test 5
+:- test copyterm_test5 + not_fails
+# "[ISO] copy_term/2: ...".
+
+copyterm_test5 :- copy_term(_, _).
+
+%test 6
+:- test copyterm_test6(X, Y, A, B) => (A=B)
+# "[ISO] copy_term/2: ...".
+
+copyterm_test6(X, Y, A, B) :- copy_term(X+X+Y, A+B+B).
+
+%test 7
+:- test copyterm_test7 + fails
+# "[ISO] copy_term/2: ...".
+
+copyterm_test7 :- copy_term(a, b).
+
+%test 8
+:- test copyterm_test8(X) + fails
+# "[ISO] copy_term/2: ...".
+
+copyterm_test8(X) :- copy_term(a+X, X+b), copy_term(a+X, X+b).
+
+%test 9 
+:- test copyterm_test9(X, Y)
+# "[ISO] copy_term/2: expected(undefined)".
+
+copyterm_test9(X, Y) :- copy_term(demoen(X, X), demoen(Y, f(Y))).
+
 
 % ===========================================================================
 %! # 8.6 Arithmetic evaluation
@@ -7399,7 +8531,1040 @@ halt_test3 :- halt(a).
 
 halt_test4 :- halt(_).
 
+% ===========================================================================
+%! # 9.1 Simple arithmetic functors
+%! ## 9.1.7 ISOcore#p117
+
+:- test eval_test1(S) => (S=42)
+# "[ISO] '+'/2: expected(succeed)".
+
+eval_test1(S) :- S is '+'(7, 35).
+
+:- test eval_test2(S) => (S=14)
+# "[ISO] '+'/2: expected(succeed)".
+
+eval_test2(S) :- S is '+'(0, 3 +11).
+
+:- test eval_test3(S) => (near(S, 14.2000, 0.0001))
+# "[ISO] '+'/2: expected(succeed)".
+
+eval_test3(S) :- S is '+'(0, 3.2 +11).
+
+:- test eval_test4(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '+'/2: expected(error) bug(fail)".
+
+eval_test4(S) :- S is '+'(77, _N).
+
+%% REVIEW:PENDING                                                      **Label_3**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+:- test eval_test5(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] '+'/2: expected(error) bug(fail)".
+
+eval_test5(S) :- S is '+'(foo, 77).
+
+:- test eval_test6(S) => (S=(-7))
+# "[ISO] '-'/2: expected(succeed)".
+
+eval_test6(S) :- S is '-'(7).
+
+:- test eval_test7(S) => (S=(8))
+# "[ISO] '-'/2: expected(succeed)".
+
+eval_test7(S) :- S is '-'(3 -11).
+
+:- test eval_test8(S) => (near(S, 7.8000, 0.0001))
+# "[ISO] '-'/2: expected(succeed)".
+
+eval_test8(S) :- S is '-'(3.2 -11).
+
+:- test eval_test9(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '-'/2: expected(error) bug(fail)".
+
+eval_test9(S) :- S is '-'(_N).
+
+%% REVIEW:PENDING                                                           **Label_3**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+:- test eval_test10(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] '-'/2: expected(error) bug(fail)".
+
+eval_test10(S) :- S is '-'(foo).
+
+:- test eval_test11(S) => (S=(-28))
+# "[ISO] '-'/2: expected(succeed)".
+
+eval_test11(S) :- S is '-'(7, 35).
+
+:- test eval_test12(S) => (S=6)
+# "[ISO] '-'/2: expected(succeed)".
+
+eval_test12(S) :- S is '-'(20, 3 +11).
+
+:- test eval_test13(S) => (near(S, -14.2000, 0.0001))
+# "[ISO] '-'/2: expected(succeed)".
+
+eval_test13(S) :- S is '-'(0, 3.2 +11).
+
+:- test eval_test14(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '-'/2: expected(error) bug(fail)".
+
+eval_test14(S) :- S is '-'(77, _N).
+
+%% REVIEW:PENDING                                                  **Label_3**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+:- test eval_test15(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] '-'/2: expected(error) bug(fail)".
+
+eval_test15(S) :- S is '-'(foo, 77).
+
+:- test eval_test16(S) => (S=245)
+# "[ISO] '*'/2: expected(succeed)".
+
+eval_test16(S) :- S is '*'(7, 35).
+
+:- test eval_test17(S) : (X=0, Y=(3 +11)) => (S=0)
+# "[ISO] '*'/2: expected(succeed)".
+
+eval_test17(S) :- S is '*'(0, 3 +11).
+
+:- test eval_test18(S) => (near(S, 21.3, 0.0001))
+# "[ISO] '*'/2: expected(succeed)".
+
+eval_test18(S) :- S is '*'(1.5, 3.2 +11).
+
+:- test eval_test19(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '*'/2: expected(error) bug(fail)".
+
+eval_test19(S) :- S is '*'(77, _N).
+
+%% REVIEW:PENDING                                                      **Label_3**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+:- test eval_test20(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] '*'/2: expected(error) bug(fail)".
+
+eval_test20(S) :- S is '*'(foo, 77).
+
+:- test eval_test21(S) => (S=0)
+# "[ISO] '//'/2: expected(succeed)".
+
+eval_test21(S) :- S is '//'(7, 35).
+
+:- test eval_test22(S) => (near(S, 0.2000, 0.0001))
+# "[ISO] '//'/2: expected(succeed)".
+
+eval_test22(S) :- S is '/'(7.0, 35).
+
+:- test eval_test23(S) => (S=10)
+# "[ISO] '//'/2: expected(succeed)".
+
+eval_test23(S) :- S is '//'(140, 3 +11).
+
+:- test eval_test24(S) => (near(S, 1.42, 0.0001))
+# "[ISO] '/'/2: expected(succeed)".
+
+eval_test24(S) :- S is '/'(20.164, 3.2 +11).
+
+:- test eval_test25(S)
+# "[ISO] '//'/2: expected(impldep)".
+
+eval_test25(S) :- S is '//'(7, -3).
+
+:- test eval_test26(S)
+# "[ISO] '//'/2: expected(impldep)".
+
+eval_test26(S) :- S is '//'(-7, 3).
+
+%% REVIEW:DONE                             
+:- test eval_test27(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '/'/2: expected(error) bug(fail)".
+
+eval_test27(S) :- S is '/'(77, _N).
+
+%% REVIEW:PENDING                                                              **Label_3**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+:- test eval_test28(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] '/'/2: expected(error) bug(fail)".
+
+eval_test28(S) :- S is '/'(foo, 77).
+
+%% REVIEW:DONE                             
+:- test eval_test29(S) + exception(error(evaluation_error(zero_divisor),
+		Imp_dep))
+# "[Non-ISO] '/'/2: expected(error) bug(succeed)".
+
+eval_test29(S) :- S is '//'(3, 0).
+
+:- test eval_test30(S) => (S=1)
+# "[ISO] mod/2: expected(succeed)".
+
+eval_test30(S) :- S is mod(7, 3).
+
+:- test eval_test31(S) => (S=0)
+# "[ISO] mod/2: expected(succeed)".
+
+eval_test31(S) :- S is mod(0, 3 +11).
+
+:- test eval_test32(S) => (S=(-1))
+# "[ISO] mod/2: expected(succeed)".
+
+eval_test32(S) :- S is mod(7, -2).
+
+:- test eval_test33(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] 'mod'/2: expected(error) bug(fail)".
+
+eval_test33(S) :- S is mod(77, _N).
+
+%% REVIEW:PENDING                                                      **Label_3**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+:- test eval_test34(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] 'mod'/2: expected(error) bug(fail)".
+
+eval_test34(S) :- S is mod(foo, 77).
+
+:- test eval_test35(S) + exception(error(type_error(integer, 7.5), Imp_dep))
+# "[ISO] mod/2: expected(error) bug(succeed)".
+
+eval_test35(S) :- S is mod(7.5, 2).
+
+:- test eval_test36(S)
+	+ exception(error(evaluation_error(zero_divisor), Imp_dep))
+# "[ISO] mod/2: expected(error)".
+
+eval_test36(S) :- S is mod(7, 0).
+
+:- test eval_test37(S) => (S=7)
+# "[ISO] floor/1: expected(succeed)".
+
+eval_test37(S) :- S is floor(7.4).
+
+:- test eval_test38(S) => (S=(-1))
+# "[ISO] floor/1: expected(succeed)".
+
+eval_test38(S) :- S is floor(-0.4).
+
+:- test eval_test39(S) => (S=8)
+# "[ISO] round/1: expected(succeed)".
+
+eval_test39(S) :- S is round(7.5).
+
+:- test eval_test40(S) => (S=8)
+# "[ISO] round/1: expected(succeed)".
+
+eval_test40(S) :- S is round(7.6).
+
+:- test eval_test41(S) => (S=(-1))
+# "[ISO] round/1: expected(succeed)".
+
+eval_test41(S) :- S is round(-0.6).
+
+:- test eval_test42(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] round/2: expected(error) bug(fail)".
+
+eval_test42(S) :- S is round(_X).
+
+:- test eval_test43(S) => (S=0)
+# "[ISO] ceiling/1: expected(succeed)".
+
+eval_test43(S) :- S is ceiling(-0.5).
+
+:- test eval_test44(S) => (S=0)
+# "[ISO] ceiling/1: expected(succeed)".
+
+eval_test44(S) :- S is truncate(-0.5).
+
+%% REVIEW:PENDING                                                        **Label_3**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws  exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+:- test eval_test45(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] truncate/1: expected(error) bug(fail)".
+
+eval_test45(S) :- S is truncate(foo).
+
+:- test eval_test46(S) => (S=7.0)
+# "[ISO] float/1: expected(succeed)".
+
+eval_test46(S) :- S is float(7).
+
+:- test eval_test47(S) => (near(S, 7.3, 0.0001))
+# "[ISO] float/1: expected(succeed)".
+
+eval_test47(S) :- S is float(7.3).
+
+:- test eval_test48(S) => (S=1.0)
+# "[ISO] float/1: expected(succeed)".
+
+eval_test48(S) :- S is float(5//3).
+
+:- test eval_test49(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] float/1: expected(error) bug(fail)".
+
+eval_test49(S) :- S is float(_X).
+
+%% REVIEW:PENDING                                                            **Label_3**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+:- test eval_test50(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] float/1: expected(error) bug(fail)".
+
+eval_test50(S) :- S is float(foo).
+
+:- test eval_test51(S) => (S=7)
+# "[ISO] abs/1: expected(succeed)".
+
+eval_test51(S) :- S is abs(7).
+
+:- test eval_test52(S) => (S=8)
+# "[ISO] abs/1: expected(succeed)".
+
+eval_test52(S) :- S is abs(3 -11).
+
+:- test eval_test53(S) => (near(S, 7.8000, 0.0001))
+# "[ISO] abs/1: expected(succeed)".
+
+eval_test53(S) :- S is abs(3.2 -11.0).
+
+:- test eval_test54(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] abs/1: expected(error) bug(fail)".
+
+eval_test54(S) :- S is abs(_N).
+
+%% REVIEW:PENDING                                                       **Label_3**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws  exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+:- test eval_test55(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] abs/1: expected(error) bug(fail)".
+
+eval_test55(S) :- S is abs(foo).
+
+:- test eval_test56(S) => (S=(5.0))
+# "[ISO] '/'/2: expected(succeed)".
+
+eval_test56(S) :- S is '/'(10,2).
+
+:- test eval_test57(S) => (S=(0.0))
+# "[ISO] '/'/2: expected(succeed)".
+
+eval_test57(S) :- S is '/'(0,3+11).
+
+:- test eval_test58(S) => (S=(-2.5))
+# "[ISO] '/'/2: expected(succeed)".
+
+eval_test58(S) :- S is '/'(-5,2).
+
+:- test eval_test59(S) => (S=(-0.1))
+# "[ISO] '/'/2: expected(succeed)".
+
+eval_test59(S) :- S is '/'(1,-10).
+
+:- test eval_test60(S) => (S=(0))
+# "[ISO] '//'/2: expected(succeed)".
+
+eval_test60(S) :- S is '//'(0,3+11).
+
+:- test eval_test61(S) => (S=(-1))
+# "[ISO] '//'/2: expected(succeed)".
+
+eval_test61(S) :- S is '//'(-5,3).
+
+:- test eval_test62(S) => (S=(0))
+# "[ISO] '//'/2: expected(succeed)".
+
+eval_test62(S) :- S is '//'(1,-12).
+
+%test 63                                                              **Label_3**
+%% REVIEW:PENDING
+%%   [gprolog]: S = 3
+%%   [ciao]: throws exception(error(type_error(evaluable,max(2,3)),'arithmetic:is'/2-2))
+:- test eval_test63(S) => (S=(3)) + no_exception
+# "[ISO] max/2: expected(succeed) bug(fail)".
+
+eval_test63(S) :- S is max(2, 3).
+
+%test 64                                                                **Label_3**
+%% REVIEW:PENDING
+%%   [gprolog]: throws exception: error(instantiation_error,(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,max(_,3)),'arithmetic:is'/2-2))
+:- test eval_test64(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] max/2: expected(succeed) bug(fail)".
+
+eval_test64(S) :- S is max(_N,3).
+
+%test 65                                                              **Label_3**
+%% REVIEW:PENDING
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws  exception(error(type_error(evaluable,max(3,foo)),'arithmetic:is'/2-2))
+:- test eval_test65(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] max/2: expected(succeed) bug(fail)".
+
+eval_test65(S) :- S is max(3,foo).
+
+%test 66                                                                 **Label_3**
+%% REVIEW:PENDING
+%%   [gprolog]: S = 2
+%%   [ciao]: throws exception(error(type_error(evaluable,min(2,3)),'arithmetic:is'/2-2))
+:- test eval_test66(S) => (S=(2)) + no_exception
+# "[ISO] min/2: expected(succeed) bug(fail)".
+
+eval_test66(S) :- S is min(2, 3).
+
+%test 67                                                                  **Label_3**
+%% REVIEW:PENDING
+%%   [gprolog]: throws exception: error(instantiation_error,(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,min(_,3)),'arithmetic:is'/2-2))
+:- test eval_test67(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] min/2: expected(succeed) bug(fail)".
+
+eval_test67(S) :- S is min(_N,3).
+
+%test 68                                                                 **Label_3**
+%% REVIEW:PENDING
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,min(3,foo)),'arithmetic:is'/2-2))
+:- test eval_test68(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] min/2: expected(succeed) bug(fail)".
+
+eval_test68(S) :- S is min(3,foo).
+
+% ===========================================================================
+%! # 9.3 Other arithmetic functors
+%! ## 9.3.1 ISOcore#p120
+
+%test 1
+:- test power_test1(S) => (S=125.0000)
+# "[ISO] '**'/2: expected(succeed)".
+
+power_test1(S) :- S is '**'(5, 3).
+
+%test 2
+:- test power_test2(S) => (S=(-125.0000))
+# "[ISO] '**'/2: expected(succeed)".
+
+power_test2(S) :- S is '**'(-5.0, 3).
+
+%test 3
+:- test power_test3(S) => (S=0.2000)
+# "[ISO] '**'/2: expected(succeed)".
+
+power_test3(S) :- S is '**'(5, -1).
+
+%test 4 
+:- test power_test4(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '**'/2: expected(error) bug(fail)".
+
+power_test4(S) :- S is '**'(77, _N).
+
+%% REVIEW:PENDING                                                          **Label_3**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+%test 5 
+:- test power_test5(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] '**'/2: expected(error) bug(fail)".
+
+power_test5(S) :- S is '**'(foo, 2).
+
+%test 6
+:- test power_test6(S) => (S=125.0000)
+# "[ISO] '**'/2: expected(succeed)".
+
+power_test6(S) :- S is '**'(5, 3.0).
+
+%test 7
+:- test power_test7(S) => (S=1.0)
+# "[ISO] '**'/2: expected(succeed)".
+
+power_test7(S) :- S is '**'(0.0, 0).
 
 
+% ---------------------------------------------------------------------------
+%! ## 9.3.2 ISOcore#p120
 
+%test 1
+:- test sin_test1(S) => (S=0.0)
+# "[ISO] sin/1: expected(succeed)".
+
+sin_test1(S) :- S is sin(0.0).
+
+%test 2 
+:- test sin_test2(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] sin/1: expected(error) bug(fail)".
+
+sin_test2(S) :- S is sin(_N).
+
+%test 3
+:- test sin_test3(S) => (S=0.0)
+# "[ISO] sin/1: expected(succeed)".
+
+sin_test3(S) :- S is sin(0).
+
+%% REVIEW:PENDING                                                            **Label_3**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+%test 4 
+:- test sin_test4(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] sin/1: expected(error) bug(fail)".
+
+sin_test4(S) :- S is sin(foo).
+
+%test 5  
+:- test sin_test5(PI, S) :
+	(PI is atan(1.0) *4)
+	=> (near(S, 1.0000, 0.0001), near(PI, 3.14159, 0.0001))
+# "[ISO] sin/1: expected(succeed)".
+
+sin_test5(PI, S) :- S is sin(PI/2.0).
+
+
+% ---------------------------------------------------------------------------
+%! ## 9.3.3 ISOcore#p120
+
+%test 1
+:- test cos_test1(S) => (S=1.0)
+# "[ISO] cos/1: expected(succeed)".
+
+cos_test1(S) :- S is cos(0.0).
+
+%test 2 
+:- test cos_test2(S)
+	+ exception(error(instantiation_error, Imp_dep))
+# "[ISO] cos/1: expected(error) bug(fail)".
+
+cos_test2(S) :- S is cos(_N).
+
+%test 3
+:- test cos_test3(S) => (S=1.0)
+# "[ISO] cos/1: expected(succeed)".
+
+cos_test3(S) :- S is cos(0).
+
+%% REVIEW:PENDING                                                           **Label_3**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+%test 4 
+:- test cos_test4(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] cos/1: expected(error) bug(fail)".
+
+cos_test4(S) :- S is cos(foo).
+
+%test 5  
+:- test cos_test5(PI, S)
+	: (PI is atan(1.0) *4)
+	=> (near(S, 0.0000, 0.02), near(PI, 3.14159, 0.02))
+# "[ISO] cos/1: expected(succeed)".
+
+cos_test5(PI, S) :- S is cos(PI/2.0).
+
+% ---------------------------------------------------------------------------
+%! ## 9.3.3 ISOcore#p121
+
+%test 1
+:- test atan_test1(S) => (S=0.0)
+# "[ISO] atan/1: expected(succeed)".
+
+atan_test1(S) :- S is atan(0.0).
+
+%test2 
+:- test atan_test2(PI) => (near(PI, 3.14159, 0.02))
+# "[ISO] atan/1: expected(succeed)".
+
+atan_test2(PI) :- PI is atan(1.0) *4.
+
+%test 3 
+:- test atan_test3(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] atan/1: expected(error) bug(fail)".
+
+atan_test3(S) :- S is atan(_N).
+
+%test 4
+:- test atan_test4(S) => (S=0.0)
+# "[ISO] atan/1: expected(succeed)".
+
+atan_test4(S) :- S is atan(0.0).
+
+%% REVIEW:PENDING                                                     **Label_3**
+%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+%test 5 
+:- test atan_test5(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] atan/1: expected(error) bug(fail)".
+
+atan_test5(S) :- S is atan(foo).
+
+
+% ---------------------------------------------------------------------------
+%! ## 9.3.5 ISOcore#p121
+
+%test 1
+:- test exp_test1(S) => (S=1.0)
+# "[ISO] exp/1: expected(succeed)".
+
+exp_test1(S) :- S is exp(0.0).
+
+%test 2 
+:- test exp_test2(S) => (near(S, 2.7818, 0.1))
+# "[ISO] exp/1: expected(succeed)".
+
+exp_test2(S) :- S is exp(1.0).
+
+
+%test 3 
+:- test exp_test3(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] exp/1: expected(error) bug(fail)".
+
+exp_test3(S) :- S is exp(_N).
+
+%test 4
+:- test exp_test4(S) => (S=1.0)
+# "[ISO] exp/1: expected(succeed)".
+
+exp_test4(S) :- S is exp(0).
+%%REVIEW:PENDING                                      **Label_3**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+%test 5 
+:- test exp_test5(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] exp/1: expected(error) bug(fail)".
+
+exp_test5(S) :- S is exp(foo).
+
+
+% ---------------------------------------------------------------------------
+%! ## 9.3.6 ISOcore#p121
+
+%test 1
+:- test log_test1(S) => (S=0.0)
+# "[ISO] log/1: expected(succeed)".
+
+log_test1(S) :- S is log(1.0).
+
+%test 2 
+:- test log_test2(S) => (near(S, 1.0000, 0.02))
+# "[ISO] log/1: expected(succeed)".
+
+log_test2(S) :- S is log(2.71828).
+
+%test 3 
+:- test log_test3(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] log/1: expected(error) bug(fail)".
+
+log_test3(S) :- S is log(_N).
+
+%% REVIEW:PENDING                                                    **Label_2**
+%%   [gprolog]: S = -inf
+%%   [ciao]: no throws
+%test 4 
+:- test log_test4(S) + exception(error(evaluation_error(undefined), Imp_dep))
+# "[ISO] log/2: expected(error) bug(succeed)".
+
+log_test4(S) :- S is log(0).
+
+%% REVIEW:PENDING                                                  **Label_3**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+%test 5 
+:- test log_test5(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] log/1: expected(error) bug(fail)".
+
+log_test5(S) :- S is log(foo).
+
+%% REVIEW:PENDING                                         **Label_2**
+%%   [gprolog]: S = -inf
+%%   [ciao]: no throws
+%test 6 
+:- test log_test6(S) + exception(error(evaluation_error(undfined), Imp_dep))
+# "[ISO] log/2: expected(error) bug(succeed)".
+
+log_test6(S) :- S is log(0.0).
+
+
+% ---------------------------------------------------------------------------
+%! ## 9.3.7 ISOcore#p122
+
+%test 1
+:- test sqrt_test1(S) => (S=0.0)
+# "[ISO] sqrt/1: expected(succeed)".
+
+sqrt_test1(S) :- S is sqrt(0.0).
+
+%test 2
+:- test sqrt_test2(S) => (S=1.0)
+# "[ISO] sqrt/1: expected(succeed)".
+
+sqrt_test2(S) :- S is sqrt(1).
+
+%test 3 
+:- test sqrt_test3(X, S) : (X=1.21) => (near(S, 1.1000, 0.02))
+# "[ISO] sqrt/1: expected(succeed)".
+
+sqrt_test3(X, S) :- S is sqrt(X).
+
+%test 4 
+:- test sqrt_test4(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] sqrt/1: expected(error) bug(fail)".
+
+sqrt_test4(S) :- S is sqrt(_N).
+
+%% REVIEW:PENDING                                             **Label_2**
+%%   [gprolog]: S = -nan
+%%   [ciao]: no throws
+%test 5 
+:- test sqrt_test5(S) + exception(error(evaluation_error(undefined), Imp_dep))
+# "[ISO] sqrt/1: expected(error) bug(succeed)".
+
+sqrt_test5(S) :- S is sqrt(-1.0).
+
+%% REVIEW:PENDING                                                **Label_3**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: no throws
+%test 6
+:- test sqrt_test6(S) + exception(error(type_error(number, foo), Imp_dep))
+# "[ISO] sqrt/1: expected(error) bug(fail)".
+
+sqrt_test6(S) :- S is sqrt(foo).
+
+% ===========================================================================
+%! # 9.4 Bitwise functors
+%! ## 9.4.1 ISOcore#p122
+
+%test 1
+:- test bit_rl_test1(S) => (S=4)
+# "[ISO] '>>'/2: expected(succeed)".
+
+bit_rl_test1(S) :- S is '>>'(16, 2).
+
+%test 2
+:- test bit_rl_test2(S) => (S=4)
+# "[ISO] '>>'/2: expected(succeed)".
+
+bit_rl_test2(S) :- S is '>>'(19, 2).
+
+%test 3 
+:- test bit_rl_test3(S) => (S=(-4))
+# "[ISO] '>>'/2: expected(impldep)".
+
+bit_rl_test3(S) :- S is '>>'(-16, 2).
+
+%test 4 
+:- test bit_rl_test4(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '>>'/2: expected(error) bug(fail)".
+
+bit_rl_test4(S) :- S is '>>'(77, _N).
+
+%% REVIEW:PENDING                                                      **Label_3**
+%%   [gprolog]: throws  exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws  exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+%test 5 
+:- test bit_rl_test5(S) + exception(error(type_error(integer, foo), Imp_dep))
+# "[ISO] '>>'/2: expected(error) bug(fail)".
+
+bit_rl_test5(S) :- S is '>>'(foo, 2).
+
+%%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
+
+%test 6 
+:- test bit_rl_test6(S) + exception(error(type_error(integer, 1.0), Imp_dep))
+# "[Non-ISO] '>>'/2: expected(error) bug(succeed)".
+
+bit_rl_test6(S) :- S is '>>'(1.0, 2).
+
+
+% ---------------------------------------------------------------------------
+%! ## 9.4.2 ISOcore#p123
+
+%test 1
+:- test bit_lr_test1(S) => (S=64)
+# "[ISO] '<<'/2: expected(succeed)".
+
+bit_lr_test1(S) :- S is '<<'(16, 2).
+
+%test 2
+:- test bit_lr_test2(S) => (S=76)
+# "[ISO] '<<'/2: expected(succeed)".
+
+bit_lr_test2(S) :- S is '<<'(19, 2).
+
+%test 3 
+:- test bit_lr_test3(S) => (S=(-64))
+# "[ISO] '<<'/2: expected(impldep)".
+
+bit_lr_test3(S) :- S is '<<'(-16, 2).
+
+%test 4 
+:- test bit_lr_test4(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '<<'/2: expected(error) bug(fail)".
+
+bit_lr_test4(S) :- S is '<<'(77, _N).
+
+%% REVIEW:PENDING                                                                 **Label_3**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+%test 5 
+:- test bit_lr_test5(S) + exception(error(type_error(integer, foo), Imp_dep))
+# "[ISO] '<<'/2: expected(error) bug(fail)".
+
+bit_lr_test5(S) :- S is '<<'(foo, 2).
+
+%%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
+
+%test 6 
+:- test bit_lr_test6(S) + exception(error(type_error(integer, 1.0), Imp_dep))
+# "[Non-ISO] '<<'/2: expected(error) bug(succeed)".
+
+bit_lr_test6(S) :- S is '<<'(1.0, 2).
+
+
+% ---------------------------------------------------------------------------
+%! ## 9.4.3 ISOcore#p123
+
+%test 1
+:- test bit_and_test1(S) => (S=8)
+# "[ISO] '/\\'/2: expected(succeed)".
+
+bit_and_test1(S) :- S is '/\\'(10, 12).
+
+%test 2
+:- test bit_and_test2(S) => (S=8)
+# "[ISO] '/\'/2: expected(succeed)".
+
+bit_and_test2(S) :- S is /\(10, 12).
+
+%test 3 
+:- test bit_and_test3(S) => (S=125)
+# "[ISO] '/\\'/2: expected(impldep)".
+
+bit_and_test3(S) :- S is '/\\'(17*256 +125, 255).
+
+%test 4
+:- test bit_and_test4(S) => (S=4)
+# "[ISO] '/\'/2: expected(impldep)".
+
+bit_and_test4(S) :- S is /\(-10, 12).
+
+%test 5 
+:- test bit_and_test5(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '/\\'/2: expected(error) bug(fail)".
+
+bit_and_test5(S) :- S is '/\\'(77, _N).
+
+%% REVIEW:PENDING                                                            **Label_3**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+%test 6 
+:- test bit_and_test6(S) + exception(error(type_error(integer, foo), Imp_dep))
+# "[ISO] '/\\'/2: expected(error) bug(fail)".
+
+bit_and_test6(S) :- S is '/\\'(foo, 2).
+
+%%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
+
+%test 7 
+:- test bit_and_test7(S) + exception(error(type_error(integer, 1.0), Imp_dep))
+# "[Non-ISO] '/\\'/2: expected(error) bug(succeed)".
+
+bit_and_test7(S) :- S is '/\\'(1.0, 2).
+
+% ---------------------------------------------------------------------------
+%! ## 9.4.4 ISOcore#p124
+
+%test 1
+:- test bit_or_test1(S) => (S=14)
+# "[ISO] '\\/'/2: expected(succeed)".
+
+bit_or_test1(S) :- S is '\\/'(10, 12).
+
+%test 2
+:- test bit_or_test2(S) => (S=14)
+# "[ISO] '\/'/2: expected(succeed)".
+
+bit_or_test2(S) :- S is \/(10, 12).
+
+%test 3 
+:- test bit_or_test3(S) => (S=255)
+# "[ISO] '\\/'/2: expected(succeed)".
+
+bit_or_test3(S) :- S is '\\/'(125, 255).
+
+%test 4 
+:- test bit_or_test4(S) => (S=(-2))
+# "[ISO] '\/'/2: expected(impldep)".
+
+bit_or_test4(S) :- S is \/(-10, 12).
+
+%test 5
+:- test bit_or_test5(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '\\/'/2: expected(error) bug(fail)".
+
+bit_or_test5(S) :- S is '\\/'(77, _N).
+
+%% REVIEW:PENDING                                                      **Label_3**
+%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
+%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+%test 6
+:- test bit_or_test6(S) + exception(error(type_error(integer, foo), Imp_dep))
+# "[ISO] '\\/'/2: expected(error) bug(fail)".
+
+bit_or_test6(S) :- S is '\\/'(foo, 2).
+
+%%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
+
+%test 7 
+:- test bit_or_test7(S) + exception(error(type_error(integer, 1.0), Imp_dep))
+# "[Non-ISO] '\\/'/2: expected(error) bug(succeed)".
+
+bit_or_test7(S) :- S is '\\/'(1.0, 2).
+
+
+% ---------------------------------------------------------------------------
+%! ## 9.4.5 ISOcore#p124
+
+%test 1
+:- test bit_not_test1(S) => (S=10)
+# "[ISO] '\\'/1: expected(succeed)".
+
+bit_not_test1(S) :- S is '\\'('\\'(10)).
+
+%test 2
+:- test bit_not_test2(S) => (S=10)
+# "[ISO] '\\'/1: expected(succeed)".
+
+bit_not_test2(S) :- S is \(\(10)).
+
+%test 3 
+:- test bit_not_test3(S)
+	=> (S=(-11))
+# "[ISO] '\'/1: expected(impldep)".
+
+bit_not_test3(S) :- S is \(10).
+
+%test 4
+:- test bit_not_test4(S) + exception(error(instantiation_error, Imp_dep))
+# "[ISO] '\\'/2: expected(error) bug(fail)".
+
+bit_not_test4(S) :- S is '\\'(_N).
+
+%test 5 
+:- test bit_not_test5(S) + exception(error(type_error(integer, 2.5), Imp_dep))
+# "[ISO] '\\'/2: expected(error) bug(succeed)".
+
+bit_not_test5(S) :- S is '\\'(2.5).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
+
+%test 6 
+:- test bit_not_test6(S) + exception(error(type_error(integer, 2.5), Imp_dep))
+# "[Non-ISO] '\\'/2: expected(error) bug(succeed)".
+
+bit_not_test6(S) :- S is '\\'(2.5).
+
+
+%! # 9.x Unbounded arithmetic
+
+% These tests verifying the operation of unbounded based on logtalk tests.
+
+%test 1
+:- test unbounded_test1(N) => (N=( 123456789012345678901234567890))
+# "[ISO-lg] '-'/2: expected(succeed)".
+
+unbounded_test1(N) :- N is '-'( 123456789012345678901234567891, 1).
+
+%test 2
+:- test unbounded_test2(N) => (N=(-1.3419876543210988e+34))
+# "[ISO-lg] '-'/2: expected(succeed)".
+
+unbounded_test2(N) :- N is '-'( 123456789012345678901234567890, 13.42e+33).
+
+%test 3
+:- test unbounded_test3(N) => (N=(123456789012345678901234567890))
+# "[ISO-lg] '-'/2: expected(succeed)".
+
+unbounded_test3(N) :- N is '-'( 246913578024691357802469135780,123456789012345678901234567890).
+
+%test 4
+:- test unbounded_test4(N) => (N=(-123456789012345678901234567890))
+# "[ISO-lg] '-'/1: expected(succeed)".
+
+unbounded_test4(N):- N is '-'(1,123456789012345678901234567891).
+
+%test 5
+:- test unbounded_test5(N) => (N=(123456789012345678901234567891))
+# "[ISO-lg] '+'/2: expected(succeed)".
+
+unbounded_test5(N):- N is '+'(1,123456789012345678901234567890).
+
+%test 6
+:- test unbounded_test6(N) => (N=(246913578024691357802469135780))
+# "[ISO-lg] '+'/2: expected(succeed)".
+
+unbounded_test6(N):- N is '+'(123456789012345678901234567890,123456789012345678901234567890).
+
+%test 7
+:- test unbounded_test7(N) => (N=(1.3420123456789013e+34))
+# "[ISO-lg] '+'/2: expected(succeed)".
+
+unbounded_test7(N):- N is '+'(123456789012345678901234567890,13.42e+33).
+
+%test 8
+:- test unbounded_test8(N) => (N=(370370367037037036703703703670))
+# "[ISO-lg] '*'/2: expected(succeed)".
+
+unbounded_test8(N):- N is '*'(123456789012345678901234567890,3).
+
+%test 9
+:- test unbounded_test9(N) => (N=(15241578753238836750495351562536198787501905199875019052100))
+# "[ISO-lg] '*'/2: expected(succeed)".
+
+unbounded_test9(N):- N is '*'(123456789012345678901234567890,123456789012345678901234567890).
+
+%test 10
+:- test unbounded_test10(N) => (N=( 1.656790108545679e+63))
+# "[ISO-lg] '*'/2: expected(succeed)".
+
+unbounded_test10(N):- N is '*'(123456789012345678901234567890,13.42e+33).
+
+%test 11
+:- test unbounded_test11(N) => (N=(41152263004115226300411522630))
+# "[ISO-lg] '//'/2: expected(succeed)".
+
+unbounded_test11(N):- N is '//'(123456789012345678901234567890,3).
+
+%test 12
+:- test unbounded_test12(N) => (N=(0))
+# "[ISO-lg] '-'/2: expected(succeed)".
+
+unbounded_test12(N):- N is '//'(3,123456789012345678901234567890).
+
+%test 13
+:- test unbounded_test13(N) => (N=( 41152263004115226300411522630))
+# "[ISO-lg] '//'/2: expected(succeed)".
+
+unbounded_test13(N):- N is '//'(15241578753238836750495351562536198787501905199875019052100, 370370367037037036703703703670).
+
+%test 14
+:- test unbounded_test14(N) => (N=(4.115226300411523e+28))
+# "[ISO-lg] '/'/2: expected(succeed)".
+
+unbounded_test14(N):- N is '/'(123456789012345678901234567890,3).
+
+%test 15
+:- test unbounded_test15(N) => (N=( 2.4300000218700003e-29))
+# "[ISO-lg] '/'/2: expected(succeed)".
+
+unbounded_test15(N):- N is '/'(3,123456789012345678901234567890).
+
+%test 16
+:- test unbounded_test16(N) => (N=( 3.0000000000000004))
+# "[ISO-lg] '/'/2: expected(succeed)".
+
+unbounded_test16(N):- N is '/'(370370367037037036703703703670,123456789012345678901234567890).
+
+%test 17
+:- test unbounded_test17(N) => (N=( 2.7598388005740465e-05))
+# "[ISO-lg] '/'/2: expected(succeed)".
+
+unbounded_test17(N):- N is '/'(370370367037037036703703703670,13.42e+33).
 
