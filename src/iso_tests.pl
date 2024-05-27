@@ -105,17 +105,17 @@ bird(_) :- fail.
 
 % ===========================================================================
 %! # 7.8 Control constructs
-%! ## 7.8.1.4 true/0 ISOcore#p43
+%! ## 7.8.1 true/0 ISOcore#p43
 
 :- test true + not_fails # "[ISO] true/0".
 
 % ---------------------------------------------------------------------------
-%! ## 7.8.2.4 fail/0 ISOcore#p44
+%! ## 7.8.2 fail/0 ISOcore#p44
 
 :- test fail/0 + fails # "[ISO] fail/0".
 
 % ---------------------------------------------------------------------------
-%! ## 7.8.3.4 call/1 ISOcore#p45
+%! ## 7.8.3 call/1 ISOcore#p45
 
 % TODO: Current issues in Ciao
 %
@@ -229,7 +229,7 @@ call_test15 :- call((1;true)).
 call_test16 :- call((true;1)).
 
 % ---------------------------------------------------------------------------
-%! ## 7.8.4.4 !/0 ISOcore#p46
+%! ## 7.8.4 !/0 ISOcore#p46
 
 % TODO: Current issues in Ciao
 %
@@ -316,7 +316,7 @@ goal((twice(_), !)).
 goal(write('Three ')).
 
 % ---------------------------------------------------------------------------
-%! ## 7.8.5.4 ISOcore#p47
+%! ## 7.8.5 ISOcore#p47
 
 %test 1
 :- test and_test1 + fails
@@ -338,7 +338,7 @@ and_test3(X) :- ','(X=true, call(X)).
 
 
 % ===========================================================================
-%! ## 7.8.6.4 ISOcore#p48
+%! ## 7.8.6 ISOcore#p48
 
 %test 1
 :- test or_test1
@@ -372,7 +372,7 @@ or_test4(X) :- ';'((X=1, !), X=2).
 or_test5(Result) :- findall(X, call((;(X=1, X=2), ;(true, !))), Result).
 
 % ===========================================================================
-%! ## 7.8.7.4 ISOcore#p49
+%! ## 7.8.7 ISOcore#p49
 
 %test 1
 :- test ifthen_test1
@@ -412,7 +412,7 @@ ifthen_test6(Result) :- findall(X, '->'(true, ';'(X=1, X=2)), Result).
 
 
 % ===========================================================================
-%! ## 7.8.8.4 ISOcore#p51
+%! ## 7.8.8 ISOcore#p51
 
 %test 1
 :- test ifthenelse_test1
@@ -470,7 +470,7 @@ ifthenelse_test8(X) :- ';'('->'(';'(X=1, X=2), true), true).
 
 
 % ===========================================================================
-%! ## 7.8.9.4 ISOcore#p52
+%! ## 7.8.9 ISOcore#p52
 
 % ---------------------------------------------------------------------------
 % (these predicates are used in the following tests)
@@ -553,39 +553,33 @@ catch_test8(Y) :- catch(coo(_X), Y, true).
 
 % ===========================================================================
 %! # 8.6 Arithmetic evaluation
-%! ## 8.6.1.4 ISOcore#p74
+%! ## 8.6.1 ISOcore#p74
 
-%test 1
 :- test is_test1(Result) => (Result=14.0)
 # "[ISO] 'is'/2: expected(succeed)".
 
 is_test1(Result) :- 'is'(Result, 3 +11.0).
 
-%test 2
 :- test is_test2(X, Y) => (X=(1 +2), Y=9)
 # "[ISO] 'is'2: expected(succeed)".
 
 is_test2(X, Y) :- X=1 +2, Y 'is' X*3.
 
-%test 3
 :- test is_test3
 # "[ISO] 'is'/2: expected(succeed)".
 
 is_test3 :- 'is'(3, 3).
 
-%test 4
 :- test is_test4 + fails
 # "[ISO] 'is'/2: expected(fail)".
 
 is_test4 :- 'is'(3, 3.0).
 
-%test 5
 :- test is_test5 + fails
 # "[ISO] 'is'/2: expected(fail)".
 
 is_test5 :- 'is'(foo, 77).
 
-%test 6 
 :- test is_test6(N) + exception(error(instantiation_error, ImplDep))
 # "[ISO] 'is'/2: expected(error) bug(fail)".
 
@@ -593,120 +587,98 @@ is_test6(N) :- 'is'(77, N).
 
 % ===========================================================================
 %! # 8.7 Arithmetic comparison
-%! ## 8.7.1.4 ISOcore#p76
+%! ## 8.7.1 ISOcore#p76
 
-
-%test 1
 :- test arithmetic_comparision_test1 + fails
 # "[ISO] '=:='/2: expected(fail)".
 
 arithmetic_comparision_test1 :- '=:='(0, 1).
 
-%test 2
 :- test arithmetic_comparision_test2
 # "[ISO] '=\\='/2: expected(succeed)".
 
 arithmetic_comparision_test2 :- '=\\='(0, 1).
 
-
-%test 3
 :- test arithmetic_comparision_test3
 # "[ISO] '<'/2: expected(succeed)".
 
 arithmetic_comparision_test3 :- '<'(0, 1).
 
-%test 4
 :- test arithmetic_comparision_test4 + fails
 # "[ISO] '>'/2: expected(fail)".
 
 arithmetic_comparision_test4 :- '>'(0, 1).
 
-
-%test 5
 :- test arithmetic_comparision_test5 + fails
 # "[ISO] '>='/2: expected(fail)".
 
 arithmetic_comparision_test5 :- '>='(0, 1).
 
-%test 6
 :- test arithmetic_comparision_test6
 # "[ISO] '=<'/2: expected(succeed)".
 
 arithmetic_comparision_test6 :- '=<'(0, 1).
 
-%test 7
 :- test arithmetic_comparision_test7
 # "[ISO] '=:='/2: expected(succeed)".
 
 arithmetic_comparision_test7 :- '=:='(1.0, 1).
 
-%test 8
 :- test arithmetic_comparision_test8 + fails
 # "[ISO] '=\='/2: expected(fail)".
 
 arithmetic_comparision_test8 :- '=\='(1.0, 1).
 
-%test 9
 :- test arithmetic_comparision_test9 + fails
 # "[ISO] '<'/2: expected(fail)".
 
 arithmetic_comparision_test9 :- '<'(1.0, 1).
 
-%test 10
 :- test arithmetic_comparision_test10 + fails
 # "[ISO] '>'/2: expected(fail)".
 
 arithmetic_comparision_test10 :- '>'(1.0, 1).
 
-%test 11
 :- test arithmetic_comparision_test11
 # "[ISO] '>='/2: expected(succeed)".
 
 arithmetic_comparision_test11 :- '>='(1.0, 1).
 
-%test 12
 :- test arithmetic_comparision_test12
 # "[ISO] '=<'/2: expected(succeed)".
 
 arithmetic_comparision_test12 :- '=<'(1.0, 1).
 
-%test 13
 :- test arithmetic_comparision_test13
 # "[ISO] '=:='/2: expected(succeed)".
 
 arithmetic_comparision_test13 :- '=:='(3*2, 7 -1).
 
-%test 14
 :- test arithmetic_comparision_test14 + fails
 # "[ISO] '=\\='/2: expected(fail)".
 
 arithmetic_comparision_test14 :- '=\\='(3*2, 7 -1).
 
-%test 15
 :- test arithmetic_comparision_test15 + fails
 # "[ISO] '<'/2: expected(fail)".
 
 arithmetic_comparision_test15 :- '<'(3*2, 7 -1).
 
-%test 16
 :- test arithmetic_comparision_test16 + fails
 # "[ISO] '>'/2: expected(fail)".
 
 arithmetic_comparision_test16 :- '>'(3*2, 7 -1).
 
-%test 17
 :- test arithmetic_comparision_test17
 # "[ISO] '>='/2: expected(succeed)".
 
 arithmetic_comparision_test17 :- '>='(3*2, 7 -1).
 
-%test 18
 :- test arithmetic_comparision_test18
 # "[ISO] '=<'/2: expected(succeed)".
 
 arithmetic_comparision_test18 :- '=<'(3*2, 7 -1).
 
-%test 19 
 :- test arithmetic_comparision_test19(X)
 	+ exception(error(instantiation_error, ImplDep))
 # "[ISO] '=:='/2: expected(error) bug(fail)".
@@ -716,7 +688,6 @@ arithmetic_comparision_test19(X) :- '=:='(X, 5).
 %% REVIEW:PENDING                                **Label_2**
 %%   [gprolog]: error(instantiation_error,(=\=)/2)
 %%   [ciao]: no throws
-%test 20 
 :- test arithmetic_comparision_test20(X)
 	+ exception(error(instantiation_error, ImplDep))
 # "[ISO] '=\='/2: expected(error) bug(fail)".
@@ -724,7 +695,6 @@ arithmetic_comparision_test19(X) :- '=:='(X, 5).
 arithmetic_comparision_test20(X) :- '=\='(X, 5).
 
 %% REVIEW:DONE
-%test 21 
 :- test arithmetic_comparision_test21(X)
 	+ exception(error(instantiation_error, ImplDep))
 # "[ISO] '<'/2: expected(error) bug(fail)".
@@ -732,7 +702,6 @@ arithmetic_comparision_test20(X) :- '=\='(X, 5).
 arithmetic_comparision_test21(X) :- '<'(X, 5).
 
 %% REVIEW:DONE
-%test 22 
 :- test arithmetic_comparision_test22(X)
 	+ exception(error(instantiation_error, ImplDep))
 # "[ISO] '>'/2: expected(error) bug(fail)".
@@ -740,7 +709,6 @@ arithmetic_comparision_test21(X) :- '<'(X, 5).
 arithmetic_comparision_test22(X) :- '>'(X, 5).
 
 %% REVIEW:DONE
-%test 23 
 :- test arithmetic_comparision_test23(X)
 	+ exception(error(instantiation_error, ImplDep))
 # "[ISO] '>='/2: expected(error) bug(fail)".
@@ -748,17 +716,15 @@ arithmetic_comparision_test22(X) :- '>'(X, 5).
 arithmetic_comparision_test23(X) :- '>='(X, 5).
 
 %% REVIEW:DONE
-%test 24 
 :- test arithmetic_comparision_test24(X)
 	+ exception(error(instantiation_error, ImplDep))
 # "[ISO] '=<'/2: expected(error) bug(fail)".
 
 arithmetic_comparision_test24(X) :- '=<'(X, 5).
 
-
 % ===========================================================================
 %! # 8.8 Clause retrieval and information
-%! ## 8.8.1.4 ISOcore#p77
+%! ## 8.8.1 ISOcore#p77
 
 :- dynamic(cat/0).
 cat.
@@ -888,7 +854,7 @@ clause_test12 :- clause(f(_), 5).
 
 
 % ===========================================================================
-%! ## 8.8.2.4 ISOcore#p78
+%! ## 8.8.2 ISOcore#p78
 
 
 %test 1
@@ -971,7 +937,7 @@ currentpredicate_test9(X, Result) :- findall(X, current_predicate(X), Result).
 
 % ===========================================================================
 %! # 8.9 Clause creation and destruction
-%! ## 8.9.1.4 ISOcore#p79
+%! ## 8.9.1 ISOcore#p79
 
 
 %test 1
@@ -1032,7 +998,7 @@ asserta_test7 :- asserta((atom(_) :- true)).
 
 
 % ===========================================================================
-%! ## 8.9.2.4 ISOcore#p80
+%! ## 8.9.2 ISOcore#p80
 
 
 %test 1
@@ -1096,7 +1062,7 @@ assertz_test7 :- assertz((atom(_) :- true)).
 
 
 % ===========================================================================
-%! ## 8.9.3.4 ISOcore#p81
+%! ## 8.9.3 ISOcore#p81
 
 %test 1
 :- test retract_test1
@@ -1191,7 +1157,7 @@ retract_test10(X) :- retract((4 :- X)).
 retract_test11(X) :- retract((atom(X) :- X == '[]')).
 
 % ===========================================================================
-%! ## 8.9.4.4 ISOcore#p82
+%! ## 8.9.4 ISOcore#p82
 
 %test 1                                                 
 :- test abolish_test1
@@ -1331,7 +1297,7 @@ abolish_test14 :- abolish(insect).
 
 % ===========================================================================
 %! # 8.10 All solutions
-%! ## 8.10.1.4 ISOcore#p83
+%! ## 8.10.1 ISOcore#p83
 
 %test 1
 :- test findall_test1(Result) => (Result=[1, 2])
@@ -1406,7 +1372,7 @@ findall_test9 :- findall(X, (X=1), [_|1]).
 
 
 % ===========================================================================
-%! ## 8.10.2.4 ISOcore#p84
+%! ## 8.10.2 ISOcore#p84
 
 %%%%%%%% THE FOLLOWING PREDICATES WILL BE USED IN THE FOLLOWING TESTS %%%%%%%%
 :- dynamic(a/2).
@@ -1525,7 +1491,7 @@ bagof_test14(Result, X) :- bagof(X, 1, Result).
 
 
 % ===========================================================================
-%! ## 8.10.3.4 ISOcore#p85
+%! ## 8.10.3 ISOcore#p85
 
 
 %%%%%%%% THE FOLLOWING PREDICATES WILL BE USED IN THE FOLLOWING TESTS %%%%%%%%
@@ -1973,7 +1939,7 @@ setoutput_test5(S) :- set_output(S).
 
 setoutput_test5_setup(S) :- current_input(S).
 
-%! ## 8.11.5.4 ISOcore#p88
+%! ## 8.11.5 ISOcore#p88
 
 %% REVIEW:PENDING                                          **Label_6**
 %test1 
@@ -2351,7 +2317,7 @@ flush_output_test6_cleanup(S) :-
     close(S).
 
 % ===========================================================================
-%! ## 8.11.8.4 ISOcore#p90
+%! ## 8.11.8 ISOcore#p90
 
 %test 1 
 :- test stream_property_test1(L, auxvar(S1, S2))
@@ -2675,7 +2641,7 @@ setup_ssp6(S,Pos):-
 
 % ===========================================================================
 %! # 8.12 Character input/output
-%! ## 8.12.1.4 ISOcore#p91
+%! ## 8.12.1 ISOcore#p91
 
 %% REVIEW:PENDING                           **Label_6**
 %test 1
@@ -3227,7 +3193,7 @@ cleanup_gco33(S1) :-
     close(S1).
 
 % ===========================================================================
-%! ## 8.12.2.4 ISOcore#p93
+%! ## 8.12.2 ISOcore#p93
 
 %% REVIEW:PENDING                             **Label_6**
 %test 1
@@ -3776,7 +3742,7 @@ cleanup_pco33(S1) :-
     close(S1).
 
 % ===========================================================================
-%! ## 8.12.3.4 ISOcore#p94
+%! ## 8.12.3 ISOcore#p94
 
 %% REVIEW:PENDING                                   **Label_6**
 %test 1
@@ -4134,7 +4100,7 @@ putcode_test24 :- put_code(foo, -1).
 
 % ===========================================================================
 %! # 8.13 Byte input/output
-%! ## 8.13.1.4 ISOcore#p96
+%! ## 8.13.1 ISOcore#p96
 
 %% REVIEW:PENDING                             **Label_6**
 %test 1 
@@ -4369,7 +4335,7 @@ cleanup_getbyte13(Sc,S1):-
 
 
 % ===========================================================================
-%! ## 8.13.2.4 ISOcore#p97
+%! ## 8.13.2 ISOcore#p97
 
 %% REVIEW:PENDING                                            **Label_4**
 %test 1 
@@ -4597,7 +4563,7 @@ cleanup_pb13(Sc,S1):-
     close_instreams(Sc, S1).
 
 % ===========================================================================
-%! ## 8.13.2.4 ISOcore#p98
+%! ## 8.13.3 ISOcore#p98
 
 %% REVIEW:PENDING                                     **Label_6**
 %test 1 
@@ -4766,7 +4732,7 @@ putbyte_test13 :- put_byte(user_output, 'ty').
 
 % ===========================================================================
 %! # 8.14 Term input/output
-%! ## 8.14.1.4 ISOcore#p99
+%! ## 8.14.1 ISOcore#p99
 
 %% REVIEW:PENDING                                      **Label_6**
 %test 1 
@@ -5187,7 +5153,7 @@ cleanup_read24(Sc,S1):-
     close_instreams(Sc, S1).
 
 % ===========================================================================
-%! ## 8.14.2.4 ISOcore#p100
+%! ## 8.14.2 ISOcore#p100
 
 %% REVIEW:PENDING                                                  **Label_6**
 %test 1 
@@ -5463,7 +5429,7 @@ cleanup_write21(S):-
     close(S).
 
 % ===========================================================================
-%! ## 8.14.3.4 ISOcore#p102
+%! ## 8.14.3 ISOcore#p102
 
 :- prop op_test1_poscond/1.
 
@@ -5632,7 +5598,7 @@ op_test18 :- op(100, xfx, ',').
 op_test19 :- op(100, xfx, [a, ',']).
 
 % ===========================================================================
-%! ## 8.14.4.4 ISOcore#p103
+%! ## 8.14.4 ISOcore#p103
 
 
 %test 1                                               **Label_1**
@@ -5687,7 +5653,7 @@ current_op_test5 :- current_op(_, _, 5).
 
 
 % ===========================================================================
-%! ## 8.14.5.4 ISOcore#p103
+%! ## 8.14.5 ISOcore#p103
 
 % TODO:[JF] won't fix (unless somebody really need them)
 char_conversion(_, _) :- fail.
@@ -5972,7 +5938,7 @@ setup_charconver12(S,Sc,S1):-
 cleanup_charconver12(Sc,S1):-
     close_instreams(Sc, S1).
 
-%! ## 8.14.6.4 ISOcore#p104
+%! ## 8.14.6 ISOcore#p104
 
 %% REVIEW:PENDING                               **Label_6**  
 %test 1  
@@ -6001,7 +5967,7 @@ cleanup_currentcharconver1(Sc,S1):-
 %%%%%%%%%%%%%%%%%%%%%%%%
 
 %! # 8.15 Logic and control
-%! ## 8.15.1.4 ISOcore#p105
+%! ## 8.15.1 ISOcore#p105
 
 %test1
 :- test not_test1 + fails
@@ -6054,7 +6020,7 @@ not_test7 :- '\\+'(_X).
 not_test8 :- '\\+'(X=f(X)).
 
 
-%! ## 8.15.2.4 ISOcore#p105
+%! ## 8.15.2 ISOcore#p105
 
 %test1
 :- test once_test1
@@ -6104,7 +6070,7 @@ once_test7 :- once(_).
 
 
 % ===========================================================================
-%! ## 8.15.3.4 ISOcore#p105
+%! ## 8.15.3 ISOcore#p105
 %test 1
 %:- test repeat_test1 + current_output("hello").
 %repeat_test1 :- repeat,write(hello),fails.
@@ -6119,7 +6085,7 @@ repeat_test2 :- repeat, !, fail.
 
 
 %! # 8.16 Atomic term processing
-%! ## 8.16.1.4 ISOcore#p106
+%! ## 8.16.1 ISOcore#p106
 
 %test1
 :- test atomlength_test1(N) => (N=17)
@@ -6189,7 +6155,7 @@ atomlength_test8 :- atom_length(atom, -4).
 atomlength_test9(L) :- atom_length('Bartók Béla', L).
 :- endif.
 
-%! ## 8.16.2.4 ISOcore#p107
+%! ## 8.16.2 ISOcore#p107
 
 %test1
 :- test atomconcat_test1(S3) => (S3='hello world')
@@ -6287,7 +6253,7 @@ atomconcat_test14(Result) :-
 	findall([T1, T2], atom_concat(T1, T2, 'Pécs'), Result).
 :- endif.
 % ===========================================================================
-%! ## 8.16.3.4 ISOcore#p108
+%! ## 8.16.3 ISOcore#p108
 
 %test 1
 :- test subatom_test1(S) => (S='abrac')
@@ -6543,7 +6509,7 @@ subatom_test35(Result) :-
 
 
 % ===========================================================================
-%! ## 8.16.4.4 ISOcore#p108
+%! ## 8.16.4 ISOcore#p108
 
 %test 1
 :- test atomchars_test1(L) => (L=[])
@@ -6658,7 +6624,7 @@ atomchars_test15(A) :- atom_chars(A, ['P', 'é', 'c', 's']).
 :- endif.
 
 % ===========================================================================
-%! ## 8.16.5.4 ISOcore#p109
+%! ## 8.16.5 ISOcore#p109
 
 %test 1
 :- test atomcodes_test1(L) => (L=[])
@@ -6791,7 +6757,7 @@ atomcodes_test16 :- atom_codes(_A, [a, b, c]).
 
 
 % ===========================================================================
-%! ## 8.16.6.4 ISOcore#p110
+%! ## 8.16.6 ISOcore#p110
 
 %test 1
 :- test charcode_test1(Code) => (Code=0'a)
@@ -6857,7 +6823,7 @@ charcode_test8 :- char_code(a, x).
 charcode_test9 :- char_code(_Str, -2).
 
 
-%! ## 8.16.7.4 ISOcore#p111
+%! ## 8.16.7 ISOcore#p111
 
 %test1
 :- test numberchars_test1(L) => (L=['3', '3'])
@@ -7068,7 +7034,7 @@ numberchars_test27 :- number_chars(_A, ['0', 'x', '0', '.', '0']).
 
 
 % ===========================================================================
-%! ## 8.16.8.4 ISOcore#p112
+%! ## 8.16.8 ISOcore#p112
 
 %test 1
 :- test numbercodes_test1(L) => (L=[0'3, 0'3])
@@ -7262,7 +7228,7 @@ numbercodes_test21 :- number_codes(_A, [0'0, 0'x, 0'0, 0'., 0'0]).
 
 % ===========================================================================
 %! # 8.17 Implementation defined hooks
-%! ## 8.17.1.4 ISOcore#p112
+%! ## 8.17.1 ISOcore#p112
 
 %test 1
 :- test setflag_test1
@@ -7322,7 +7288,7 @@ setflag_test6 :- set_prolog_flag(max_arity, 40).
 
 
 % ===========================================================================
-%! ## 8.17.2.4 ISOcore#p113
+%! ## 8.17.2 ISOcore#p113
 
 %% REVIEW:PENDING                                       **Label_4**
 %test 1 
@@ -7402,7 +7368,7 @@ currentflag_test7 :- current_prolog_flag(warning, _Y).
 currentflag_test8 :- current_prolog_flag(1 + 2, flag).
 
 % ===========================================================================
-%! ## 8.17.3.4 and 8.17.4.4 ISOcore#p113 from the ISO standard.
+%! ## 8.17.3 ISOcore#p113
 
 % TODO: Let us trust that halt/0 and halt/1 effectively stops the process.
 %   Testing those predicates require new comp properties. (JF)
@@ -7412,6 +7378,8 @@ currentflag_test8 :- current_prolog_flag(1 + 2, flag).
 # "[ISO] halt/0: stops the process.".
 
 halt_test1 :- halt.
+
+%! ## 8.17.4 ISOcore#p113
 
 %test 2 
 :- test halt_test2
