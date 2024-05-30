@@ -385,7 +385,7 @@ curly_test2(T) :- read(T).
 % ---------------------------------------------------------------------------
 %! ## 6.3.7 double quoted list notation ISOcore#p20
 
-% TODO: Current issues in Ciao
+% NOTE: Current issues in Ciao:
 %
 %  - Do not trust the output of those tests until the double_quotes
 %    flag is implemented.
@@ -531,7 +531,7 @@ doublequoted_test12 :- read(X), '' == X.
 % ---------------------------------------------------------------------------
 %! ## 7.8.3 call/1 ISOcore#p45
 
-% TODO: Current issues in Ciao
+% NOTE: Current issues in Ciao:
 %
 %  - The term to goal translation in `call/1` should set the right
 %    scope of cut.
@@ -645,7 +645,7 @@ call_test16 :- call((true;1)).
 % ---------------------------------------------------------------------------
 %! ## 7.8.4 !/0 ISOcore#p46
 
-% TODO: Current issues in Ciao
+% NOTE: Current issues in Ciao:
 %
 %   - cut is not allowed in \+ or if-parts of ->, if/3
 
@@ -3189,9 +3189,12 @@ setinput_test5(S) :-
 setup_setinput(S) :-
     current_output(S).
 
-
 % ---------------------------------------------------------------------------
-%! ## 8.11.4 (FROM SICTUS AND EDDBALI) ISOcore#p87
+%! ## 8.11.4 ISOcore#p87
+
+% NOTE: Current issues in Ciao:
+%
+%  - reposition(true) is not supported in open/4
 
 % TODO:[JF] missing setup/cleanup
 
@@ -3246,14 +3249,12 @@ setoutput_test5(S) :- set_output(S).
 
 setoutput_test5_setup(S) :- current_input(S).
 
-%! ## 8.11.5 ISOcore#p88
+%! ## 8.11.5 open/3, open/4 ISOcore#p88
 
-%% REVIEW:PENDING                                          **Label_6**
-%test1 
 :- test open_test1(Sc,Stream)
    + (setup(setup_open1(Stream)),
       cleanup(cleanup_open1(Sc,Stream)))
-# "[ISO] open/4: expected(succeed)".
+   # "[ISO] open/4".
 
 open_test1(Sc,Stream) :-
     open('/tmp/roger data', read, Stream, [type(binary)]),
@@ -3267,12 +3268,10 @@ setup_open1(_Stream):-
 cleanup_open1(Sc,Stream):-
     close_instreams(Sc, Stream).
 
-%% REVIEW:PENDING                                         **Label_6**
-%test 2
 :- test open_test2(S,Sc)
    + (setup(setup_open2(S1)),
       cleanup(cleanup_open2(Sc,S)))
-# "[ISO] open/4: expected(succeed)".
+   # "[ISO] open/4".
 
 open_test2(S,Sc) :-
     open('/tmp/scowen', write, S, [alias(editor)]),
@@ -3286,254 +3285,205 @@ setup_open2(S1):-
 cleanup_open2(Sc,S):-
     close_outstreams(Sc, S).
 
-%% REVIEW:PENDING                                     **Label_6**
-%test3
 :- test open_test3(Sc,Stream)
-   + (setup(setup_open3(S)),
+   + (setup(setup_open3),
       cleanup(cleanup_open3(Sc,Stream)))
-# "[ISO] open/4: expected(succeed)".
+   # "[ISO] open/4".
 
 open_test3(Sc,Stream) :-
     open('/tmp/data', read, Stream, []),
     current_input(Sc),
     set_input(Stream).
 
-setup_open3(S):-
+setup_open3 :-
     open('/tmp/data', write, S, []),
     close(S).
 
 cleanup_open3(Sc,Stream):-
     close_instreams(Sc, Stream).
 
-%test 4 
 :- test open_test4 + exception(error(instantiation_error, ImplDep))
-# "[ISO-sics] open/3: expected(error)".
+   # "[ISO-sics] open/3".
 
 open_test4 :- open(_, read, _).
 
-
-%test 5 
 :- test open_test5
-	+ exception(error(domain_error(source_sink, Source_sink), ImplDep))
-# "[ISO-sics] open/3: expected(error)".
+   + exception(error(domain_error(source_sink, Source_sink), ImplDep))
+   # "[ISO-sics] open/3".
 
 open_test5 :- open('/tmp/f', _, _).
 
-% TODO:[JF] it was fixed
-%% REVIEW:PENDING                                                      **Label_2**
-%%   [gprolog]: throws exception(error(instantiation_error, _))
-%%   [ciao]: no throws
-%test 6 
-:- test open_test6 + exception(error(instantiation_error, ImplDep))
-# "[ISO-sics] open/4: expected(error)".
+:- test open_test6
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO-sics] open/4".
 
 open_test6 :- open('/tmp/f', write, _, _).
 
-% TODO:[JF] it was fixed
-%% REVIEW:PENDING                                                      **Label_2**
-%%   [gprolog]: throws  exception(error(instantiation_error,_))
-%%   [ciao]: no throws
-%test 7 .
-:- test open_test7 + exception(error(instantiation_error, ImplDep))
-# "[ISO-sics] open/4: expected(error) bug(succeed)".
+:- test open_test7
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO-sics] open/4".
 
 open_test7 :- open('/tmp/f', write, _, [type(text)|_]).
 
-% TODO:[JF] it was fixed
-%% REVIEW:PENDING                                                       **Label_3**
-%%   [gprolog]: throws exception(error(instantiation_error, _))
-%%   [ciao]: throws exception(error(type_error(atom,_),'stream_basic:$open'/4-4))
-%test 8
-:- test open_test8 + exception(error(instantiation_error, ImplDep))
-# "[ISO-sics] open/4: expected(error) bug(wrong_error)".
+:- test open_test8
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO-sics] open/4".
 
 open_test8 :- open('/tmp/f', write, _, [type(text), _]).
 
-% TODO:[JF] it was fixed
-%test 9 
 :- test open_test9
-	+ exception(error(domain_error(source_sink, Source_sink), ImplDep))
-# "[ISO-sics] open/3: expected(error)".
+   + exception(error(domain_error(source_sink, Source_sink), ImplDep))
+   # "[ISO-sics] open/3".
 
 open_test9 :- open('/tmp/f', 1, _).
 
-% TODO:[JF] it was fixed
-%% REVIEW:PENDING                                                         **Label_2**
-%%   [gprolog]: throws exception(error(type_error(list, type(text)),_))
-%%   [ciao]: no throws
-%test 10 
-:- test open_test10 + exception(error(type_error(list, type(text)), Im_dep))
-# "[ISO-sics] open/4: expected(error) bug(wrong_error)".
+:- test open_test10
+   + exception(error(type_error(list, type(text)), Im_dep))
+   # "[ISO-sics] open/4".
 
 open_test10 :- open('/tmp/f', write, _, type(text)).
 
-%test 11
-:- test open_test11 + exception(error(uninstantiation_error(bar), ImplDep))
-# "[ISO-sics] open/3: expected(error) bug(wrong_error)".
+:- test open_test11
+   + exception(error(uninstantiation_error(bar), ImplDep))
+   # "[ISO-sics] open/3".
 
 open_test11 :- open('/tmp/f', write, bar).
 
-%test 12 
 :- test open_test12
-	+ exception(error(domain_error(source_sink, foo(1, 2)), ImplDep))
-# "[ISO-sics] open/3: expected(error)".
+   + exception(error(domain_error(source_sink, foo(1, 2)), ImplDep))
+   # "[ISO-sics] open/3".
 
 open_test12 :- open(foo(1, 2), write, _).
 
-%test 13
 :- test open_test13
-	+ exception(error(domain_error(source_sink, Source_sink), ImplDep))
-# "[ISO-sics] open/3: expected(error)".
+   + exception(error(domain_error(source_sink, Source_sink), ImplDep))
+   # "[ISO-sics] open/3".
 
 open_test13 :- open('/tmp/foo', red, _).
 
-% TODO:[JF] it was fixed
-%% REVIEW:PENDING                                                      **Label_3**
-%%   [gprolog]: throws exception(error(domain_error(stream_option, bar),_))
-%%   [ciao]: throws exception(error(domain_error(open_option_list,[bar]),open/4-4)
-%test 14 
 :- test open_test14
-	+ exception(error(domain_error(stream_option, bar), ImplDep))
-# "[ISO-sics] open/4: expected(error) bug(succeed)".
+   + exception(error(domain_error(stream_option, bar), ImplDep))
+   # "[ISO-sics] open/4".
 
 open_test14 :- open('/tmp/foo', write, _, [bar]).
 
-%test 15
 :- test open_test15
-	+ exception(error(existence_error(source_sink, Source_sink), ImplDep))
-# "[ISO-sics] open/3: expected(error)".
+   + exception(error(existence_error(source_sink, Source_sink), ImplDep))
+   # "[ISO-sics] open/3".
 
 open_test15 :- open('nonexistent', read, _).
 
-%test 16 
-:- test open_test16 : (open('/tmp/foo', write, _, [alias(a)]))
-	+ exception(error(permission_error(open, source_sink, alias(a)),
-		ImplDep))
-# "[ISO-sics] open/4: expected(error) bug(succeed)".
+:- test open_test16
+   + (setup(setup_open16(S)),
+      cleanup(cleanup_open16(S)),
+      exception(error(permission_error(open, source_sink, alias(a)), ImplDep)))
+   # "[ISO-sics] open/4".
 
 open_test16 :- open('/tmp/bar', write, _, [alias(a)]).
 
-% TODO:[JF] most prologs do not throw exceptions here?!
+setup_open16(S) :-
+    open('/tmp/foo', write, S, [alias(a)]).
 
-%% REVIEW:PENDING                                                           **Label_3**
-%%   [gprolog]: throws exception(error(permission_error(open, source_sink, reposition(true)), _))
-%%   [ciao]: throws exception(error(domain_error(open_option_list,[reposition(true)]),open/4-4))
-%test 17
+cleanup_open16(S) :-
+    close(S).
+
+% TODO:[JF] We need to implement reposition(true) in open/4, but this
+%   error is a bit different. Most Prolog system do not throw any
+%   exception while opening this device.
+
 :- test open_test17
-	+ exception(error(permission_error(open, source_sink, reposition(true)
-		), ImplDep))
-# "[ISO-sics] open/4: expected(error) bug(succeed)".
+   + exception(error(permission_error(open, source_sink, reposition(true)), ImplDep))
+   # "[ISO-sics] open/4: expected(error) bug(succeed)".
 
 open_test17 :- open('/dev/tty', read, _, [reposition(true)]).
-% TODO: we will not implement reposition(true) in open/4 % TODO:[JF] why?
 
 % ---------------------------------------------------------------------------
-%! ## 8.11.6 (FROM SICTUS AND EDDBALI) ISOcore#p88
+%! ## 8.11.6 close/1, close/2 ISOcore#p88
 
-%test 1
-:- test close_test1(S) : (open('/tmp/foo', write, S))
-# "[ISO-sics] close/1: expected(succeed)".
+% NOTE: Current issues in Ciao:
+%
+%  - force(true) is not implemented in close/1
+
+:- test close_test1(S)
+   + (not_fails,
+      setup(setup_close_test1(S)))
+   # "[ISO-sics] close/1".
 
 close_test1(S) :- close(S).
 
-% TODO:[JF] fixed
-%% REVIEW:PENDING                                                           **Label_3**
-%%   [gprolog]: throws exception(error(instantiation_error, _))
-%%   [ciao]: throws exception(error(domain_error(stream_or_alias,_),'stream_basic:close'/1-1))
-%test 2 
-:- test close_test2 + exception(error(instantiation_error, ImplDep))
-# "[ISO-sics] close/1: expected(error)".
+setup_close_test1(S) :- open('/tmp/foo', write, S).
+
+:- test close_test2
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO-sics] close/1".
 
 close_test2 :- close(_).
 
-% TODO:[JF] fixed
-%% REVIEW:PENDING                                                         **Label_2**
-%%   [gprolog]: throws exception(error(instantiation_error,_))
-%%   [ciao]: no throws
-%test 3 
 :- test close_test3(Sc)
-	+ (setup(close_test3_setup(Sc)),
-           exception(error(instantiation_error, ImplDep)))
-# "[ISO-sics] close/2: expected(error)".
+   + (setup(close_test3_setup(Sc)),
+      exception(error(instantiation_error, ImplDep)))
+   # "[ISO-sics] close/2".
 
 close_test3(Sc) :- close(Sc, _).
 
 close_test3_setup(Sc) :- current_input(Sc).
 
-% TODO:[JF] fixed
-%% REVIEW:PENDING                                                       **Label_2**
-%%   [gprolog]: throws exception(error(instantiation_error, _))
-%%   [ciao]: no throws
-%test 4 
 :- test close_test4(Sc)
-	+ (setup(close_test3_setup(Sc)),
-           exception(error(instantiation_error, ImplDep)))
-# "[ISO-sics] close/2: expected(error)".
+   + (setup(close_test3_setup(Sc)),
+      exception(error(instantiation_error, ImplDep)))
+   # "[ISO-sics] close/2".
 
 close_test4(Sc) :- close(Sc, [force(true)|_]).
 
-% TODO:[JF] fixed
-%% REVIEW:PENDING                                                      **Label_2**
-%%   [gprolog]: throws  exception(error(instantiation_error, _))
-%%   [ciao]: no throws
-%test 5 
 :- test close_test5(Sc)
-	+ (setup(close_test3_setup(Sc)),
-           exception(error(instantiation_error, ImplDep)))
-# "[ISO-sics] close/2: expected(error)".
+   + (setup(close_test3_setup(Sc)),
+      exception(error(instantiation_error, ImplDep)))
+   # "[ISO-sics] close/2".
 
 close_test5(Sc) :- close(Sc, [force(true), _]).
 
-% TODO:[JF] fixed
-%% REVIEW:PENDING                                                          **Label_2**
-%%   [gprolog]: throws exception(error(type_error(list, foo), _))
-%%   [ciao]: no throws
-%test 6
 :- test close_test6(Sc)
-	+ (setup(close_test3_setup(Sc)),
-           exception(error(type_error(list, foo), ImplDep)))
-# "[ISO-sics] close/2: expected(error)".
+   + (setup(close_test3_setup(Sc)),
+      exception(error(type_error(list, foo), ImplDep)))
+   # "[ISO-sics] close/2".
 
 close_test6(Sc) :- close(Sc, foo).
 
-% TODO:[JF] fixed
-%% REVIEW:PENDING                                                        **Label_2**
-%%   [gprolog]: throws exception(error(domain_error(close_option, foo),_))
-%%   [ciao]: no throws
-%test 7 
 :- test close_test7(Sc)
-	+ (setup(close_test3_setup(Sc)),
-           exception(error(domain_error(close_option, foo), ImplDep)))
-# "[ISO-sics] close/2: expected(error)".
+   + (setup(close_test3_setup(Sc)),
+      exception(error(domain_error(close_option, foo), ImplDep)))
+   # "[ISO-sics] close/2".
 
 close_test7(Sc) :- close(Sc, [foo]).
 
-% TODO:[JF] fixed % TODO:[JF] both acceptable in ISO 
-%test 8 
+% TODO:[JF] both exceptions acceptable in ISO 
 :- test close_test8
-	+ exception(error(existence_error(stream, foo), ImplDep))
-# "[ISO-sics] close/1: expected(error)".
+   + exception(error(existence_error(stream, foo), ImplDep))
+   # "[ISO-sics] close/1".
 % :- test close_test8
 % 	+ exception(error(domain_error(stream_or_alias, foo), ImplDep))
 % # "[ISO-sics] close/1: expected(error)".
 
 close_test8 :- close(foo).
 
-% TODO:[JF] fixed
-%% REVIEW:PENDING                                                         **Label_3**
-%%   [gprolog]: throws exception(error(existence_error(stream, S), _))
-%%   [ciao]: throws  exception(error(domain_error(stream_or_alias,'$stream'(int,int)),'stream_basic:close'/1-1))
-%test 9 
 :- test close_test9(S)
-	+ (setup(close_test9_setup(S)),
-           exception(error(existence_error(stream, S), ImplDep)))
-# "[ISO-sics] close/1: expected(error)".
+   + (setup(close_test9_setup(S)),
+      exception(error(existence_error(stream, S), ImplDep)))
+   # "[ISO-sics] close/1".
 
 close_test9(S) :- close(S).
 
 close_test9_setup(S) :-
     open('/tmp/foo', write, S, []),
     close(S).
+
+% TODO:[JF] force(true) option is not implemented
+:- test close_test10(Sc)
+   + (setup(close_test3_setup(Sc)),
+      not_fails)
+   # "[ISO-ciao] close/2: bug()".
+
+close_test10(Sc) :- close(Sc, [force(true)]).
 
 % ---------------------------------------------------------------------------
 %! ## 8.11.7 (FROM SICTUS AND EDDBALI) ISOcore#p89
@@ -3664,8 +3614,6 @@ setup_strp2(S1):-
 
 cleanup_strp2(S1):-
     close(S1).
-
-%%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
 
 % TODO:[JF] fixed; but not that some prolog admits aliases here and the error would be different
 %% REVIEW:PENDING                                                            **Label_2**
