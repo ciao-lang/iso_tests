@@ -865,53 +865,51 @@ ifthenelse_test8(X) :- ';'('->'(';'(X=1, X=2), true), true).
 %! ## 7.8.9 catch/3 ISOcore#p52
 
 :- test catch_test1(Y) => (Y=10)
-# "[ISO] catch: expected(succeed)".
+   # "[ISO] catch/3".
 
 catch_test1(Y) :- catch(foo(5), test(Y), true).
 
 :- test catch_test2(Z) : (Z=3)
-# "[ISO] catch: expected(succeed)".
+   # "[ISO] catch/3".
 
 catch_test2(Z) :- catch(bar(3), Z, true).
 
 :- test catch_test3
-# "[ISO] catch: expected(succeed)".
+   # "[ISO] catch/3".
 
 catch_test3 :- catch(true, _, 3).
 
-%% REVIEW:PENDING                                **Label_3**
-%test4
-%%   [gprolog]: throws exception(bla)
-%%   [ciao]:  throws  exception(bla)
-:- test catch_test4 + exception(error(system_error, ImplDep))
-# "[ISO] catch: expected(error) bug(wrong_error)".
-
-catch_test4 :- catch(true, _C, write(demoen)), throw(bla). % TODO: wrong test?
+% TODO:[JF] this ISO tests seems to be wrong (according to all Prolog systems and Logtalk)
+% :- test catch_test4 + exception(error(system_error, ImplDep))
+% # "[ISO] catch/3: expected(error) bug(wrong_error)".
+% 
+% catch_test4 :- catch(true, _C, write(demoen)), throw(bla).
 
 :- test catch_test5(Y) => (Y=1)
-# "[ISO] catch: expected(succeed)".
+   # "[ISO] catch/3".
 
 catch_test5(Y) :- catch(car(_X), Y, true).
 
 :- test catch_test6 + fails
-# "[ISO] catch: expected(fail)".
+   # "[ISO] catch/3".
 
 catch_test6 :-
-    catch(number_chars(_X, ['1', 'a', '0']), error(syntax_error(_), _),
-          fail).
+    catch(number_chars(_X, ['1', 'a', '0']), error(syntax_error(_), _), fail).
 
 :- test catch_test7(Result) => (Result=[c]) + (user_output("h1"))
-# "[ISO] catch: expected(succeed)".
+   # "[ISO] catch/3".
 
 catch_test7(Result) :- findall(C, catch(g, C, write(h1)), Result).
 
 :- test catch_test8(Y) => (Y=error(instantiation_error, Imp_def))
-# "[ISO] catch: expected(succeed)".
+   # "[ISO] catch/3".
 
 catch_test8(Y) :- catch(coo(_X), Y, true).
 
 % ---------------------------------------------------------------------------
 % (these predicates are used in the following tests)
+
+% TODO:[JF] review the use of those predicates, rename them if needed
 
 :- push_prolog_flag(multi_arity_warnings, off).
 :- dynamic(foo/1).
