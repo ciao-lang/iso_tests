@@ -7491,230 +7491,224 @@ atomcodes_test16 :- atom_codes(_A, [a, b, c]).
 %! ## 8.16.6 char_code/2 ISOcore#p110
 
 :- test charcode_test1(Code) => (Code=0'a)
-# "[ISO] char_code/2: expected(succeed)".
+   # "[ISO] char_code/2".
 
 charcode_test1(Code) :- char_code('a', Code).
 
 :- test charcode_test2(Str) => (Str=c)
-# "[ISO] char_code/2: expected(succeed)".
+   # "[ISO] char_code/2".
 
 charcode_test2(Str) :- char_code(Str, 99).
 
 :- test charcode_test3(Str) => (Str=c)
-# "[ISO] char_code/2: expected(succeed)".
+   # "[ISO] char_code/2".
 
 charcode_test3(Str) :- char_code(Str, 0'c).
 
 :- test charcode_test4(X)
-# "[ISO] char_code/2: expected(succeed)".
+   # "[ISO] char_code/2".
 
 charcode_test4(X) :- char_code(X, 163).
 
 :- test charcode_test5
-# "[ISO] char_code/2: expected(succeed)".
+   # "[ISO] char_code/2".
 
 charcode_test5 :- char_code('b', 0'b).
 
-%% REVIEW:PENDING                                                        **Label_2**
-%%   [gprolog]: throws  exception(error(type_error(character, ab), _))
-%%   [ciao]: no throws
+% TODO:[JF] missing type check
 :- test charcode_test6 + exception(error(type_error(character, ab), ImplDep))
-# "[ISO] char_code/2: expected(error) bug(fail)".
+   # "[ISO] char_code/2: bug()".
 
 charcode_test6 :- char_code('ab', _Int).
 
 :- test charcode_test7 + exception(error(instantiation_error, ImplDep))
-# "[ISO] char_code/2: expected(error)".
+   # "[ISO] char_code/2".
 
 charcode_test7 :- char_code(_C, _I).
 
 :- test charcode_test8 + exception(error(type_error(integer, x), ImplDep))
-# "[ISO-eddbali] char_code/2: expected(error) bug(fail)".
+   # "[ISO-eddbali] char_code/2".
 
 charcode_test8 :- char_code(a, x).
 
 :- test charcode_test9
 	+ exception(error(representation_error(character_code), ImplDep))
-# "[ISO-eddbali] char_codes/2: expected(error) bug(wrong_error)".
+   # "[ISO-eddbali] char_code/2".
 
 charcode_test9 :- char_code(_Str, -2).
 
+% ---------------------------------------------------------------------------
 %! ## 8.16.7 number_chars/2 ISOcore#p111
 
+% NOTE: Current issues in Ciao:
+%
+%  - number_chars/2 and number_codes/2 do not accept leading blanks
+%  - number_chars/2 and number_codes/2 do not parse hex, bin, oct numbers 
+
 :- test numberchars_test1(L) => (L=['3', '3'])
-# "[ISO] number_chars/2: expected(succeed)".
+   # "[ISO] number_chars/2".
 
 numberchars_test1(L) :- number_chars(33, L).
 
 :- test numberchars_test2
-# "[ISO] number_chars/2: expected(succeed)".
+   # "[ISO] number_chars/2".
 
 numberchars_test2 :- number_chars(33, ['3', '3']).
 
 :- test numberchars_test3(N) => (N=33.0)
-# "[ISO] number_chars/2: expected(impldep)".
+   # "[ISO] number_chars/2".
 
 numberchars_test3(N) :- number_chars(33.0, Y), number_chars(N, Y).
 
 :- test numberchars_test4(X) => (near(X, 3.3, 0.02))
-# "[ISO] number_chars/2: expected(succeed)".
+   # "[ISO] number_chars/2".
 
 numberchars_test4(X) :- number_chars(X, ['3', '.', '3', 'E', +, '0']).
 
 :- test numberchars_test5 + fails
-# "[ISO] number_chars/2: expected(impldep)".
+   # "[ISO] number_chars/2".
 
 numberchars_test5 :- number_chars(3.3, ['3', '.', '3', 'E', +, '0']).
 
 :- test numberchars_test6(A) => (A=(-25))
-# "[ISO] number_chars/2: expected(succeed)".
+   # "[ISO] number_chars/2".
 
 numberchars_test6(A) :- number_chars(A, [-, '2', '5']).
 
-%% REVIEW:PENDING                                           **Label_4**
+% TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks
 :- test numberchars_test7(A) => (A=3)
-# "[ISO] number_chars/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO] number_chars/2: bug()".
 
-numberchars_test7(A) :- number_chars(A, ['\n', '', '3']).
+numberchars_test7(A) :- number_chars(A, ['\n', ' ', '3']).
 
-%% REVIEW:PENDING                                                **Label_2**
-%%   [gprolog]: throws type_error(character,'')  
-%%   [ciao]: no throws
+% TODO:[JF] it should report syntax error
 :- test numberchars_test8
-	+ exception(error(syntax_error(imp_dep_atom), ImplDep))
-# "[ISO] number_chars/2: expected(error) bug(fail)".
+   + exception(error(syntax_error(_), ImplDep))
+   # "[ISO] number_chars/2: bug()".
 
-numberchars_test8 :- number_chars(_A, ['3', '']).
+numberchars_test8 :- number_chars(_A, ['3', ' ']).
 
-%% REVIEW:PENDING                                            **Label_4**
+% TODO:[JF] number_chars/2 and number_codes/2 should accept hex numbers
 :- test numberchars_test9(A) => (A=15)
-# "[ISO] number_chars/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO] number_chars/2: bug()".
 
 numberchars_test9(A) :- number_chars(A, ['0', x, f]).
 
-%% REVIEW:PENDING                                  **Label_4**
+% TODO:[JF] number_chars/2 and number_codes/2 should accept codes
 :- test numberchars_test10(A) => (A=0'a)
-# "[ISO] number_chars/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO] number_chars/2: bug()".
 
 numberchars_test10(A) :- number_chars(A, ['0', '''', a]).
 
 :- test numberchars_test11(A) => (A=4.2)
-# "[ISO] number_chars/2: expected(succeed)".
+   # "[ISO] number_chars/2".
 
 numberchars_test11(A) :- number_chars(A, ['4', '.', '2']).
 
 :- test numberchars_test12(A) => (A=4.2)
-# "[ISO] number_chars/2: expected(succeed)".
+   # "[ISO] number_chars/2".
 
 numberchars_test12(A) :- number_chars(A, ['4', '2', '.', '0', 'e', '-', '1']).
 
 :- test numberchars_test13 + exception(error(instantiation_error, ImplDep))
-# "[ISO-eddbali] number_chars/2: expected(error)".
+   # "[ISO-eddbali] number_chars/2".
 
 numberchars_test13 :- number_chars(_X, _Y).
 
 :- test numberchars_test14 + exception(error(type_error(number, a), ImplDep))
-# "[ISO-eddbali] number_chars/2: expected(error)".
+   # "[ISO-eddbali] number_chars/2".
 
 numberchars_test14 :- number_chars(a, _Y).
 
-%% REVIEW:PENDING                                                   **Label_2**
-%%   [gprolog]: throws exception(error(type_error(list, 4), _))
-%%   [ciao]: no throws
-:- test numberchars_test15 + exception(error(type_error(list, 4), ImplDep))
-# "[ISO-eddbali] number_chars/2: expected(error) bug(fail)".
+% TODO:[JF] missing type check
+:- test numberchars_test15
+   + exception(error(type_error(list, 4), ImplDep))
+   # "[ISO-eddbali] number_chars/2: bug()".
 
 numberchars_test15 :- number_chars(_, 4).
 
-%% REVIEW:PENDING                                                **Label_3**
-%%   [gprolog]: throws exception(error(type_error(character, 2), _))
-%%   [ciao]: throws exception(error(type_error(atom,2),'atomic_basic:$constant_codes'/3-1))
+% TODO:[JF] fix type check
 :- test numberchars_test16
-	+ exception(error(type_error(character, 2), ImplDep))
-# "[ISO-eddbali] number_chars/2: expected(error) bug(wrong_error)".
+   + exception(error(type_error(character, 2), ImplDep))
+   # "[ISO-eddbali] number_chars/2: bug()".
 
 numberchars_test16 :- number_chars(_A, ['4', 2]).
 
-:- test numberchars_test17 + exception(error(instantiation_error, ImplDep))
-# "[ISO-sics] number_chars/2: expected(error)".
+:- test numberchars_test17
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO-sics] number_chars/2".
 
 numberchars_test17 :- number_chars(_A, [a|_]).
 
 :- test numberchars_test18
-	+ exception(error(instantiation_error, ImplDep))
-# "[ISO-sics] number_chars/2: expected(error)".
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO-sics] number_chars/2".
 
 numberchars_test18 :- number_chars(_A, [a, _]).
 
-%% REVIEW:PENDING                                              **Label_4**
+% TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and oct numbers
 :- test numberchars_test19(A) => (A=9)
-# "[ISO-sics] number_chars/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test19(A) :- number_chars(A, [' ', '0', 'o', '1', '1']).
 
-%% REVIEW:PENDING                                           **Label_4**
+% TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and hex numbers
 :- test numberchars_test20(A) => (A=17)
-# "[ISO-sics] number_chars/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test20(A) :- number_chars(A, [' ', '0', 'x', '1', '1']).               
 
-%% REVIEW:PENDING                                       **Label_4**
+% TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and bin numbers
 :- test numberchars_test21(A) => (A=3)
-# "[ISO-sics] number_chars/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test21(A) :- number_chars(A, [' ', '0', 'b', '1', '1']).
 
-%% REVIEW:PENDING                                        **Label_2**
-%%   [gprolog]: throws error(syntax_error('constant term stream:1 (char:2) non numeric character'),number_chars/2)
-%%   [ciao]: no throws
+% TODO:[JF] number_chars/2 and number_codes/2 should report wrong oct numbers
 :- test numberchars_test22
-	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
-# "[ISO-sics] number_chars/2: expected(error) bug(fail)".
+   + exception(error(syntax_error(_), ImplDep))
+   # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test22 :- number_chars(_A, ['0', 'o', '8']).
 
-%% REVIEW:PENDING                                             **Label_2**
-%%   [gprolog]: exception(error(syntax_error(_), _)) 
-%%   [ciao]: no throws
+% TODO:[JF] number_chars/2 and number_codes/2 should report wrong bin numbers
 :- test numberchars_test23
-	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
-# "[ISO-sics] number_chars/2: expected(error) bug(fail)".
+   + exception(error(syntax_error(_), ImplDep))
+   # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test23 :- number_chars(_A, [' ', 'b', '2']).
 
-%% REVIEW:PENDING                                             **Label_2**
-%%   [gprolog]: throws exception(error(syntax_error(_), _))
-%%   [ciao]: no throws
+% TODO:[JF] number_chars/2 and number_codes/2 should report wrong hex numbers
 :- test numberchars_test24
-	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
-# "[ISO-sics] number_chars/2: expected(error) bug(fail)".
+   + exception(error(syntax_error(_), ImplDep))
+   # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test24 :- number_chars(_A, [' ', 'x', 'g']).
 
-%% REVIEW:PENDING                                          **Label_2**
-%%   [gprolog]: throws  error(type_error(character,'\xc3\\xa1\'),number_chars/2)
-%%   [ciao]: no throws
+% TODO:[JF] number_chars/2 and number_codes/2 should report wrong numbers
 :- test numberchars_test25
-	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
-# "[ISO-sics] number_chars/2: expected(error) bug(fail)".
+   + exception(error(syntax_error(_), ImplDep))
+   # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test25 :- number_chars(_A, ['á']).
 
-%% REVIEW:PENDING                                                     **Label_2**
-%%   [gprolog]: throws exception(error(syntax_error(_), _))
-%%   [ciao]: no throws
+% TODO:[JF] number_chars/2 and number_codes/2 should report wrong numbers
 :- test numberchars_test26
-	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
-# "[ISO-sics] number_chars/2: expected(error) bug(fail)".
+   + exception(error(syntax_error(_), ImplDep))
+   # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test26 :- number_chars(_A, ['a']).
 
-%% REVIEW:PENDING                                                                **Label_2**
-%%   [gprolog]: throws exception(error(syntax_error(_), _))
-%%   [ciao]: no throws
+% TODO:[JF] number_chars/2 and number_codes/2 should report wrong numbers
 :- test numberchars_test27
-	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
-# "[ISO-sics] number_chars/2: expected(error) bug(fail)".
+   + exception(error(syntax_error(_), ImplDep))
+   # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test27 :- number_chars(_A, ['0', 'x', '0', '.', '0']).
 
@@ -7869,7 +7863,7 @@ numbercodes_test19(A, S) :-
 %%   [gprolog]: throws FOO
 %%   [ciao]: no throws
 :- test numbercodes_test20
-	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
+	+ exception(error(syntax_error(_), ImplDep))
 # "[ISO-sics] number_codes/2: expected(error) bug(succeed)".
 
 numbercodes_test20 :- number_codes(_X, "ä").
@@ -7878,7 +7872,7 @@ numbercodes_test20 :- number_codes(_X, "ä").
 %%   [gprolog]: throws exception(error(syntax_error(_), _))
 %%   [ciao]: no throws
 :- test numbercodes_test21
-	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
+	+ exception(error(syntax_error(_), ImplDep))
 # "[ISO-sics] number_codes/2: expected(error) bug(fail)".
 
 numbercodes_test21 :- number_codes(_A, [0'0, 0'x, 0'0, 0'., 0'0]).
