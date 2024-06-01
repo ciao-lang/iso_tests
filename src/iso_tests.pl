@@ -113,6 +113,11 @@ bird(_) :- fail.
 :- load_test_module(iso_tests(iso_tests_common)).
 :- use_module(iso_tests_common).
 
+% Common for IO
+
+wr_txt_in(S, Txt) :-
+    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, Txt).
+
 % ===========================================================================
 %! # 6.3 Term syntax
 
@@ -3430,12 +3435,12 @@ flush_output_test6_cleanup(S) :-
 % ---------------------------------------------------------------------------
 %! ## 8.11.8 ISOcore#p90
 
-:- test stream_property_test1(L, auxvar(S1, S2))
+:- test stream_property_test1(L)
    + (setup(setup_strp1(S1, S2)),
       cleanup(cleanup_strp1(S1,S2)))
 # "[ISO] stream_property/2: expected(succeed)".
 
-stream_property_test1(L, _) :-
+stream_property_test1(L) :-
     findall(F, stream_property(_, file_name(F)), L),
     absolute_file_name('/tmp/file1.pl', File1),
     absolute_file_name('/tmp/file2.pl', File2),
@@ -3559,12 +3564,12 @@ setup_eostr3(S):-
     open('/tmp/foo', write, S, []), close(S).
 
 %% REVIEW:PENDING                                                       **Label_6**
-:- test at_end_of_stream_test4(auxvar(S1)) 
+:- test at_end_of_stream_test4
    + (setup(setup_eostr4(S1)),
       cleanup(cleanup_eostr4(S1)))
 # "[ISO-sics] at_end_of_stream/1: expected(succeed)".
 
-at_end_of_stream_test4(_) :-
+at_end_of_stream_test4 :-
     at_end_of_stream(st_m).
 
 setup_eostr4(S1):-
@@ -3595,12 +3600,12 @@ cleanup_eostr5(S1):-
     close(S1).
 
 %% REVIEW:PENDING                                                  **Label_6**
-:- test at_end_of_stream_test6(auxvar(S1)) 
+:- test at_end_of_stream_test6
    + (setup(setup_aeos6(S1)),
       cleanup(cleanup_aeos6(S1)))
 # "[ISO-sics] at_end_of_stream/1: expected(succeed) bug(error)".
 
-at_end_of_stream_test6(_) :-
+at_end_of_stream_test6 :-
     at_end_of_stream(st_m).
 
 setup_aeos6(S1):-
@@ -3733,14 +3738,14 @@ setup_ssp6(S,Pos):-
 %! ## 8.12.1 ISOcore#p91
 
 %% REVIEW:PENDING                           **Label_6**
-:- test getchar_test1(X, Char, auxvar(Sc, S2)) :
+:- test getchar_test1(X, Char) :
    true =>
    (X = 'werty') +
    (setup(setup_gch1(Sc, S2)),
    cleanup(cleanup_gch1(Sc, S2)))
 # "[ISO] get_char/1: expected(succeed)".
 
-getchar_test1(X, Char, _) :-
+getchar_test1(X, Char) :-
     (get_char(Char), Char = 'q' -> true ; fail),
     read(X).
 
@@ -3753,14 +3758,14 @@ cleanup_gch1(Sc, S2) :-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                       **Label_6**
-:- test getcode_test2(X,Code, auxvar(Sc,S2)) :
+:- test getcode_test2(X,Code) :
    true =>
    (X= 'werty',Code = 0'q) +
    (setup(setup_gco2(S2,Sc)),
    cleanup(cleanup_gco2(Sc,S2)))
       # "[ISO] get_code/1: expected(succeed)".
 
-getcode_test2(X,Code,_) :-
+getcode_test2(X,Code) :-
     get_code(Code),
     read(X).
 
@@ -3773,13 +3778,13 @@ cleanup_gco2(Sc,S2):-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                  **Label_6**
-:- test getchar_test3(X, Char, auxvar(S2)) :
+:- test getchar_test3(X, Char) :
    true => (X = 'werty') +
    (setup(setup_gch3(S2)),
     cleanup(cleanup_gch3(S2)))
 # "[ISO] get_char/2: expected(succeed) bug(error)".
 
-getchar_test3(X, Char,_) :-
+getchar_test3(X, Char) :-
     ( get_char(st_i, 'q') -> true ; fail ),
     read(st_i, X),
     Char = 'q'.
@@ -3795,14 +3800,14 @@ cleanup_gch3(S2):-
 
 
 %% REVIEW:PENDING                    **Label_6**
-:- test getcode_test4(X, Code, auxvar(S2)) :
+:- test getcode_test4(X, Code) :
    true =>
    (X = 'werty') +
    (setup(setup_gco4(S2)),
     cleanup(cleanup_gco4(S2)))
 # "[ISO] get_code/2: expected(succeed) bug(error)".
 
-getcode_test4(X, Code, _) :-
+getcode_test4(X, Code) :-
     (get_code(st_i, 0'q) -> true ; fail),
     read(st_i, X),
     Code = 0'q.
@@ -3818,14 +3823,14 @@ cleanup_gco4(S2) :-
 
 
 %% REVIEW:PENDING                               **Label_6**
-:- test getchar_test5(X, Char, auxvar(S2)) :
+:- test getchar_test5(X, Char) :
    true =>
    (Char = '''',
     X = "qwerty'") +
    (setup(setup_gch5(S2)),
     cleanup(cleanup_gch5(S2))).
 
-getchar_test5(X, Char, _) :-
+getchar_test5(X, Char) :-
     get_char(st_i, Char),
     catch(read_no_term(st_i, X),E,X=E).
 
@@ -3838,7 +3843,7 @@ cleanup_gch5(S2) :-
     close(S2).
 
 %% REVIEW:PENDING                       **Label_6**
-:- test getcode_test6(X,Code,auxvar(S2)) :
+:- test getcode_test6(X,Code) :
    true =>
    (Code= 0'',
     X = "qwerty'") +
@@ -3846,7 +3851,7 @@ cleanup_gch5(S2) :-
     cleanup(cleanup_gco6(S2)))
 # "[ISO] get_code/2: expected(succeed) bug(error)".
 
-getcode_test6(X,Code,_) :-
+getcode_test6(X,Code) :-
     get_code(st_i, Code),
     read_no_term(st_i, X).
     
@@ -3860,14 +3865,14 @@ cleanup_gco6(S2):-
     close(S2). 
 
 %% REVIEW:PENDING                     **Label_6**
-:- test getchar_test7(X,auxvar(S2)) :
+:- test getchar_test7(X) :
    true =>
    (X='werty') +
    (setup(setup_gch7(S2)),
     cleanup(cleanup_gch7(S2)))
 # "[ISO] get_char/2: expected(fail) bug(error)".
 
-getchar_test7(X,_) :-
+getchar_test7(X) :-
     ( get_char(st_i, p) -> fail ; true),
     read(st_i, X).
 
@@ -3882,14 +3887,14 @@ cleanup_gch7(S2):-
 
 
 %% REVIEW:PENDING                        **Label_6**
-:- test getcode_test8(X,auxvar(S2)) :
+:- test getcode_test8(X) :
    true =>
    (X= 'werty') +
    (setup(setup_gco8(S2)),
    cleanup(cleanup_gco8(S2)))
 # "[ISO] get_code/2: expected(fail) bug(error)".
 
-getcode_test8(X,_) :-
+getcode_test8(X) :-
     ( get_code(st_i, 0'p) -> fail ; true ),
     read(st_i,X).
 
@@ -3904,14 +3909,14 @@ cleanup_gco8(S2):-
     close(S2).
 
 %% REVIEW:PENDING       **Label_6**
-:- test getchar_test9(Char,auxvar(S2)) :
+:- test getchar_test9(Char) :
    true =>
    (Char=(end_of_file)) +
    (setup(setup_gch9(S2)),
     cleanup(cleanup_gch9(S2)))
 # "[ISO] get_char/2: expected(succeed) bug(error)".
 
-getchar_test9(Char, _) :-
+getchar_test9(Char) :-
     get_char(st_i, Char).
 
 setup_gch9(S2):-
@@ -3926,14 +3931,14 @@ cleanup_gch9(S2):-
     close(S2).
 
 %% REVIEW:PENDING        **Label_6**
-:- test getcode_test10(Code, auxvar(S2)) :
+:- test getcode_test10(Code) :
    true =>
    (Code=(-1)) +
    (setup(setup_gco10(S2)),
     cleanup(cleanup_gco10(S2))) 
 # "[ISO] get_code/2: expected(succeed) bug(error)".
 
-getcode_test10(Code, _) :-
+getcode_test10(Code) :-
     get_code(st_i, Code).
 
 setup_gco10(S2):-
@@ -4034,14 +4039,14 @@ getchar_test18(S, _) :- get_char(S, _).
 %%cleanup_gch19(Sc,S1):- (close_instreams(Sc, S1)).
 
 %% REVIEW:PENDING                            **Label_6**
-:- test getchar_test20(auxvar(Sc,S1)) 
+:- test getchar_test20
    + (setup(setup_gch20(Sc,S1)),
       cleanup(cleanup_gch20(Sc,S1)),
       exception(error(permission_error(input, past_end_of_stream, S1),
                       ImplDep)))
 # "[ISO-sics] get_char/1: expected(error) bug(wrong_error)".
 
-getchar_test20(_) :-
+getchar_test20 :-
     get_char(_).
 
 setup_gch20(Sc,S1):-
@@ -4166,13 +4171,13 @@ setup_gco29(S):-
     current_output(S).
 
 %% REVIEW:PENDING                                **Label_6**
-:- test getcode_test30(auxvar(Sc,S1))
+:- test getcode_test30
    + (setup(setup_gco30(Sc,S1)),
       cleanup(cleanup_gco30(Sc,S1)),
       exception(error(permission_error(input, binary_stream, S1), ImplDep)))
 # "[ISO-sics] get_code/1: expected(error)".
 
-getcode_test30(_) :-
+getcode_test30 :-
     get_code(_).
 
 setup_gco30(Sc,S1):-
@@ -4186,14 +4191,14 @@ cleanup_gco30(Sc, S1):-
     close_instreams(Sc, S1).    
 
 %% REVIEW:PENDING                                     **Label_6**
-:- test getcode_test31(auxvar(Sc,S1)) 
+:- test getcode_test31
    + (setup(setup_gco31(Sc,S1)),
       cleanup(cleanup_gco31(Sc,S1)),
       exception(error(permission_error(input, past_end_of_stream, S1),
                       ImplDep)))
 # "[ISO-sics] get_code/1: expected(error) bug(wrong_error)".
 
-getcode_test31(_) :-
+getcode_test31 :-
     get_code(_).
 
 setup_gco31(Sc,S1):-
@@ -4251,7 +4256,7 @@ cleanup_gco33(S1) :-
 %! ## 8.12.2 ISOcore#p93
 
 %% REVIEW:PENDING                             **Label_6**
-:- test peekchar_test1(Char, X, auxvar(S2,Sc)) :
+:- test peekchar_test1(Char, X) :
    true =>
    (Char='q',
     X='qwerty') +
@@ -4259,7 +4264,7 @@ cleanup_gco33(S1) :-
     cleanup(cleanup_pc1(Sc,S2)))
    # "[ISO] peek_char/1: expected(succeed)".
 
-peekchar_test1(Char, X, _) :-
+peekchar_test1(Char, X) :-
     peek_char(Char),
     read(X).
 
@@ -4272,7 +4277,7 @@ cleanup_pc1(Sc,S2):-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                                **Label_6**
-:- test peekcode_test2(Code, X, auxvar(S2,Sc)) :
+:- test peekcode_test2(Code, X) :
    true =>
    (Code=0'q,
     X='qwerty') +
@@ -4280,7 +4285,7 @@ cleanup_pc1(Sc,S2):-
     cleanup(cleanup_pco2(Sc,S2)))
 # "[ISO] peek_code/1: expected(succeed)".
 
-peekcode_test2(Code, X, _) :-
+peekcode_test2(Code, X) :-
     peek_code(Code),
     read(X).
 
@@ -4293,7 +4298,7 @@ cleanup_pco2(Sc,S2):-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                               **Label_6**
-:- test peekchar_test3(Char, X, auxvar(S2,Sc)) :
+:- test peekchar_test3(Char, X) :
    true =>
    ( Char='q',
     X='qwerty') +
@@ -4301,7 +4306,7 @@ cleanup_pco2(Sc,S2):-
     cleanup(cleanup_pc3(Sc,S2)))
    # "[ISO] peek_char/2: expected(succeed) bug(error)".
 
-peekchar_test3(Char, X, _) :-
+peekchar_test3(Char, X) :-
     peek_char(st_i, Char),
     read(X).
 
@@ -4315,7 +4320,7 @@ cleanup_pc3(Sc,S2):-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                            **Label_6**
-:- test peekcode_test4(Code, X, auxvar(S2,Sc)) :
+:- test peekcode_test4(Code, X) :
    true =>
    (Code=0'q,
     X='qwerty') +
@@ -4323,7 +4328,7 @@ cleanup_pc3(Sc,S2):-
     cleanup(cleanup_pco4(S2,Sc)))
 # "[ISO] peek_code/2: expected(succeed) bug(error)".
 
-peekcode_test4(Code, X, _) :-
+peekcode_test4(Code, X) :-
     peek_code(st_i, Code),
     read(X).
 
@@ -4337,7 +4342,7 @@ cleanup_pco4(S2,Sc):-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                         **Label_6**
-:- test peekchar_test5(X,Char,auxvar(S2,Sc)) :
+:- test peekchar_test5(X,Char) :
    true =>
    (Char='''',
     X='qwerty') +
@@ -4345,7 +4350,7 @@ cleanup_pco4(S2,Sc):-
     cleanup(cleanup_pc5(S2,Sc)))
    # "[ISO] peek_char/2: expected(succeed) bug(error)".
 
-peekchar_test5(X,Char,_) :-
+peekchar_test5(X,Char) :-
     peek_char(st_i, Char),
     read(X).
 
@@ -4359,7 +4364,7 @@ cleanup_pc5(S2,Sc):-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                            **Label_6**
-:- test peekcode_test6(Code, X, auxvar(S2,Sc)) :
+:- test peekcode_test6(Code, X) :
    true =>
    (Code=0''',
     X='qwerty') +
@@ -4368,7 +4373,7 @@ cleanup_pc5(S2,Sc):-
 # "[ISO] peek_code/2: expected(succeed) bug(error)".
 % '
 
-peekcode_test6(Code, X,_) :-
+peekcode_test6(Code, X) :-
     peek_code(st_iii, Code),
     read(X).
 
@@ -4382,14 +4387,14 @@ cleanup_pco6(Sc,S2):-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                            **Label_6**
-:- test peekchar_test7(X,auxvar(S2,Sc)) :
+:- test peekchar_test7(X) :
    true =>
    (X='qwerty') +
    (setup(setup_pc7(S2,Sc)),
     cleanup(cleanup_pc7(Sc,S2))) 
 # "[ISO] peek_char/2: expected(fail) bug(error)".
 
-peekchar_test7(X, _):-    
+peekchar_test7(X) :-    
     (peek_char(st_i, p)-> fail ; true),
     read(X).
 
@@ -4403,14 +4408,14 @@ cleanup_pc7(Sc,S2):-
       close_instreams(Sc, S2).
      
 %% REVIEW:PENDING                              **Label_6**
-:- test peekcode_test8(X,auxvar(S2,Sc)) :
+:- test peekcode_test8(X) :
     true =>
     (X = 'qwerty') +
     (setup(setup_pco8(S2,Sc)),
      cleanup(cleanup_pco8(Sc,S2))) 
 # "[ISO] peek_code/2: expected(fail) bug(error)".
 
-peekcode_test8(X, _) :- 
+peekcode_test8(X) :- 
     (peek_code(st_i, 0'p) -> fail;true),
     read(X).
 
@@ -4424,14 +4429,14 @@ cleanup_pco8(Sc,S2):-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                                  **Label_6**
-:- test peekchar_test9(Char,auxvar(S2,Sc)) :
+:- test peekchar_test9(Char) :
    true =>
    (Char=(end_of_file)) +
    (setup(setup_pc9(Sc,S2)),
     cleanup(cleanup_pc9(Sc,S2)))
    # "[ISO] peek_char/2: expected(succeed) bug(error)".
 
-peekchar_test9(Char,_) :-
+peekchar_test9(Char) :-
     peek_char(st_i, Char).
     
 setup_pc9(Sc,S2):-
@@ -4444,14 +4449,14 @@ cleanup_pc9(Sc,S2):-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                                **Label_6**
-:- test peekcode_test10(Code,auxvar(S2,Sc)) :
+:- test peekcode_test10(Code) :
    true =>
    (Code=(-1)) +
    (setup(setup_pco10(S2,Sc)),
     cleanup(cleanup_pco10(Sc,S2)))
 # "[ISO] peek_code/2: expected(succeed) bug(error)".
 
-peekcode_test10(Code,_) :-
+peekcode_test10(Code) :-
     peek_code(st_i, Code).
 
 setup_pco10(S2,Sc):-
@@ -4555,12 +4560,12 @@ setup_pc18(S,S1):-
 peekchar_test19(S) :- peek_char(S, _).
 
 %% REVIEW:PENDING                                                    **Label_6**
-:- test peekchar_test20(auxvar(S1)) 
+:- test peekchar_test20
    + (setup(setup_pc20(S1)),
       cleanup(cleanup_pc20(S1)))
    # "[ISO-sics] peek_char/2: expected(error) bug(wrong_error)".
 
-peekchar_test20(_) :-
+peekchar_test20 :-
     peek_char(st_i, _).
 
 setup_pc20(S1) :-
@@ -4674,13 +4679,13 @@ peekcode_test29(S) :-
     peek_code(S, _).
 
 %% REVIEW:PENDING                                   **Label_6**
-:- test peekcode_test30(S1, auxvar(Sc)) 
+:- test peekcode_test30(S1) 
    + (setup(setup_pco30(S1,Sc)),
       cleanup(cleanup_pco30(Sc,S1)),
       exception(error(permission_error(input, binary_stream, S1), ImplDep)))
    # "[ISO-sics] peek_code/2: expected(error) bug(succeed)".
 
-peekcode_test30(S1, _) :-
+peekcode_test30(S1) :-
     peek_code(S1, _).
 
 setup_pco30(S1,Sc):-
@@ -4694,14 +4699,14 @@ cleanup_pco30(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                      **Label_6**
-:- test peekcode_test31(auxvar(S1,Sc)) 
+:- test peekcode_test31
    + (setup(setup_pco31(S1, Sc)),
       cleanup(cleanup_pco31(S1, Sc)),
       exception(error(permission_error(input,
                                        past_end_of_stream, S1), ImplDep)))
    # "[ISO-sics] peek_code/1: expected(error) bug(wrong_error)".
 
-peekcode_test31(_) :-
+peekcode_test31 :-
     peek_code(_).
 
 setup_pco31(S1,Sc):-
@@ -4716,7 +4721,7 @@ cleanup_pco31(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                             **Label_6**
-:- test peekcode_test32(Code1, Code2, auxvar(Sc,S1)) :
+:- test peekcode_test32(Code1, Code2) :
    true =>
    (Code1=(-1),
     Code2=(-1)) +
@@ -4724,7 +4729,7 @@ cleanup_pco31(Sc,S1):-
     cleanup(cleanup_pco32(Sc,S1)))
 # "[ISO-sics] peek_code/1: expected(succeed)".
 
-peekcode_test32(Code1, Code2,_) :-
+peekcode_test32(Code1, Code2) :-
     peek_code(Code1),
     peek_code(Code2).
 
@@ -4762,14 +4767,14 @@ cleanup_pco33(S1) :-
 %! ## 8.12.3 ISOcore#p94
 
 %% REVIEW:PENDING                                   **Label_6**
-:- test putchar_test1(S, Sc1, S1, L, auxvar(Sc)) :
+:- test putchar_test1(S, Sc1, S1, L) :
    true =>
    (L='qwert') +
    (setup(setup_putch1(S,Sc)),
     cleanup(cleanup_putch1(S1,S,Sc,Sc1)))
 # "[ISO] put_char/1: expected(succeed) bug(error)".
 
-putchar_test1(S, Sc1, S1, L, _) :-
+putchar_test1(S, Sc1, S1, L) :-
     put_char(t),
     write_contents(text, '.', S),
     open_to_read('/tmp/tmp.out', read, Sc1, S1, [type(text)]),
@@ -4807,14 +4812,14 @@ cleanup_putch2(S,Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                             **Label_6**
-:- test putcode_test3(S, Sc1, S1, L, auxvar(Sc)) :
+:- test putcode_test3(S, Sc1, S1, L) :
    true =>
    (L='qwert') +
    (setup(setup_putco3(S,Sc)),
     cleanup(cleanup_putco3(S,Sc,S1,Sc1)))
 # "[ISO] put_code/1: expected(succeed) bug(error)".
 
-putcode_test3(S, Sc1, S1, L, _) :-
+putcode_test3(S, Sc1, S1, L) :-
     put_code(0't),
     write_contents(text, '.', S),
     open_to_read('/tmp/tmp.out', read, Sc1, S1, [type(text)]),
@@ -4852,12 +4857,12 @@ cleanup_putco4(Sc,S1,S):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                              **Label_6**
-:- test putchar_test5(auxvar(S,Sc)) 
+:- test putchar_test5
    + (setup(setup_putch5(S,Sc)),
       cleanup(cleanup_putch5(S,Sc)))
    # "[ISO] put_char/1: expected(succeed) bug(error)".
 
-putchar_test5(_) :-
+putchar_test5 :-
     nl, put_char(a).
 
 setup_putch5(S,Sc):-
@@ -4872,12 +4877,12 @@ cleanup_putch5(S,Sc):-
     close(S1).
 
 %% REVIEW:PENDING                               **Label_6**
-:- test putchar_test6(auxvar(S)) 
+:- test putchar_test6
    + (setup(setup_putch6(S)),
       cleanup(cleanup_putch6(S)))
    # "[ISO] put_char/2: expected(succeed) bug(error)".
 
-putchar_test6(_) :-
+putchar_test6 :-
     nl(st_o), put_char(st_o, a).
 
 setup_putch6(S):-
@@ -5092,14 +5097,14 @@ putcode_test24 :- put_code(foo, -1).
 %! ## 8.13.1 ISOcore#p96
 
 %% REVIEW:PENDING                             **Label_6**
-:- test getbyte_test1(Byte,S2,auxvar(Sc)) :
+:- test getbyte_test1(Byte,S2) :
    true =>
    (Byte=113) +
    (setup(setup_getbyte1(Sc,S2)),
     cleanup(cleanup_getbyte1(Sc,S2))) 
 # "[ISO] get_byte/1: expected(succeed)".
 
-getbyte_test1(Byte,S2,_) :-
+getbyte_test1(Byte,S2) :-
     get_byte(Byte),
     read_no_term(S2, [119, 101, 114]).
 
@@ -5153,14 +5158,14 @@ cleanup_getbyte3(S2):-
     close(S2).
 
 %% REVIEW:PENDING                                **Label_6**
-:- test getbyte_test4(Byte,auxvar(S2)):
+:- test getbyte_test4(Byte):
    true =>
    (Byte=(-1)) +
    (setup(setup_getbyte4(S2)),
     cleanup(cleanup_getbyte4(S2))) 
 # "[ISO] get_byte/2: expected(succeed) bug(error)".
 
-getbyte_test4(Byte,_) :-
+getbyte_test4(Byte) :-
     get_byte(st_i, Byte).
 
 setup_getbyte4(S2):-
@@ -5192,13 +5197,13 @@ getbyte_test5 :- get_byte(user_output, _).
 getbyte_test6 :- get_byte(_, _).
 
 %% REVIEW:PENDING                                  **Label_6**
-:- test getbyte_test7(auxvar(Sc,S1)) 
+:- test getbyte_test7 
    + (setup(setup_getbyte7(Sc,S1)),
       cleanup(cleanup_getbyte7(Sc,S1)),
       exception(error(type_error(in_byte, p),ImplDep)))
    # "[ISO-sics] get_byte/1: expected(error) bug(fail)".
 
-getbyte_test7(_) :-
+getbyte_test7 :-
     get_byte(p).
 
 setup_getbyte7(Sc,S1):-
@@ -5211,14 +5216,13 @@ cleanup_getbyte7(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                 **Label_6**
-:- test getbyte_test8(auxvar(Sc,S1)) 
+:- test getbyte_test8
    + (setup(setup_getbyte8(Sc,S1)),
       cleanup(cleanup_getbyte8(Sc,S1)),
-      exception(error(type_error(in_byte, -2),
-                      ImplDep)))
+      exception(error(type_error(in_byte, -2),ImplDep)))
 # "[ISO-sics] get_code/1: expected(error) bug(fail)".
 
-getbyte_test8(_) :-
+getbyte_test8 :-
     get_byte(-2).
 
 setup_getbyte8(Sc,S1):-
@@ -5269,12 +5273,12 @@ setup_getbyte11(S):-
     current_output(S).
 
 %% REVIEW:PENDING                                        **Label_6**
-:- test getbyte_test12(auxvar(Sc,S1)) 
+:- test getbyte_test12
    + (setup(setup_getbyte12(Sc,S1)),
       cleanup(cleanup_getbyte12(Sc,S1)))
    # "[ISO-sics] get_byte/2: expected(error) bug(succeed)".
 
-getbyte_test12(_) :-
+getbyte_test12 :-
     get_byte(_).
 
 setup_getbyte12(Sc,S1):-
@@ -5287,14 +5291,13 @@ cleanup_getbyte12(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                        **Label_6**
-:- test getbyte_test13(auxvar(Sc,S1)) 
+:- test getbyte_test13
    + (setup(setup_getbyte13(Sc,S1)),
       cleanup(cleanup_getbyte13(Sc,S1)),
-      exception(error(permission_error(input,
-                                       past_end_of_stream, S1), ImplDep)))
+      exception(error(permission_error(input, past_end_of_stream, S1), ImplDep)))
    # "[ISO-sics] get_byte1: expected(error) bug(wrong_error)".
 
-getbyte_test13(_) :-
+getbyte_test13 :-
     get_byte(_),
     get_byte(_).
 
@@ -5313,14 +5316,14 @@ cleanup_getbyte13(Sc,S1):-
 %! ## 8.13.2 ISOcore#p97
 
 %% REVIEW:PENDING                                            **Label_4**
-:- test peekbyte_test1(Byte,S2,auxvar(Sc)) :
+:- test peekbyte_test1(Byte,S2) :
    true =>
    (Byte=113) + 
    (setup(setup_pb1(Sc,S2)),
     cleanup(cleanup_pb1(Sc,S2)))
 # "[ISO] peek_byte/1: expected(succeed) bug(error)".
 
-peekbyte_test1(Byte,S2,_) :-
+peekbyte_test1(Byte,S2) :-
     peek_byte(Byte),
     read_no_term(S2, [113, 119, 101, 114]).
 
@@ -5374,14 +5377,14 @@ cleanup_pb3(S2):-
     close(S2).
 
 %% REVIEW:PENDING                                      **Label_6**
-:- test peekbyte_test4(Byte,auxvar(S2,Sc)) :
+:- test peekbyte_test4(Byte) :
    true =>
    (Byte=(-1)) +
    (setup(setup_pb4(Sc,S2)),
     cleanup(cleanup_pb4(S2,Sc))) 
 # "[ISO] peek_byte/2: expected(succeed) bug(error)".
 
-peekbyte_test4(Byte,_) :-
+peekbyte_test4(Byte) :-
     peek_byte(st_i, Byte).
 
 setup_pb4(Sc,S2):-
@@ -5408,13 +5411,13 @@ peekbyte_test5 :- peek_byte(user_output, _).
 peekbyte_test6 :- peek_byte(_, _).
 
 %% REVIEW:PENDING                                            **Label_6**
-:- test peekbyte_test7(auxvar(Sc,S1)) 
+:- test peekbyte_test7
    + (setup(setup_pb7(Sc,S1)),
       cleanup(cleanup_pb7(Sc,S1)),
       exception(error(type_error(in_byte, p), ImplDep)))
    # "[ISO-sics] peek_byte/1: expected(error) bug(fail)".
 
-peekbyte_test7(_) :-
+peekbyte_test7 :-
     peek_byte(p).
 
 setup_pb7(Sc,S1):-
@@ -5427,13 +5430,13 @@ cleanup_pb7(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                   **Label_6**
-:- test peekbyte_test8(auxvar(Sc,S1)) 
+:- test peekbyte_test8
    + (setup(setup_pb8(Sc,S1)),
       cleanup(cleanup_pb8(Sc,S1)),
       exception(error(type_error(in_byte, -2), ImplDep)))
    # "[ISO-sics] peek_byte/1: expected(error) bug(fail)".
 
-peekbyte_test8(_) :-
+peekbyte_test8 :-
     peek_byte(-2).
 
 setup_pb8(Sc,S1):-
@@ -5483,12 +5486,12 @@ setup_pb11(S):-
     current_output(S).
 
 %% REVIEW:PENDING                                  **Label_6**
-:- test peekbyte_test12(auxvar(Sc,S1))
+:- test peekbyte_test12
    + (setup(setup_pb12(Sc,S1)),
       cleanup(cleanup_pb12(Sc,S1)))
    # "[ISO-sics] peek_byte/1: expected(error) bug(succeed)".
 
-peekbyte_test12(_) :-
+peekbyte_test12 :-
     peek_byte(_).
 
 setup_pb12(Sc,S1):-
@@ -5502,13 +5505,13 @@ cleanup_pb12(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                       **Label_6**
-:- test peekbyte_test13(auxvar(Sc,S1)) 
+:- test peekbyte_test13
    + (setup(setup_pb13(Sc,S1)),
     cleanup(cleanup_pb13(Sc,S1)),
     exception(error(permission_error(input, past_end_of_stream, S1),ImplDep)))
    # "[ISO-sics] peek_byte/1: expected(error) bug(wrong_error)".
 
-peekbyte_test13(_) :-
+peekbyte_test13 :-
     get_byte(_),
     peek_byte(_).
 
@@ -5526,12 +5529,12 @@ cleanup_pb13(Sc,S1):-
 %! ## 8.13.3 ISOcore#p98
 
 %% REVIEW:PENDING                                     **Label_6**
-:- test putbyte_test1(auxvar(S,Sc)) 
+:- test putbyte_test1
    + (setup(setup_ptb1(S,Sc)),
       cleanup(cleanup_ptb1(S,Sc)))
    # "[ISO] put_byte/1: expected(succeed) bug(error)".
 
-putbyte_test1(_) :-
+putbyte_test1 :-
     put_byte(116).
 
 setup_ptb1(S,Sc):-
@@ -5547,12 +5550,12 @@ cleanup_ptb1(S,Sc):-
     close(S1).
 
 %% REVIEW:PENDING                                       **Label_6**
-:- test putbyte_test2(auxvar(S)) 
+:- test putbyte_test2
    + (setup(setup_ptb2(S)),
       cleanup(cleanup_ptb2(S)))
    # "[ISO] put_byte/2: expected(succeed) bug(error)".
 
-putbyte_test2(_) :-
+putbyte_test2 :-
     put_byte(st_i, 84).
 
 setup_ptb2(S):-
@@ -5584,12 +5587,12 @@ putbyte_test4 :- put_byte(user_output, 'ty').
 putbyte_test5 :- put_byte(_, 118).
 
 %% REVIEW:PENDING                                  **Label_6**
-:- test putbyte_test6(auxvar(S, Sc)) 
+:- test putbyte_test6
    + (setup(setup_ptb6(S, Sc)),
       exception(error(instantiation_error, ImplDep)))
    # "[ISO-sics] put_byte/2: expected(error)".
 
-putbyte_test6(_) :-
+putbyte_test6 :-
     put_byte(_).
 
 setup_ptb6(S, Sc):-
@@ -5610,13 +5613,13 @@ setup_ptb7(S):-
     close(S).
 
 %% REVIEW:PENDING                                      **Label_6**
-:- test putbyte_test8(S1, auxvar(Sc, S1)) 
+:- test putbyte_test8(S1) 
    + (setup(setup_ptb8(Sc,S1)),
       cleanup(cleanup_ptb8(Sc,S1)),
       exception(error(permission_error(output, stream, S1), ImplDep)))
    # "[ISO-sics] put_byte/2: expected(error) bug(wrong_error)".
 
-putbyte_test8(S1, _) :-
+putbyte_test8(S1) :-
     put_byte(S1, 99).
 
 setup_ptb8(Sc,S1):-
@@ -5681,14 +5684,14 @@ putbyte_test13 :- put_byte(user_output, 'ty').
 %! ## 8.14.1 ISOcore#p99
 
 %% REVIEW:PENDING                                      **Label_6**
-:- test read_test1(Y,X,auxvar(Sc,S1)) :
+:- test read_test1(Y,X) :
    true =>
    (X='term1',Y='term2') +
    (setup(setup_read1(Sc,S1)),
     cleanup(cleanup_read1(Sc,S1)))
 # "[ISO] read/1: expected(succeed)".
 
-read_test1(Y,X,_) :-
+read_test1(Y,X) :-
     read(X),
     read(Y).
 
@@ -5702,14 +5705,14 @@ cleanup_read1(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                         **Label_6**
-:- test read_test2(Y,X,auxvar(S1)) :
+:- test read_test2(Y,X) :
    true =>
    (X='term2') +
    (setup(setup_read2(S1)),
     cleanup(cleanup_read2(S1)))
 # "[ISO] read/2: expected(succeed)".
 
-read_test2(Y,X,_) :-
+read_test2(Y,X) :-
     read(st_i, Y),
     read(st_i,X).
 
@@ -5723,7 +5726,7 @@ cleanup_read2(S1):-
     close(S1). 
 
 %% REVIEW:PENDING                                             **Label_6**
-:- test read_test3(T, VL, VN, VS,auxvar(S1),Y) :
+:- test read_test3(T, VL, VN, VS, Y) :
    true =>
    (T=foo(X1+X2, X1+X3),
     VL=[X1, X2, X3],
@@ -5734,7 +5737,7 @@ cleanup_read2(S1):-
     cleanup(cleanup_read3(S1)))
 # "[ISO] read_term/2: expected(succeed) bug(error)".
 
-read_test3(T, VL, VN, VS,_,Y) :-
+read_test3(T, VL, VN, VS, Y) :-
    read_term(st_i, T, [variables(VL), variable_names(VN), singletons(VS)]),
    read(st_i,Y).
    
@@ -5747,19 +5750,19 @@ setup_read3(S1):-
 cleanup_read3(S1):-
     close(S1).
 
-:- test read_test4(Y, auxvar(Sc,S1)) :
+:- test read_test4(Y) :
    true =>
    (Y='term2') +
    (setup(setup_read4(Sc,S1)),
     cleanup(cleanup_read4(Sc,S1)))
 # "[ISO] read/1: expected(fail)".
 
-read_test4(Y,_) :-
+read_test4(Y) :-
     (read(4.1) -> fail ; true),
     read(Y).
 
 setup_read4(Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '3.1. term2.'),
+    wr_txt_in(S, '3.1. term2.'),
     close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text)]).
 
@@ -5769,7 +5772,7 @@ cleanup_read4(Sc,S1):-
 %% REVIEW:PENDING                                      **Label_3**
 %%   [gprolog]: throws existence_error(procedure,open_and_write/6)
 %%   [ciao]: throws exception(error(syntax_error([1,1,['operator expected after expression'],['',foo,'\n','** here **','\n','',123,' ','.']]),read/1))
-:- test read_test5(X, Y, auxvar(Sc,S1)) :
+:- test read_test5(X, Y) :
    true =>
    (Y='term2') +
    (setup(setup_read5(Sc,S1)),
@@ -5777,7 +5780,7 @@ cleanup_read4(Sc,S1):-
     exception(error(syntax_error(S), ImplDep)))
 # "[ISO] read/1: expected(error) bug(wrong_error)".
 
-read_test5(X, Y, _) :-
+read_test5(X, Y) :-
     read(X),
     read(Y).
 
@@ -5793,17 +5796,17 @@ cleanup_read5(Sc, S1):-
 %% REVIEW:PENDING                                          **Label_3**
 %%   [gprolog]: throws existence_error(procedure,open_and_write/6)
 %%   [ciao]: throws  exception(error(syntax_error([1,1,['operator expected after expression'],['',3.1,'\n','** here **','\n']]),read/1))
-:- test read_test6(X, auxvar(Sc,S1)) 
+:- test read_test6(X) 
    + (setup(setup_read6(Sc,S1)),
       cleanup(cleanup_read6(Sc,S1)),
       exception(error(syntax_error(S), ImplDep)))
    # "[ISO] read/1: expected(error) bug(wrong_error)".
 
-read_test6(X, _) :-
+read_test6(X) :-
     read(X).
 
 setup_read6(Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '3.1'),
+    wr_txt_in(S, '3.1'),
     close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text)]).
 
@@ -5813,7 +5816,7 @@ cleanup_read6(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                             **Label_6**
-:- test read_test7(T, L, auxvar(Sc, S1)) :
+:- test read_test7(T, L) :
    true =>
    (T=foo(bar),
     L=[]) +
@@ -5821,11 +5824,11 @@ cleanup_read6(Sc,S1):-
     cleanup(cleanup_read7(Sc,S1)))
 # "[ISO-sics] read_term/2: expected(succeed)".
 
-read_test7(T, L, _) :-
+read_test7(T, L) :-
     read_term(T, [singletons(L)]).
     
 setup_read7(Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, 'foo(bar).'),
+    wr_txt_in(S, 'foo(bar).'),
     close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S1,
                  [type(text), eof_action(error)]).
@@ -5886,14 +5889,14 @@ read_test14 :- read_term(user_input, _, [bar]).
 read_test15 :- read_term(user_output, _, []).
 
 %% REVIEW:PENDING                                            **Label_6**
-:- test read_test16(T, auxvar(Sc, S1)) :
+:- test read_test16(T) :
    true =>
    (T=end_of_file) +
    (setup(setup_read16(Sc,S1)),
     cleanup(cleanup_read16(Sc,S1))) 
 # "[ISO-sics] read/1: expected(succeed)".
 
-read_test16(T, _) :-
+read_test16(T) :-
     read(T).
 
 setup_read16(Sc,S1):-
@@ -5920,13 +5923,13 @@ setup_read17(S,S1):-
 
 %%REMOVE exception??
 %% REVIEW:PENDING                                         **Label_6**
-:- test read_test18(auxvar(Sc, S1))
+:- test read_test18
    + (setup(setup_read18(Sc,S1)),
       cleanup(cleanup_read18(Sc,S1)),
       exception(error(permission_error(input, binary_stream, S1), ImplDep)))
    # "[ISO-sics] read_term/2: expected(error) bug(succeed)".
 
-read_test18(_) :-
+read_test18 :-
     read_term(_, []).
 
 setup_read18(Sc,S1):-
@@ -5941,13 +5944,13 @@ cleanup_read18(Sc,S1):-
 
 %%REMOVE exception??
 %% REVIEW:PENDING                                         **Label_6**
-:- test read_test19(auxvar(Sc, S1)) 
+:- test read_test19
    + (setup(setup_read19(Sc,S1)),
       cleanup(cleanup_read19(Sc,S1)),
       exception(error(permission_error(input, binary_stream, S1), ImplDep)))
    # "[ISO-sics] read/1: expected(error) bug(succeed)".
 
-read_test19(_) :-
+read_test19 :-
     read(_).
 
 setup_read19(Sc,S1):-
@@ -5964,14 +5967,14 @@ cleanup_read19(Sc,S1):-
 %   it does in some prolog systems, not in gprolog
 
 %% REVIEW:PENDING                                        **Label_6**
-:- test read_test20(S1, auxvar(Sc, S1)) 
+:- test read_test20(S1) 
    + (setup(setup_read20(Sc,S1)),
       cleanup(cleanup_read20(Sc,S1)),
       exception(error(permission_error(input, past_end_of_stream, S1),
                       ImplDep)))
    # "[ISO-sics] read_term/3: expected(error) bug(wrong_error)".
 
-read_test20(S1, _) :-
+read_test20(S1) :-
     read_term(S1, _, []).
 
 setup_read20(Sc,S1):-
@@ -6007,17 +6010,17 @@ setup_read21(Ops,S,T,Sc,S1):-
                  [type(text), eof_action(error)]).
 
 %% REVIEW:PENDING                                         **Label_6**
-:- test read_test22(auxvar(Sc,S1)) 
+:- test read_test22
    + (setup(setup_read22(Sc,S1)),
       cleanup(cleanup_read22(Sc,S1)),
       exception(error(syntax_error(S), ImplDep)))
    # "[ISO-sics] read_term/2: expected(error) bug(wrong_error)".
 
-read_test22(_):-
+read_test22 :-
     read_term(_, []).
 
 setup_read22(Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'a."),
+    wr_txt_in(S, "'a."),
     close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S1,
                  [type(text), eof_action(error)]).
@@ -6026,21 +6029,21 @@ cleanup_read22(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                              **Label_6**
-:- test read_test23(T, auxvar(Sc, S1)) :
+:- test read_test23(T) :
    true =>
    (T=M) +
    (setup(setup_read23(Sc,S1)),
     cleanup(cleanup_read23(Sc,S1))) 
 # "[ISO-sics] read/1: expected(succeed)".
 
-read_test23(T, _) :-
+read_test23(T) :-
     read(T).
 
 setup_read23(Sc,S1):-
     (current_prolog_flag(max_integer, M) ->true;M=0),
     number_codes(M, L),
     atom_codes(Atm, L),
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, Atm),
+    wr_txt_in(S, Atm),
     write_contents(text, '.', S),
     close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S1,
@@ -6050,21 +6053,21 @@ cleanup_read23(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                          **Label_6**
-:- test read_test24(T, auxvar(Sc, S1) ) :
+:- test read_test24(T) :
    true =>
    (T=M) +
    (setup(setup_read24(Sc,S1)),
     cleanup(cleanup_read24(Sc,S1)))
 # "[ISO-sics] read/1: expected(succeed)".
 
-read_test24(T, _) :-
+read_test24(T) :-
     read(T).
 
 setup_read24(Sc,S1):-
     (current_prolog_flag(min_integer, M) ->true;M=0),
     number_codes(M, L),
     atom_codes(Atm, L),
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, Atm),
+    wr_txt_in(S, Atm),
     write_contents(text, '.', S),
     close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S1,
@@ -6077,12 +6080,12 @@ cleanup_read24(Sc,S1):-
 %! ## 8.14.2 ISOcore#p100
 
 %% REVIEW:PENDING                                                  **Label_6**
-:- test write_test1(S, S1, Sc1, X, auxvar(Sc)) 
+:- test write_test1(S, S1, Sc1, X) 
    + (setup(setup_write1(S,Sc)),
       cleanup(cleanup_write1(S,Sc,Sc1,S1)))
    # "[ISO] write_term/3: expected(succeed)".
 
-write_test1(S, S1, Sc1, X, _) :-
+write_test1(S, S1, Sc1, X) :-
     write_term(S, [1, 2, 3], []),
     write_contents(text, '.', S),
     open_to_read('/tmp/tmp.out', read, Sc1, S1,
@@ -6098,12 +6101,12 @@ cleanup_write1(S,Sc,Sc1,S1):-
     close_instreams(Sc1, S1).
 
 %% REVIEW:PENDING                                        **Label_6**
-:- test write_test2(auxvar(S,Sc)) 
+:- test write_test2
    + (setup(setup_write2(S,Sc)),
       cleanup(cleanup_write2(Sc,S)))
    # "[ISO] write_canonical/1: expected(succeed) bug(error)".
 
-write_test2(_) :-
+write_test2 :-
     write_canonical([1, 2, 3]).
 
 setup_write2(S,Sc):-
@@ -6118,12 +6121,12 @@ cleanup_write2(Sc,S):-
     close(S1).
 
 %% REVIEW:PENDING                                      **Label_6**
-:- test write_test3(S,S1,auxvar(Sc)) 
+:- test write_test3(S,S1) 
    + (setup(setup_write3(S,Sc)),
       cleanup(cleanup_write3(Sc,S)))
    # "[ISO] write_term/3: expected(succeed)".
 
-write_test3(S,S1,_) :-
+write_test3(S,S1) :-
     write_term(S, '1<2', []),
     open('/tmp/tmp.out', read, S1, [type(text)]),
     read_no_term(S1, "1<2").
@@ -6137,12 +6140,12 @@ cleanup_write3(Sc,S):-
     close_outstreams(Sc, S).
 
 %% REVIEW:PENDING                                          **Label_6**
-:- test write_test4(S,S1,auxvar(Sc)) 
+:- test write_test4(S,S1) 
    + (setup(setup_write4(S,Sc)),
       cleanup(cleanup_write4(Sc,S)))
    # "[ISO] writeq/2: expected(succeed)".
 
-write_test4(S,S1,_) :-
+write_test4(S,S1) :-
     writeq(S, '1<2'),
     open('/tmp/tmp.out', read, S1, [type(text)]),
     read_no_term(S1, "'1<2'").
@@ -6156,12 +6159,12 @@ cleanup_write4(Sc,S):-
     close_outstreams(Sc, S).
 
 %% REVIEW:PENDING                                                **Label_6**
-:- test write_test5(auxvar(S,Sc)) 
+:- test write_test5
    + (setup(setup_write5(S,Sc)),
       cleanup(cleanup_write5(S,Sc)))
    # "[ISO] writeq/1: expected(succeed) bug(error)".
 
-write_test5(_) :-
+write_test5 :-
     writeq('$VAR'(0)).
 
 setup_write5(S,Sc):-
@@ -6175,12 +6178,12 @@ cleanup_write5(S,Sc):-
     read_no_term(S1, "A").
 
 %% REVIEW:PENDING                                                    **Label_6**
-:- test write_test6(S,auxvar(Sc)) 
+:- test write_test6(S) 
    + (setup(setup_write6(S,Sc)),
       cleanup(cleanup_write6(Sc,S)))
    # "[ISO] write_term/3: expected(succeed)".
 
-write_test6(S,_) :-
+write_test6(S) :-
     write_term(S, '$VAR'(1), [numbervars(false)]).
 
 setup_write6(S,Sc):-
@@ -6195,12 +6198,12 @@ cleanup_write6(Sc,S):-
     close(S1).
 
 %% REVIEW:PENDING                                                **Label_6**
-:- test write_test7(S,auxvar(Sc)) 
+:- test write_test7(S) 
    + (setup(setup_write7(S,Sc)),
       cleanup(cleanup_write7(S,Sc)))
    # "[ISO] write_term/3: expected(succeed)".
 
-write_test7(S,_) :-
+write_test7(S) :-
     write_term(S, '$VAR'(51), [numbervars(true)]).
 
 setup_write7(S,Sc):-
@@ -6306,13 +6309,13 @@ setup_write20(S):-
 %% REVIEW:PENDING                                              **Label_2**
 %%   [gprolog]: throws exception(error(permission_error(output, binary_stream, S), _))
 %%   [ciao]: no throws
-:- test write_test21(auxvar(S,Sc)) 
+:- test write_test21
    + (setup(setup_write21(S,Sc)),
       cleanup(cleanup_write21(S)),
       exception(error(permission_error(output, binary_stream, S), ImplDep)))
 # "[ISO-sics] write/1: expected(error) bug(succeed)".
 
-write_test21(_) :-
+write_test21 :-
     write(a).
 
 setup_write21(S,Sc):-
@@ -6515,295 +6518,256 @@ current_op_test4 :- current_op(_, 0, _).
 current_op_test5 :- current_op(_, _, 5).
 
 % ---------------------------------------------------------------------------
-%! ## 8.14.5 ISOcore#p103
+%! ## 8.14.5 char_conversion/2 ISOcore#p103
+
+% NOTE: Incompatibilities in Ciao:
+%
+%  - Implement char_conversion/2 may be too costly. Unless it is
+%    really necessary in some application, it will not be supported.
 
 % TODO:[JF] won't fix (unless somebody really need them)
 char_conversion(_, _) :- fail.
 current_char_conversion(_, _) :- fail.
 
-%% REVIEW:PENDING                               **Label_6**      
-:- test char_conversion_test1(auxvar(S,Sc,S1))
-   + (setup(setup_charconver1(S,Sc,S1)),
-      cleanup(cleanup_charconver1(Sc,S1)))
-   # "[ISO] char_conversion/2: expected(succeed) bug(error)".
-
-char_conversion_test1(_) :-
-    char_conversion('&', ','),
-    read('a,b'),
-    get_char(' '),
-    get_char('&').
-
-setup_charconver1(S,Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, 'a&b. &'),
+setup_charconver1(Sc,S1):-
+    wr_txt_in(S, 'a&b. &'),
     close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1,
-                 [type(text), eof_action(error)]).
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
+    char_conversion('&', ',').
 
-cleanup_charconver1(Sc,S1):-
-    close_instreams(Sc, S1).
-
-%% REVIEW:PENDING                                    **Label_6**  
-:- test char_conversion_test2(auxvar(S,Sc,S1)) 
-   + (setup(setup_charconver2(S,Sc,S1)),
-      cleanup(cleanup_charconver2(Sc,S1)))
-   # "[ISO] char_conversion/2: expected(succeed) bug(error)".
-
-char_conversion_test2(_) :-
+setup_charconver2(Sc,S1):-
+    wr_txt_in(S, '^b+c^'),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
     char_conversion('^', '''').
 
-setup_charconver2(S,Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '^b+c^'),
+setup_charconver3(Sc,S1):-
+    wr_txt_in(S, "'A+c'+A."),
     close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1,
-                 [type(text), eof_action(error)]).
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
+    char_conversion('A', 'a').
 
-cleanup_charconver2(Sc,S1):-
-    read('b+c'),
-    get_char(' '),
-    get_char('^'),
-    close_instreams(Sc, S1).
-
-%% REVIEW:PENDING                                  **Label_6**  
-:- test char_conversion_test3(auxvar(S,Sc,S1)) 
-   + (setup(setup_charconver3(S,Sc,S1)),
-      cleanup(cleanup_charconver3(Sc,S1)))
-   # "[ISO] char_conversion/2: expected(succeed) bug(error)".
-
-char_conversion_test3(_) :-
-    char_conversion('A', 'a'),
-    read('A+c'+a).
-
-setup_charconver3(S,Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'A+c'+A."),
+setup_charconver4(Sc,S1):-
+    wr_txt_in(S, "A&A. 'AAA'. ^A&A^."),
     close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1,
-                 [type(text), eof_action(error)]).
-
-cleanup_charconver3(Sc,S1):-
-    close_instreams(Sc, S1).
-
-%% REVIEW:PENDING                                      **Label_6**  
-:- test char_conversion_test4(X, Y, Z, auxvar(S, Sc, S1)) :
-   true =>
-   (X=(a, a),
-    Y='AAA',
-    Z='a,a') +
-   (setup(setup_charconver4(S,Sc,S1)),
-    cleanup(cleanup_charconver4(Sc,S1)))
-# "[ISO] char_conversion/2: expected(succeed) bug(error)".
-
-char_conversion_test4(X, Y, Z, _) :-
-    read(X),
-    read(Y),
-    read(Z).
-
-setup_charconver4(S,Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text,
-                   "A&A. 'AAA'. ^A&A^."),
-    close(S),
-    open_to_read('/tmp/tmp.in', read,
-                 Sc, S1, [type(text), eof_action(error)]),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
     char_conversion('&', ','),
     char_conversion('^', ''''),
     char_conversion('A', 'a').
 
-cleanup_charconver4(Sc,S1):-
-    close_instreams(Sc, S1).
-
-%% REVIEW:PENDING                                  **Label_6**          
-:- test char_conversion_test5(auxvar(S,Sc,S1)) 
-   + (setup(setup_charconver5(S,Sc,S1)),
-      cleanup(cleanup_charconver5(Sc,S1)))
-   # "[ISO] char_conversion/2: expected(succeed) bug(error)".
-
-char_conversion_test5(_) :-
-    char_conversion('&', '&'),
-    read('&'),
-    \+current_char_conversion(_, _).
-
-setup_charconver5(S,Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "& ."),
+setup_charconver5(Sc,S1):-
+    wr_txt_in(S, "& ."),
     close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1,
-                 [type(text), eof_action(error)]),
-    char_conversion('&', ',').
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
+    char_conversion('&', ','),
+    char_conversion('&', '&').
 
-cleanup_charconver5(Sc,S1):-
-    
-    close_instreams(Sc, S1).
-
-%% REVIEW:PENDING!!                                             **Label_6**  
-%:- test char_conversion_test6(X) :
-%   (setup(setup_charconver6(S,Sc,S1)))=>
-%   (cleanup(cleanup_charconver6(Sc,S1,X)))
-%# "[ISO-sics] char_conversion/2: expected(succeed) bug(error)".
-
-%char_conversion_test6(X) :- read(X).
-%
-%setup_charconver6(S,Sc,S1):-
-%    ( open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "0'%%1."),
-%	    close(S),
-%	    open_to_read('/tmp/tmp.in', read, Sc, S1,
-%		[type(text), eof_action(error)]),
-%	    char_conversion('%', '+'),
- %           char_conversion('^', '\' )).
-
-%cleanup_charconver6(Sc,S1,X):- (close_instreams(Sc, S1), X=(0,%') +1).
-
-%% REVIEW:PENDING                                               **Label_6**  
-:- test char_conversion_test7(X, auxvar(S,Sc,S1)) :
-   true =>
-   (X=('%' +1)) +
-   (setup(setup_charconver7(S,Sc,S1)),
-    cleanup(cleanup_charconver7(Sc,S1)))
-# "[ISO-sics] char_conversion/2: expected(succeed) bug(error)".
-
-char_conversion_test7(X, _) :-
-    read(X).
-
-setup_charconver7(S,Sc,S1):- 
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'%'%1."),
-                   close(S),
-                   open_to_read('/tmp/tmp.in', read, Sc, S1,
-                                [type(text), eof_action(error)]),
-                   char_conversion('%', '+'),
-                                   char_conversion('^', '\'').
-
-cleanup_charconver7(Sc,S1):-
-    close_instreams(Sc, S1).
-
-%% REVIEW:PENDING                                                  **Label_6**  
-:- test char_conversion_test8(X, auxvar(S,Sc,S1)) 
-   + (setup(setup_charconver8(S,Sc,S1)),
-      cleanup(cleanup_charconver8(X,Sc,S1)))
-   # "[ISO-sics] char_conversion/2: expected(succeed) bug(error)".
-
-char_conversion_test8(X, _) :-
-    read(X).
-
-setup_charconver8(S,Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '"%"%1.'),
-                   close(S),
-                   open_to_read('/tmp/tmp.in', read, Sc, S1,
-                                [type(text), eof_action(error)]),
-                   char_conversion('%', '+'),
-                                   char_conversion('^', '\'').
-
-cleanup_charconver8(X,Sc,S1):-
-    X=(close_instreams(Sc, S1), "%" +1).
-                                   
-
-%% REVIEW:PENDING                                               **Label_6**  
-:- test char_conversion_test9(X, auxvar( S, Sc,S1)) :
-   true =>
-   ( X='.'(1, !)) +
-   (setup(setup_charconver9(S,Sc,S1)),
-    cleanup(cleanup_charconver9(Sc,S1)))
-# "[ISO-sics] char_conversion/2: expected(succeed) bug(error)".
-
-char_conversion_test9(X,_) :-
-    read(X),
-    op(0, xfx, '.').
-
-setup_charconver9(S,Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, '1.#.'),
+setup_charconver6(Sc,S1):-
+    wr_txt_in(S, "0'%%1."),
     close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1,
-                 [type(text), eof_action(error)]),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
+    char_conversion('%', '+'),
+    char_conversion('^', '\'').
+
+setup_charconver7(Sc,S1):- 
+    wr_txt_in(S, "'%'%1."),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
+    char_conversion('%', '+'),
+    char_conversion('^', '\'').
+
+setup_charconver8(Sc,S1):-
+    wr_txt_in(S, '"%"%1.'),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
+    char_conversion('%', '+'),
+    char_conversion('^', '\'').
+
+setup_charconver9(Sc,S1):-
+    wr_txt_in(S, '1.#.'),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
     op(100, xfx, '.'),
     char_conversion('#', '!').
 
-cleanup_charconver9(Sc,S1):-
-    close_instreams(Sc, S1).
+setup_charconver10(Sc,S1):-
+    wr_txt_in(S, "^aa'+'bb^'."),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
+    char_conversion('%', '+'),
+    char_conversion('^', '\'').
+
+setup_charconver11(Sc,S1):-
+    wr_txt_in(S, "+ .% ."),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
+    char_conversion('%', '+'),
+    char_conversion('^', '\'').
+
+setup_charconver12(Sc,S1):-
+    wr_txt_in(S, "- .% ."),
+    close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
+    char_conversion('%', '+'),
+    char_conversion('^', '\'').
+
+cleanup_charcnv(Sc,S1) :- close_instreams(Sc, S1).
+
+%% REVIEW:PENDING                               **Label_6**      
+:- test char_conversion_test1
+   + (not_fails,
+      setup(setup_charconver1(Sc,S1)),
+      cleanup(cleanup_charcnv(Sc,S1)))
+   # "[ISO] char_conversion/2: bug(wontfix)".
+
+char_conversion_test1 :-
+    read((a,b)),
+    get_char(' '),
+    get_char('&').
+
+:- test char_conversion_test2
+   + (not_fails,
+      setup(setup_charconver2(Sc,S1)),
+      cleanup(cleanup_charcnv(Sc,S1)))
+   # "[ISO] char_conversion/2: bug(wontfix)".
+
+char_conversion_test2 :-
+    read('b+c'),
+    get_char(' '),
+    get_char('^').
+
+:- test char_conversion_test3
+   + (not_fails,
+      setup(setup_charconver3(Sc,S1)),
+      cleanup(cleanup_charcnv(Sc,S1)))
+   # "[ISO] char_conversion/2: bug(wontfix)".
+
+char_conversion_test3 :-
+    read('A+c'+a).
+
+:- test char_conversion_test4(X, Y, Z)
+   : true => (X=(a, a), Y='AAA', Z='a,a')
+   + (not_fails,
+      setup(setup_charconver4(Sc,S1)),
+      cleanup(cleanup_charcnv(Sc,S1)))
+# "[ISO] char_conversion/2: bug(wontfix)".
+
+char_conversion_test4(X, Y, Z) :-
+    read(X),
+    read(Y),
+    read(Z).
+
+:- test char_conversion_test5
+   + (not_fails,
+      setup(setup_charconver5(Sc,S1)),
+      cleanup(cleanup_charcnv(Sc,S1)))
+   # "[ISO] char_conversion/2: bug(wontfix)".
+
+char_conversion_test5 :-
+    read('&'),
+    \+current_char_conversion(_, _).
+
+:- test char_conversion_test6(X)
+   + (not_fails,
+      setup(setup_charconver6(Sc,S1)),
+      cleanup(cleanup_charcnv(Sc,S1)))
+# "[ISO-sics] char_conversion/2: bug(wontfix)".
+
+char_conversion_test6(X) :-
+    read(X),
+    X = (0'%) + 1.
+
+:- test char_conversion_test7(X)
+   : true => (X=('%' +1))
+   + (not_fails,
+      setup(setup_charconver7(Sc,S1)),
+      cleanup(cleanup_charcnv(Sc,S1)))
+   # "[ISO-sics] char_conversion/2: bug(wontfix)".
+
+char_conversion_test7(X) :-
+    read(X).
+
+%% REVIEW:PENDING                                                  **Label_6**  
+:- test char_conversion_test8(X) 
+   + (not_fails,
+      setup(setup_charconver8(Sc,S1)),
+      cleanup(cleanup_charcnv(Sc,S1)))
+   # "[ISO-sics] char_conversion/2: bug(wontfix)".
+
+char_conversion_test8(X) :-
+    read(X),
+    X = "%" + 1.
+
+%% REVIEW:PENDING                                               **Label_6**  
+:- test char_conversion_test9(X) :
+   true =>
+   ( X='.'(1, !)) +
+   (not_fails,
+    setup(setup_charconver9(Sc,S1)),
+    cleanup(cleanup_charcnv(Sc,S1)))
+# "[ISO-sics] char_conversion/2: bug(wontfix)".
+
+char_conversion_test9(X) :-
+    read(X),
+    op(0, xfx, '.').
 
 %% REVIEW:PENDING                                                 **Label_6**  
-:- test char_conversion_test10(X, auxvar( S, Sc, S1)) :
+:- test char_conversion_test10(X) :
    true =>
    (X=('aa'+'bb^')) +
-   (setup(setup_charconver10(S,Sc,S1)),
-    cleanup(cleanup_charconver10(Sc,S1)))
-# "[ISO-sics] char_conversion/2: expected(succeed) bug(error)".
+   (not_fails,
+    setup(setup_charconver10(Sc,S1)),
+    cleanup(cleanup_charcnv(Sc,S1)))
+# "[ISO-sics] char_conversion/2: bug(wontfix)".
 
-char_conversion_test10(X,_) :-
-        read(X).
-
-setup_charconver10(S,Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "^aa'+'bb^'."),
-    close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1,
-                 [type(text), eof_action(error)]),
-    char_conversion('%', '+'),
-                    char_conversion('^', '\'').
-
-cleanup_charconver10(Sc,S1):-
-    close_instreams(Sc, S1).
+char_conversion_test10(X) :-
+    read(X).
 
 %% REVIEW:PENDING                                                **Label_6**  
-:- test char_conversion_test11(X, Y, auxvar(S,Sc,S1)) :
+:- test char_conversion_test11(X, Y) :
    true =>
    (X=(+), Y=(+)) +
-   (setup(setup_charconver11(S,Sc,S1)),
-    cleanup(cleanup_charconver11(Sc,S1)))
-# "[ISO-sics] char_conversion/2: expected(succeed) bug(error)".
+   (not_fails,
+    setup(setup_charconver11(Sc,S1)),
+    cleanup(cleanup_charcnv(Sc,S1)))
+# "[ISO-sics] char_conversion/2: bug(wontfix)".
 
-char_conversion_test11(X, Y, _) :-
+char_conversion_test11(X, Y) :-
     set_prolog_flag(char_conversion, off),
     read(X),
     set_prolog_flag(char_conversion, on),
     read(Y).
 
-setup_charconver11(S,Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "+ .% ."),
-                   close(S),
-                   open_to_read('/tmp/tmp.in', read, Sc, S1,
-                                [type(text), eof_action(error)]),
-                   char_conversion('%', '+'),
-                                   char_conversion('^', '\'').
-
-cleanup_charconver11(Sc,S1):-
-    close_instreams(Sc, S1).
-
 %% REVIEW:PENDING                                          **Label_6**  
-:- test char_conversion_test12(X, Y, auxvar(S,Sc,S1)) :
+:- test char_conversion_test12(X, Y) :
    true =>
    (X=('-'('.+')), Y=end_of_file) +
-   (setup(setup_charconver12(S,Sc,S1)),
-    cleanup(cleanup_charconver12(Sc,S1)))
-# "[ISO-sics] char_conversion/2: expected(succeed) bug(error)".
+   (not_fails,
+    setup(setup_charconver12(Sc,S1)),
+    cleanup(cleanup_charcnv(Sc,S1)))
+# "[ISO-sics] char_conversion/2: bug(wontfix)".
 
-char_conversion_test12(X, Y, _) :-
+char_conversion_test12(X, Y) :-
     read(X),
     read(Y).
 
-setup_charconver12(S,Sc,S1):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "- .% ."),
-                   close(S),
-                   open_to_read('/tmp/tmp.in', read, Sc, S1,
-                                [type(text), eof_action(error)]),
-                   char_conversion('%', '+'),
-                                   char_conversion('^', '\'').
+%! ## 8.14.6 current_char_conversion/2 ISOcore#p104
 
-cleanup_charconver12(Sc,S1):-
-    close_instreams(Sc, S1).
-
-%! ## 8.14.6 ISOcore#p104
-
-%% REVIEW:PENDING                               **Label_6**  
-:- test current_char_conversion_test1(Result, auxvar(Aacute,S,Sc,S1)) :
+:- test current_char_conversion_test1(Result) :
    true =>
    (Result=['A', Aacute]) +
-   (setup(setup_currentcharconver1(S,Sc,S1,Aacute)),
+   (not_fails,
+    setup(setup_currentcharconver1(Sc,S1,Aacute)),
     cleanup(cleanup_currentcharconver1(Sc,S1)))
-# "[ISO] current_char_conversion/2: expected(succeed) bug(error)".
+# "[ISO] current_char_conversion/2: bug(wontfix)".
 
-current_char_conversion_test1(Result,_) :-
+current_char_conversion_test1(Result) :-
     findall(C, current_char_conversion(C, a), Result).
 
-setup_currentcharconver1(S,Sc,S1,Aacute):-
-    open_and_write('/tmp/tmp.in', write, S, [type(text)], text, "'\\341\\'."),
+setup_currentcharconver1(Sc,S1,Aacute):-
+    wr_txt_in(S, "'\\341\\'."),
     close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1,
-                 [type(text), eof_action(error)]),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
     read(Aacute),
     char_conversion('A', 'a'),
     char_conversion(Aacute, 'a').
