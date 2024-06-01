@@ -540,6 +540,15 @@ doublequoted_test12 :- read(X), '' == X.
 
 % ===========================================================================
 %! # 7.8 Control constructs
+
+% NOTE: Current issues in Ciao:
+%
+%  - cut (`!/0`) is illegal in `\+` or if-parts of `->`
+%  - The term to goal translation in `call/1` should set the right
+%    scope of cut (!).
+%  - The term to goal translation in `call/1` should complain when
+%    finding a non-callable and report the whole term.
+
 %! ## 7.8.1 true/0 ISOcore#p43
 
 :- test true + not_fails # "[ISO] true/0".
@@ -551,13 +560,6 @@ doublequoted_test12 :- read(X), '' == X.
 
 % ---------------------------------------------------------------------------
 %! ## 7.8.3 call/1 ISOcore#p45
-
-% NOTE: Current issues in Ciao:
-%
-%  - The term to goal translation in `call/1` should set the right
-%    scope of cut.
-%  - The term to goal translation in `call/1` should complain when
-%    finding a non-callable and report the whole term.
 
 :- test call_test1
    # "[ISO] call/1".
@@ -597,7 +599,7 @@ call_test6 :- call(bb(3)).
 
 % TODO:[JF] set the scope of cut when the term is translated to a goal
 :- test call_test7(Result) => (Result=[[1, !]])
-   # "[ISO] call/1: expected(succeed) bug(wrong_succeed)".
+   # "[ISO] call/1: bug()".
 
 call_test7(Result) :- findall([X, Z], (Z= !, call((Z= !, aa(X), Z))), Result).
 
@@ -637,7 +639,7 @@ call_test12 :- call(1).
 % TODO:[JF] complain about non-callable when the term is translated to a goal
 :- test call_test13
    + exception(error(type_error(callable, (fail, 1)), ImplDep))
-   # "[ISO] call/1: expected(error) bug(fail)".
+   # "[ISO] call/1: bug()".
 
 call_test13 :- call((fail, 1)).
 
@@ -645,30 +647,26 @@ call_test13 :- call((fail, 1)).
 %   do not write anything to output!
 :- test call_test14
    + exception(error(type_error(callable, (write(3), 1)), ImplDep))
-   # "[ISO] call/1: expected(error) bug(wrong_error)".
+   # "[ISO] call/1: bug()".
 
 call_test14 :- call((write(3), 1)).
 
 % TODO:[JF] it should complain about non-callable when the term is translated to a goal,
 %   and report the whole goal
 :- test call_test15 + exception(error(type_error(callable, (1;true)), ImplDep))
-# "[ISO] call/1: expected(error) bug(wrong_error)".
+# "[ISO] call/1: bug()".
 
 call_test15 :- call((1;true)).
 
 % TODO:[JF] it should complain about non-callable when the term is translated to a goal,
 %   instead it executes the first branch
 :- test call_test16 + exception(error(type_error(callable, (true;1)), ImplDep))
-   # "[ISO-ciao] call/1: expected(error) bug(success)".
+   # "[ISO-ciao] call/1: bug()".
 
 call_test16 :- call((true;1)).
 
 % ---------------------------------------------------------------------------
 %! ## 7.8.4 !/0 ISOcore#p46
-
-% NOTE: Current issues in Ciao:
-%
-%   - cut is not allowed in \+ or if-parts of ->, if/3
 
 :- test cut_test1
    # "[ISO] cut".
@@ -715,11 +713,10 @@ cut_test8 :- twice(X), call(X), write('Forwards '), fail.
 
 cut_test9 :- goal(X), call(X), write('Forwards '), fail.
 
+% TODO:[JF] ! is illegal in \+ or if-parts of ->; uncomment when fixed
 :- test cut_test10 
-      + (user_output("C Forwards Moss Forwards "),fails)
-# "[ISO] cut: expected(fail)".
-
-% TODO:[JF] commented out, in Ciao "! is illegal in \+ or if-parts of ->"
+   + (user_output("C Forwards Moss Forwards "),fails)
+   # "[ISO] cut: bug()".
 % cut_test10 :- twice(_), (\+(\+(!))), write('Forwards '), fail.
 cut_test10 :- throw(bug_not_implemented).
 
@@ -733,10 +730,9 @@ cut_test11 :- twice(_), once(!), write('Forwards '), fail.
 
 cut_test12 :- twice(_), call(!), write('Forwards '), fail.
 
+% TODO:[JF] ! illegal in -> part ; reimplement without findall/3 when fixed
 :- test cut_test13 + not_fails
-   # "[ISO-ciao] cut: bug(fails)".
-
-% TODO:[JF] reimplement without findall/3
+   # "[ISO-ciao] cut: bug()".
 cut_test13 :-
     findall(Y, ( member(X,[1,2]), !, X=2 -> Y=a ; Y=b ), Ys),
     Ys = [b].
@@ -754,17 +750,17 @@ goal(write('Three ')).
 %! ## 7.8.5 (,)/2 ISOcore#p47
 
 :- test and_test1 + fails
-# "[ISO] ',': expected(fail)".
+   # "[ISO] ','".
 
 and_test1 :- ','(X=1, var(X)).
 
 :-test and_test2(X) => (X=1)
-# "[ISO] ',': expected(succeed)".
+  # "[ISO] ','".
 
 and_test2(X) :- ','(var(X), X=1).
 
 :- test and_test3(X) => (X=true)
-# "[ISO] ',': expected(succeed)".
+   # "[ISO] ','".
 
 and_test3(X) :- ','(X=true, call(X)).
 
@@ -772,27 +768,27 @@ and_test3(X) :- ','(X=true, call(X)).
 %! ## 7.8.6 (;)/2 ISOcore#p48
 
 :- test or_test1
-# "[ISO] ';': expected(fail)".
+   # "[ISO] ';'".
 
 or_test1 :- ';'(true, fail).
 
 :- test or_test2 + fails
-# "[ISO] ';': expected(fail)".
+   # "[ISO] ';'".
 
-or_test2 :-';'((!, fail), true).
+or_test2 :- ';'((!, fail), true).
 
 :- test or_test3
-# "[ISO] ';': expected(succeed)".
+   # "[ISO] ';'".
 
 or_test3 :- ';'(!, call(3)).
 
 :- test or_test4(X) => (X=1)
-# "[ISO] ';': expected(succeed)".
+   # "[ISO] ';'".
 
 or_test4(X) :- ';'((X=1, !), X=2).
 
 :- test or_test5(Result) => (Result=[1, 1])
-# "[ISO] ';': expected(succeed)".
+   # "[ISO] ';'".
 
 or_test5(Result) :- findall(X, call((;(X=1, X=2), ;(true, !))), Result).
 
@@ -800,32 +796,32 @@ or_test5(Result) :- findall(X, call((;(X=1, X=2), ;(true, !))), Result).
 %! ## 7.8.7 (->)/2 if-then ISOcore#p49
 
 :- test ifthen_test1
-# "[ISO] '->': expected(succeed)".
+   # "[ISO] '->'".
 
 ifthen_test1 :- '->'(true, true).
 
 :- test ifthen_test2 + fails
-# "[ISO] '->': expected(fail)".
+   # "[ISO] '->'".
 
 ifthen_test2:- '->'(true, fail).
 
 :- test ifthen_test3 + fails
-# "[ISO] '->': expected(fail)".
+   # "[ISO] '->'".
 
 ifthen_test3 :- '->'(fail, true).
 
 :- test ifthen_test4(Result) => (Result=[1])
-# "[ISO] '->': expected(succeed)".
+   # "[ISO] '->'".
 
 ifthen_test4(Result) :- findall(X, '->'(true, X=1), Result).
 
 :- test ifthen_test5(Result) => (Result=[1])
-# "[ISO] '->': expected(succeed)".
+   # "[ISO] '->'".
 
 ifthen_test5(Result) :- findall(X, '->'(';'(X=1, X=2), true), Result).
 
 :- test ifthen_test6(Result) => (Result=[1, 2])
-# "[ISO] '->': expected(succeed)".
+   # "[ISO] '->'".
 
 ifthen_test6(Result) :- findall(X, '->'(true, ';'(X=1, X=2)), Result).
 
@@ -833,54 +829,53 @@ ifthen_test6(Result) :- findall(X, '->'(true, ';'(X=1, X=2)), Result).
 %! ## 7.8.8 (;)/2 if-then-else ISOcore#p51
 
 :- test ifthenelse_test1
-# "[ISO] if-then-else: expected(succeed)".
+   # "[ISO] if-then-else".
 
 ifthenelse_test1 :- ';'('->'(true, true), fail).
 
-%test1
 :- test ifthenelse_test2
-# "[ISO] if-then-else: expected(succeed)".
+   # "[ISO] if-then-else".
 
 ifthenelse_test2 :- ';'('->'(fail, true), true).
 
-%test3
 :- test ifthenelse_test3 + fails
-# "[ISO] if-then-else: expected(fail)".
+   # "[ISO] if-then-else".
 
 ifthenelse_test3 :- ';'('->'(true, fail), fail).
 
-%test4
 :- test ifthenelse_test4 + fails
-# "[ISO] if-then-else: expected(fail)".
+   # "[ISO] if-then-else".
 
 ifthenelse_test4 :- ';'('->'(fail, true), fail).
 
 :- test ifthenelse_test5(X) => (X=1)
-# "[ISO] if-then-else: expected(succeed)".
+   # "[ISO] if-then-else".
 
 ifthenelse_test5(X) :- ';'('->'(true, X=1), X=2).
 
 :- test ifthenelse_test6(X) => (X=2)
-# "[ISO] if-then-else: expected(succeed)".
+   # "[ISO] if-then-else".
 
 ifthenelse_test6(X) :- ';'('->'(fail, X=1), X=2).
 
 :- test ifthenelse_test7(Result) => (Result=[1, 2])
-# "[ISO] if-then-else: expected(succeed)".
+   # "[ISO] if-then-else".
 
 ifthenelse_test7(Result) :-
-	findall(X, ';'('->'(true, ';'(X=1, X=2)), true), Result).
+    findall(X, ';'('->'(true, ';'(X=1, X=2)), true), Result).
 
 :- test ifthenelse_test8(X) => (X=1)
-# "[ISO] if-then-else: expected(succeed)".
+   # "[ISO] if-then-else".
 
 ifthenelse_test8(X) :- ';'('->'(';'(X=1, X=2), true), true).
 
-% % test 9 
-% :- test ifthenelse_test9
-% # "[ISO] if-then-else: expected(succeed)".
-%
-% ifthenelse_test9 :- ';'('->'(!,fail),true).
+% TODO:[JF] ! is illegal in \+ or if-parts of ->; uncomment when fixed
+:- test ifthenelse_test9
+   + not_fails
+   # "[ISO] if-then-else".
+
+% ifthenelse_test9 :- ';'('->'(','(!, fail), true), true).
+ifthenelse_test9 :- throw(bug_not_implemented).
 
 % ---------------------------------------------------------------------------
 %! ## 7.8.9 catch/3 ISOcore#p52
@@ -2084,14 +2079,12 @@ insect(bee).
 % ---------------------------------------------------------------------------
 
 %% REVIEW:PENDING                                           **Label_4**
-%test 1 
 :- test clause_test1
 # "[ISO] clause/2: expected(succeed) bug(fail)".
 
 clause_test1 :- clause(cat, true).
 
 %% REVIEW:PENDING                                    **Label_4**
-%test 2 
 :- test clause_test2
 # "[ISO] clause/2: expected(succeed) bug(fail)".
 
@@ -2100,7 +2093,6 @@ clause_test2:- clause(dog, true).
 %% REVIEW:PENDING                                   **Label_1**
 %%   [gprolog]: it is correct
 %%   [ciao]: return a different result
-%test 3 
 :- test clause_test3(I, Body) => (Body=insect(I))
 # "[ISO] clause/2: expected(succeed) bug(fail)".
 
@@ -2109,7 +2101,6 @@ clause_test3(I, Body) :- clause(legs(I, 6), Body).
 %% REVIEW:PENDING                                   **Label_1**
 %%   [gprolog]: it is correct
 %%   [ciao]: return a different result
-%test 4 
 :- test clause_test4(C, Body) => (Body=(call(C), call(C)))
 # "[ISO] clause/2: expected(succeed) bug(fail)".
 
@@ -2118,14 +2109,12 @@ clause_test4(C, Body) :- clause(legs(C, 7), Body).
 %% REVIEW:PENDING                                 **Label_1**
 %%   [gprolog]: it is correct
 %%   [ciao]: return a different result
-%test 5 
 :- test clause_test5(Result) => (Result=[[ant, true], [bee, true]])
 # "[ISO] clause/2: expected(succeed) bug(fail)".
 
 clause_test5(Result) :- findall([I, T], clause(insect(I), T), Result).
 
 %% REVIEW:PENDING                                    **Label_4**
-%test 6                
 :- test clause_test6(Body) + fails
 # "[ISO] clause/2: expected(fail)".
 
@@ -2134,7 +2123,6 @@ clause_test6(Body) :- clause(x, Body).
 %% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: throws exception(error(instantation_error, _))
 %%   [ciao]: no throws
-%test 7 
 :- test clause_test7(B) + exception(error(instantation_error, ImplDep))
 # "[ISO] clause/2: expected(error) bug(fail)".
 
@@ -2143,7 +2131,6 @@ clause_test7(B) :- clause(_, B).
 %% REVIEW:PENDING                                                 **Label_2**
 %%   [gprolog]: throws exception(error(type_error(callable, 4), _))
 %%   [ciao]: no throws
-%test 8 
 :- test clause_test8(X) + exception(error(type_error(callable, 4), ImplDep))
 # "[ISO] clause/2: expected(error) bug(fail)".
 
@@ -2152,7 +2139,6 @@ clause_test8(X) :- clause(4, X).
 %% REVIEW:PENDING                                                 **Label_3**
 %%   [gprolog]: throws exception(error(permission_error(access, private_procedure, elk/1),_))
 %%   [ciao]: throw exception(error(permission_error(modify,static_procedure,'iso_tests:elk'/1),clause/2))
-%test 9
 :- test clause_test9(N, Body)
 	+ exception(error(permission_error(access, private_procedure, elk/1),
 		ImplDep))
@@ -2163,49 +2149,39 @@ clause_test9(N, Body) :- clause(elk(N), Body).
 %% REVIEW:PENDING                                                 **Label_3**
 %%   [gprolog]: throws  exception(error(permission_error(access, private_procedure, atom/1),_))
 %%   [ciao]: throw exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),clause/2))
-%test 10
 :- test clause_test10(Body)
-	+ exception(error(permission_error(access, private_procedure, atom/1),
-		ImplDep))
-# "[ISO] clause/2: expected(error) bug(wrong_error)".
+   + exception(error(permission_error(access, private_procedure, atom/1), ImplDep))
+   # "[ISO] clause/2: expected(error) bug(wrong_error)".
 
 clause_test10(Body) :- clause(atom(_), Body).
 
-%test 11
 :- test clause_test11 + fails
-# "[ISO] clause/2: expected(fail)".
+   # "[ISO] clause/2: expected(fail)".
 
 clause_test11 :- clause(legs(A, 6), insect(f(A))).
 
 %% REVIEW:PENDING                                    **Label_3**
 %%   [gprolog]: throws exception(error(type_error(callable, 5), _))
 %%   [ciao]: throw exception(error(permission_error(modify,static_procedure,'iso_tests:f'/1),clause/2))
-%test 12 
 :- test clause_test12
-	+ exception(error(type_error(callable, 5), ImplDep))
-# "[ISO-eddbali] clause/2: expected(error) bug(fail)".
+   + exception(error(type_error(callable, 5), ImplDep))
+   # "[ISO-eddbali] clause/2: expected(error) bug(fail)".
 
 clause_test12 :- clause(f(_), 5).
 
 % ---------------------------------------------------------------------------
 %! ## 8.8.2 ISOcore#p78
 
-
-%test 1
 :- test currentpredicate_test1
-# "[ISO] current_predicate/2: expected(succeed)".
+   # "[ISO] current_predicate/2: expected(succeed)".
 
 currentpredicate_test1 :- current_predicate(dog/0).
 
-
-%test 2
 :- test currentpredicate_test2 + fails
-# "[ISO] current_predicate/2: expected(fail)".
+   # "[ISO] current_predicate/2: expected(fail)".
 
 currentpredicate_test2 :- current_predicate(current_predicate/0).
 
-
-%test 3
 :- test currentpredicate_test3(Arity) => (Arity=1)
 # "[ISO] current_predicate/2: expected(succeed)".
 
@@ -2214,13 +2190,11 @@ currentpredicate_test3(Arity) :- current_predicate(elk/Arity).
 %% REVIEW:PENDING                                                    **Label_5**
 %%   [gprolog]: nondet
 %%   [ciao]: nondet
-%test 4
 :- test currentpredicate_test4(A) + fails
-# "[ISO] current_predicate/2: expected(fail)".
+   # "[ISO] current_predicate/2: expected(fail)".
 
 currentpredicate_test4(A) :- current_predicate(foo/A).
 
-%test 5
 :- test currentpredicate_test5(Result)
 	=> (find_on_list([elk], Result), find_on_list([insect], Result))
 # "[ISO] current_predicate/2: expected(succeed)".
@@ -2231,7 +2205,6 @@ currentpredicate_test5(Result) :-
 %% REVIEW:PENDING                                                      **Label_2**
 %%   [gprolog]: throws exception(error(type_error(predicate_indicator, 4),_))
 %%   [ciao]: no throw 
-%test 6 
 :- test currentpredicate_test6
 	+ exception(error(type_error(predicate_indicator, 4), ImplDep))
 # "[ISO] current_predicate/2: expected(error) bug(fail)".
@@ -2242,8 +2215,8 @@ currentpredicate_test6 :- current_predicate(4).
 %%   [gprolog]: throw exception(error(type_error(predicate_indicator, 0/dog), _))
 %%   [ciao]: no throw 
 :- test currentpredicate_test7(X) : (X=dog)
-	+ exception(error(type_error(predicate_indicator, 0/dog), ImplDep))
-# "[ISO-eddbali] current_predicate/2: expected(error) bug(fail)".
+   + exception(error(type_error(predicate_indicator, 0/dog), ImplDep))
+   # "[ISO-eddbali] current_predicate/2: expected(error) bug(fail)".
 
 currentpredicate_test7(X) :- current_predicate(X).
 
@@ -2251,14 +2224,14 @@ currentpredicate_test7(X) :- current_predicate(X).
 %%   [gprolog]: throws exception: error(type_error(atom,0),current_predicate/1)
 %%   [ciao]: no throw 
 :- test currentpredicate_test8(X) : (X=0/dog)
-	+ exception(error(type_error(predicate_indicator, 0/dog), ImplDep))
-# "[ISO-eddbali] current_predicate/2: expected(error) bug(fail)".
+   + exception(error(type_error(predicate_indicator, 0/dog), ImplDep))
+   # "[ISO-eddbali] current_predicate/2: expected(error) bug(fail)".
 
 currentpredicate_test8(X) :- current_predicate(X).
 
 :- test currentpredicate_test9(X, Result)
-	=> (find_on_list([cat/0, dog/0, elk/1, insect/1, legs/2], Result))
-# "[ISO-eddbali] current_predicate/2: expected(succeed)".
+   => (find_on_list([cat/0, dog/0, elk/1, insect/1, legs/2], Result))
+   # "[ISO-eddbali] current_predicate/2: expected(succeed)".
 
 currentpredicate_test9(X, Result) :- findall(X, current_predicate(X), Result).
 
@@ -2266,28 +2239,24 @@ currentpredicate_test9(X, Result) :- findall(X, current_predicate(X), Result).
 %! # 8.9 Clause creation and destruction
 %! ## 8.9.1 ISOcore#p79
 
-%test 1
 :- test asserta_test1
-# "[ISO] asserta/2: expected(succeed)".
+   # "[ISO] asserta/2: expected(succeed)".
 
 asserta_test1 :- asserta(legs(octopus, 8)).
 
-%test 2
 :- test asserta_test2
-# "[ISO] asserta/2: expected(succeed)".
+   # "[ISO] asserta/2: expected(succeed)".
 
 asserta_test2 :- asserta((legs(A, 4) :- animal(A))).
 
-%test 3
 :- test asserta_test3
-# "[ISO] asserta/2: expected(succeed)".
+   # "[ISO] asserta/2: expected(succeed)".
 
 asserta_test3 :- asserta((foo(A) :- A, call(A))).
 
 %% REVIEW:PENDING                                                         **Label_3**
 %%   [gprolog]: throws exception(error(instantiation_error,_))
 %%   [ciao]: throws exception(error(type_error(clause,_),asserta/1-1)) 
-%test 4
 :- test asserta_test4 + exception(error(instantiation_error, ImplDep))
 # "[ISO] asserta/2: expected(error) bug(wrong_error)".
 
@@ -2296,7 +2265,6 @@ asserta_test4 :- asserta(_).
 %% REVIEW:PENDING                                                        **Label_3**
 %%   [gprolog]: exception(error(type_error(callable, 4), _))
 %%   [ciao]: throws exception(error(type_error(clause,4),asserta/1-1))
-%test 5
 :- test asserta_test5 + exception(error(type_error(callable, 4), ImplDep))
 # "[ISO] asserta/2: expected(error) bug(wrong_error)".
 
@@ -2328,21 +2296,18 @@ asserta_test7 :- asserta((atom(_) :- true)).
 %! ## 8.9.2 ISOcore#p80
 
 
-%test 1
 :- test assertz_test1
 # "[ISO] assertz/2: expected(succeed)".
 
 assertz_test1 :- assertz(legs(spider, 8)).
 
 
-%test 2
 :- test assertz_test2
 # "[ISO] assertz/2: expected(succeed)".
 
 assertz_test2 :- assertz((legs(B, 2) :- bird(B))).
 
 
-%test 3
 :- test assertz_test3
 # "[ISO] assertz/2: expected(succeed)".
 
@@ -2391,13 +2356,11 @@ assertz_test7 :- assertz((atom(_) :- true)).
 % ---------------------------------------------------------------------------
 %! ## 8.9.3 ISOcore#p81
 
-%test 1
 :- test retract_test1
 # "[ISO] retract/1: expected(succeed)".
 
 retract_test1 :- retract(legs(octopus, 8)).
 
-%test 2
 :- test retract_test2 + fails
 # "[ISO] retract/1: expected(fail)".
 
@@ -2405,7 +2368,6 @@ retract_test2 :- retract(legs(spider, 6)).
 
 
 %% REVIEW:PENDING                                                          **Label_4**
-%test 3
 :- test retract_test3(X, T) => (T=bird(X))
 # "[ISO] retract/1: expected(succeed) bug(fail)".
 
@@ -2447,7 +2409,6 @@ retract_test6(Result) :-
 retract_test7(A) :- retract((foo(A) :- A, call(A))).
 
 %% REVIEW:PENDING                                                  **Label_4**
-%test 8
 :- test retract_test8(A, B, C) => (A=call(C), B=call(C))
 # "[ISO] retract/1: expected(succeed) bug(fail)".
 
@@ -2465,7 +2426,6 @@ retract_test9(X, Y) :- retract((X :- in_eec(Y))).
 %% REVIEW:PENDING                                                  **Label_2**
 %%   [gprolog]: throws exception(error(type_error(callable, 4), _))
 %%   [ciao]: no throws
-%test 10 
 :- test retract_test10(X)
 	+ exception(error(type_error(callable, 4), ImplDep))
 # "[ISO] retract/1: expected(error) bug(fail)".
@@ -2537,13 +2497,11 @@ abolish_test4 :- abolish(foo(_)).
 
 % ---------------------------------------------------------------------------
 
-%test 6
 :- test abolish_test6
 # "[ISO-eddbali] abolish/1: expected(succeed)".
 
 abolish_test6 :- abolish(foo/1).
 
-%test 7
 :- test abolish_test7(Result)
 	=> (Result=[ant, bee])
 # "[ISO-eddbali] abolish/1: expected(succeed)".
@@ -2555,7 +2513,6 @@ abolish_test7(Result) :-
 %% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
-%test 8
 :- test abolish_test8 + exception(error(instantiation_error, ImplDep))
 # "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
 
@@ -2575,7 +2532,6 @@ abolish_test9 :- abolish(bar/1).
 %% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: throws exception(error(type_error(integer, a), _))
 %%   [ciao]: no throws
-%test 10  
 :- test abolish_test10
 	+ exception(error(type_error(integer, a), ImplDep))
 # "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
@@ -2626,54 +2582,46 @@ abolish_test14 :- abolish(insect).
 %! # 8.10 All solutions
 %! ## 8.10.1 ISOcore#p83
 
-%test 1
 :- test findall_test1(Result) => (Result=[1, 2])
 # "[ISO] findall/3: expected(succeed)".
 
 findall_test1(Result) :- findall(X, (X=1;X=2), Result).
 
 
-%test 2
 :- test findall_test2(Result, Y) => (Result=[1+_])
 # "[ISO] findall/3: expected(succeed)".
 
 findall_test2(Result, Y) :- findall(X+Y, (X=1), Result).
 
 
-%test 3
 :- test findall_test3(Result, X) => (Result=[])
 # "[ISO] findall/3: expected(succeed)".
 
 findall_test3(Result, X) :- findall(X, fail, Result).
 
 
-%test 4
 :- test findall_test4(Result) => (Result=[1, 1])
 # "[ISO] findall/3: expected(succeed)".
 
 findall_test4(Result) :- findall(X, (X=1;X=1), Result).
 
 
-%test 5
 :- test findall_test5 + fails
 # "[ISO] findall/3: expected(fail)".
 
 findall_test5 :- findall(X, (X=2;X=1), [1, 2]).
 
-%test 6
 :- test findall_test6(X, Y) => (X=1, Y=2)
 # "[ISO] findall/3: expected(succeed)".
 
 findall_test6(X, Y) :- findall(X, (X=1;X=2), [X, Y]).
 
-%test 7
 :- test findall_test7(X, Goal, Result)
 	+ exception(error(instantiation_error, ImplDep))
 # "[ISO] findall/3: expected(error)".
 
 findall_test7(X, Goal, Result) :- findall(X, Goal, Result).
 
-%test 8
 :- test findall_test8(X, Result)
 	+ exception(error(type_error(callable, 4), ImplDep))
 # "[ISO] findall/3: expected(error)".
@@ -2712,49 +2660,41 @@ b(2, 2).
 
 % ---------------------------------------------------------------------------
 
-%test 1
 :- test bagof_test1(Result) => (Result=[1, 2])
 # "[ISO] bagof/3: expected(succeed)".
 
 bagof_test1(Result) :- bagof(X, (X=1;X=2), Result).
 
-%test 2
 :- test bagof_test2(X) => (X=[1, 2])
 # "[ISO] bagof/3: expected(succeed)".
 
 bagof_test2(X) :- bagof(X, (X=1;X=2), X).
 
-%test 3
 :- test bagof_test3(Result, Y, Z) => (Result=[Y, Z])
 # "[ISO] bagof/3: expected(succeed)".
 
 bagof_test3(Result, Y, Z) :- bagof(X, (X=Y;X=Z), Result).
 
-%test 4
 :- test bagof_test4(Result, X) + fails
 # "[ISO] bagof/3: expected(fail)".
 
 bagof_test4(Result, X) :- bagof(X, fail, Result).
 
-%test 5
 :- test bagof_test5(Result) => (Result=[[[1], 1], [[1], 2]])
 # "[ISO] bagof/3: expected(succeed)".
 
 bagof_test5(Result) :- findall([L, Y], bagof(1, (Y=1;Y=2), L), Result).
 
-%test 6
 :- test bagof_test6(Result) => (Result=[f(a, _), f(_, b)])
 # "[ISO] bagof/3: expected(succeed)".
 
 bagof_test6(Result) :- bagof(f(X, Y), (X=a;Y=b), Result).
 
-%test 7
 :- test bagof_test7(Result) => (Result=[1, 2])
 # "[ISO] bagof/3: expected(succeed)".
 
 bagof_test7(Result) :- bagof(X, Y^((X=1, Y=1);(X=2, Y=2)), Result).
 
-%test 8
 :- test bagof_test8(Result)
 	=> (Result=[1, _, 2])
 # "[ISO] bagof/3: expected(succeed)".
@@ -2836,49 +2776,41 @@ d(2, 2).
 
 % ---------------------------------------------------------------------------
 
-%test 1
 :- test setof_test1(Result) => (Result=[1, 2])
 # "[ISO] setof/3: expected(succeed)".
 
 setof_test1(Result) :- setof(X, (X=1;X=2), Result).
 
-%test 2
 :- test setof_test2(X) => (X=[1, 2])
 # "[ISO] setof/3: expected(succeed)".
 
 setof_test2(X) :- setof(X, (X=1;X=2), X).
 
-%test 3
 :- test setof_test3(Result) => (Result=[1, 2])
 # "[ISO] setof/3: expected(succeed)".
 
 setof_test3(Result) :- setof(X, (X=2;X=1), Result).
 
-%test 4
 :- test setof_test4(Result) => (Result=[2])
 # "[ISO] setof/3: expected(succeed)".
 
 setof_test4(Result) :- setof(X, (X=2;X=2), Result).
 
-%test 5
 :- test setof_test5(Result, Y, Z) => (Result=[Y, Z] ;S=[Z, Y])
 # "[ISO] setof/3: expected(impldep)".
 
 setof_test5(Result, Y, Z) :- setof(X, (X=Y;X=Z), Result).
 
-%test 6
 :- test setof_test6(Result, X) + fails
 # "[ISO] setof/3: expected(fail)".
 
 setof_test6(Result, X) :- setof(X, fail, Result).
 
-%test 7
 :- test setof_test7(Result) => (Result=[[[1], 1], [[1], 2]])
 # "[ISO] setof/3: expected(succeed)".
 
 setof_test7(Result) :- findall([L, Y], setof(1, (Y=2;Y=1), L), Result).
 
-%test 8
 :- test setof_test8(Result) => (Result=[f(_, b), f(a, _)])
 # "[ISO] setof/3: expected(succeed)".
 
@@ -2893,7 +2825,6 @@ setof_test8(Result) :- setof(f(X, Y), (X=a;Y=b), Result).
 
 setof_test9(Result) :- setof(X, (Y^(X=1, Y=1);(X=2, Y=2)), Result).
 
-%test 10 
 :- test setof_test10(Result) => (Result=[_, 1, 2])
 # "[ISO] setof/3: expected(succeed)".
 
@@ -3501,7 +3432,6 @@ close_test10(Sc) :- close(Sc, [force(true)]).
 %! ## 8.11.7 (FROM SICTUS AND EDDBALI) ISOcore#p89
 
 %% REVIEW:PENDING                                              **Label_6**
-%test 1
 :- test flush_output_test1(S,S1)
    + (setup(setup_flush_output1(S)),
       cleanup(cleanup_flush_output1(S)))
@@ -3519,7 +3449,6 @@ cleanup_flush_output1(S):-
     close(S).
 
 % TODO:[JF] both acceptable in ISO 
-%test 2
 :- test flush_output_test2
 	+ exception(error(existence_error(stream, foo), ImplDep))
 % :- test flush_output_test2
@@ -3528,13 +3457,11 @@ cleanup_flush_output1(S):-
 
 flush_output_test2 :- flush_output(foo).
 
-%test 3
 :- test flush_output_test3 + exception(error(instantiation_error, ImplDep))
 # "[ISO-sics] flush_output/1: expected(error)".
 
 flush_output_test3 :- flush_output(_).
 
-%test 4
 :- test flush_output_test4(S)
    + (setup(flush_output_test4_setup(S)),
       exception(error(existence_error(stream, S), ImplDep)))
@@ -3688,7 +3615,6 @@ stream_property_test7 :- stream_property(_S, type(binary)).
 %% REVIEW:PENDING                                              **Label_2**
 %%   [gprolog]: throws  exception(error(instantiation_error,_))
 %%   [ciao]: no throws
-%test 1
 :- test at_end_of_stream_test1
 	+ exception(error(instantiation_error, ImplDep))
 # "[ISO-sics] at_end_of_stream/1: expected(error) bug(wrong_error)".
@@ -3908,7 +3834,6 @@ setup_ssp6(S,Pos):-
 %! ## 8.12.1 ISOcore#p91
 
 %% REVIEW:PENDING                           **Label_6**
-%test 1
 :- test getchar_test1(X, Char, auxvar(Sc, S2)) :
    true =>
    (X = 'werty') +
@@ -3929,7 +3854,6 @@ cleanup_gch1(Sc, S2) :-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                       **Label_6**
-%test 2
 :- test getcode_test2(X,Code, auxvar(Sc,S2)) :
    true =>
    (X= 'werty',Code = 0'q) +
@@ -3973,7 +3897,6 @@ cleanup_gch3(S2):-
 
 
 %% REVIEW:PENDING                    **Label_6**
-%test 4
 :- test getcode_test4(X, Code, auxvar(S2)) :
    true =>
    (X = 'werty') +
@@ -4110,7 +4033,6 @@ cleanup_gch9(S2):-
     close(S2).
 
 %% REVIEW:PENDING        **Label_6**
-%test 10 
 :- test getcode_test10(Code, auxvar(S2)) :
    true =>
    (Code=(-1)) +
@@ -4458,7 +4380,6 @@ cleanup_gco33(S1) :-
 %! ## 8.12.2 ISOcore#p93
 
 %% REVIEW:PENDING                             **Label_6**
-%test 1
 :- test peekchar_test1(Char, X, auxvar(S2,Sc)) :
    true =>
    (Char='q',
@@ -4480,7 +4401,6 @@ cleanup_pc1(Sc,S2):-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                                **Label_6**
-%test 2
 :- test peekcode_test2(Code, X, auxvar(S2,Sc)) :
    true =>
    (Code=0'q,
@@ -4660,7 +4580,6 @@ cleanup_pc9(Sc,S2):-
     close_instreams(Sc, S2).
 
 %% REVIEW:PENDING                                **Label_6**
-%test 10 
 :- test peekcode_test10(Code,auxvar(S2,Sc)) :
    true =>
    (Code=(-1)) +
@@ -5002,7 +4921,6 @@ cleanup_pco33(S1) :-
 %! ## 8.12.3 ISOcore#p94
 
 %% REVIEW:PENDING                                   **Label_6**
-%test 1
 :- test putchar_test1(S, Sc1, S1, L, auxvar(Sc)) :
    true =>
    (L='qwert') +
@@ -5049,7 +4967,6 @@ cleanup_putch2(S,Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                             **Label_6**
-%test 3
 :- test putcode_test3(S, Sc1, S1, L, auxvar(Sc)) :
    true =>
    (L='qwert') +
@@ -5117,7 +5034,6 @@ cleanup_putch5(S,Sc):-
     close(S1).
 
 %% REVIEW:PENDING                               **Label_6**
-%test 6
 :- test putchar_test6(auxvar(S)) 
    + (setup(setup_putch6(S)),
       cleanup(cleanup_putch6(S)))
@@ -5137,7 +5053,6 @@ cleanup_putch6(S):-
     close(S1).
 
 % TODO:[JF] missing creation of my_file!
-%test 7
 :- test putchar_test7
    + (setup(setup_putch7(S)),
       cleanup(cleanup_putch7(S)),
@@ -5156,7 +5071,6 @@ cleanup_putch7(S):-
 %% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(type_error(character, ty), _))
 %%   [ciao]: no throws
-%test 8
 :- test putchar_test8 + exception(error(type_error(character, ty), ImplDep))
 # "[ISO] put_char/2: expected(error) bug(fail)".
 
@@ -5183,7 +5097,6 @@ cleanup_putco9(S):-
 %% REVIEW:PENDING                                            **Label_3**
 %%   [gprolog]: throws exception(error(type_error(integer,ty),'io_basic:put_code'/2-2))
 %%   [ciao]: throws  exception(error(type_error(integer,ty),'io_basic:put_code'/2-2))
-%test 10
 :- test putcode_test10
    + (setup(setup_putco10(S)),
       cleanup(cleanup_putco10(S)),
@@ -5402,7 +5315,6 @@ cleanup_getbyte2(S2):-
 
 % TODO:[JF] fixed test
 %% REVIEW:PENDING                                **Label_6**
-%test 3
 :- test getbyte_test3(S2) 
    + (setup(setup_getbyte3(S2)),
       cleanup(cleanup_getbyte3(S2))) 
@@ -5456,7 +5368,6 @@ getbyte_test5 :- get_byte(user_output, _).
 
 
 
-%test 6
 :- test getbyte_test6
 	+ exception(error(instantiation_error, ImplDep))
 # "[ISO-sics] get_byte/2: expected(error)".
@@ -5613,7 +5524,6 @@ cleanup_pb1(Sc,S2):-
     close_instreams(Sc,S2).
 
 %% REVIEW:PENDING                                           **Label_6**
-%test 2
 :- test peekbyte_test2(Byte,S2) :
    true =>
    (Byte=113) +
@@ -5685,7 +5595,6 @@ cleanup_pb4(S2,Sc):-
 peekbyte_test5 :- peek_byte(user_output, _).
 
 
-%test 6
 :- test peekbyte_test6 + exception(error(instantiation_error, ImplDep))
 # "[ISO-sics] peek_byte/2: expected(error)".
 
@@ -5742,7 +5651,6 @@ cleanup_pb8(Sc,S1):-
 
 peekbyte_test9 :- peek_byte(foo, _).
 
-%test 10 
 :- test peekbyte_test10(S1) 
    + (setup(setup_pb10(S, S1)),
       exception(error(existence_error(stream, S1), ImplDep))).
@@ -5839,7 +5747,6 @@ cleanup_ptb1(S,Sc):-
     close(S1).
 
 %% REVIEW:PENDING                                       **Label_6**
-%test 2
 :- test putbyte_test2(auxvar(S)) 
    + (setup(setup_ptb2(S)),
       cleanup(cleanup_ptb2(S)))
@@ -5873,7 +5780,6 @@ putbyte_test3 :- put_byte(my_file, _).
 
 putbyte_test4 :- put_byte(user_output, 'ty').
 
-%test 5
 :- test putbyte_test5 + exception(error(instantiation_error, ImplDep))
 # "[ISO-sics] put_byte/2: expected(error)".
 
@@ -5943,7 +5849,6 @@ putbyte_test9 :-
 setup_ptb9(S):-
     current_output(S).
 
-%test 10 
 :- test putbyte_test10 
    + (setup(setup_ptb10(S)),
       exception(error(type_error(byte, -1), ImplDep)))
@@ -6006,7 +5911,6 @@ cleanup_read1(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                         **Label_6**
-%test 2
 :- test read_test2(Y,X,auxvar(S1)) :
    true =>
    (X='term2') +
@@ -6028,7 +5932,6 @@ cleanup_read2(S1):-
     close(S1). 
 
 %% REVIEW:PENDING                                             **Label_6**
-%test 3
 :- test read_test3(T, VL, VN, VS,auxvar(S1),Y) :
    true =>
    (T=foo(X1+X2, X1+X3),
@@ -6053,7 +5956,6 @@ setup_read3(S1):-
 cleanup_read3(S1):-
     close(S1).
 
-%test 4
 :- test read_test4(Y, auxvar(Sc,S1)) :
    true =>
    (Y='term2') +
@@ -6121,7 +6023,6 @@ cleanup_read6(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                             **Label_6**
-%test 7
 :- test read_test7(T, L, auxvar(Sc, S1)) :
    true =>
    (T=foo(bar),
@@ -6142,7 +6043,6 @@ setup_read7(Sc,S1):-
 cleanup_read7(Sc,S1):-
     close_instreams(Sc, S1).
 
-%test 8
 :- test read_test8 + exception(error(instantiation_error, ImplDep))
 # "[ISO-sics] read/2: expected(error)".
 
@@ -6154,7 +6054,6 @@ read_test8 :- read(_, _).
 
 read_test9 :- read_term(user_input, _, _).
 
-%test 10
 :- test read_test10 + exception(error(instantiation_error, ImplDep))
 # "[ISO-sics] read_term/3: expected(error)".
 
@@ -6446,7 +6345,6 @@ cleanup_write2(Sc,S):-
     close(S1).
 
 %% REVIEW:PENDING                                      **Label_6**
-%test 3
 :- test write_test3(S,S1,auxvar(Sc)) 
    + (setup(setup_write3(S,Sc)),
       cleanup(cleanup_write3(Sc,S)))
@@ -6466,7 +6364,6 @@ cleanup_write3(Sc,S):-
     close_outstreams(Sc, S).
 
 %% REVIEW:PENDING                                          **Label_6**
-%test 4
 :- test write_test4(S,S1,auxvar(Sc)) 
    + (setup(setup_write4(S,Sc)),
       cleanup(cleanup_write4(Sc,S)))
@@ -6527,7 +6424,6 @@ cleanup_write6(Sc,S):-
     close(S1).
 
 %% REVIEW:PENDING                                                **Label_6**
-%test 7
 :- test write_test7(S,auxvar(Sc)) 
    + (setup(setup_write7(S,Sc)),
       cleanup(cleanup_write7(S,Sc)))
@@ -6547,7 +6443,6 @@ cleanup_write7(S,Sc):-
     read_no_term(S1, "Z1"),
     close(S1).
 
-%test 8
 :- test write_test8 + exception(error(instantiation_error, ImplDep))
 # "[ISO-sics] write/2: expected(error)".
 
@@ -6559,7 +6454,6 @@ write_test8 :- write(_, foo).
 
 write_test9 :- write_term(foo, _).
 
-%test 10 
 :- test write_test10 + exception(error(instantiation_error,ImplDep)).
 write_test10 :- write_term(user_output,foo,_).
 
@@ -6712,27 +6606,23 @@ op_test3 :- op(max, xfy, ++).
 
 op_test4 :- op(-30, xfy, ++).
 
-%test 5
 :- test op_test5
 	+ exception(error(domain_error(operator_priority, 1201), ImplDep))
 # "[ISO] op/3: expected(error)".
 
 op_test5 :- op(1201, xfy, ++).
 
-%test 6
 :- test op_test6 + exception(error(instantiation_error, ImplDep))
 # "[ISO] op/3: expected(error)".
 
 op_test6 :- op(30, _Xfy, ++).
 
-%test 7
 :- test op_test7
 	+ exception(error(domain_error(operator_specifier, yfy), ImplDep))
 # "[ISO] op/3: expected(error)".
 
 op_test7 :- op(30, yfy, ++).
 
-%test 8
 :- test op_test8 + exception(error(type_error(list, 0), ImplDep))
 # "[ISO] op/3: expected(error)".
 
@@ -6756,7 +6646,6 @@ op_test9(_) :- op(30, xfy, ++), op(40, xfx, ++).
 %% REVIEW:PENDING                                             **Label_2**
 %%   [gprolog]: throws exception(error(permission_error(create, operator, ++), _))
 %%   [ciao]: no throws
-%test 10 
 %:- test op_test10
 %	+ exception(error(permission_error(create, operator, ++), ImplDep))
 %# "[ISO] op/3: expected(error) bug(succeed)".
@@ -6866,7 +6755,6 @@ current_op_test2 :- current_op(1201, _, _).
 %% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(operator_specifier, yfy), ImplDep))
 %%   [ciao]: no throws
-%test 3
 :- test current_op_test3
 	+ exception(error(domain_error(operator_specifier, yfy), ImplDep))
 # "[ISO-sics] current_op/3: expected(error) bug(fail)".
@@ -7105,7 +6993,6 @@ cleanup_charconver9(Sc,S1):-
     close_instreams(Sc, S1).
 
 %% REVIEW:PENDING                                                 **Label_6**  
-%test 10  
 :- test char_conversion_test10(X, auxvar( S, Sc, S1)) :
    true =>
    (X=('aa'+'bb^')) +
@@ -7267,7 +7154,6 @@ not_test8 :- '\\+'(X=f(X)).
 
 once_test1 :- once(!).
 
-%test 2
 :- test once_test2(Result) => (Result=[1, 2])
 # "[ISO] once/1: expected(succeed)".
 
@@ -7297,7 +7183,6 @@ once_test5 :- once(X=f(X)).
 
 once_test6 :- once(3).
 
-%test 7
 :- test once_test7 + exception(error(instantiation_error, ImplDep))
 # "[ISO-eddbali] once/1: expected(error)".
 
@@ -7306,7 +7191,6 @@ once_test7 :- once(_).
 % ---------------------------------------------------------------------------
 %! ## 8.15.3 ISOcore#p105
 
-%test 1
 %:- test repeat_test1 + current_output("hello").
 %repeat_test1 :- repeat,write(hello),fails.
 
@@ -7483,46 +7367,39 @@ atomconcat_test14(Result) :-
 % ---------------------------------------------------------------------------
 %! ## 8.16.3 ISOcore#p108
 
-%test 1
 :- test subatom_test1(S) => (S='abrac')
 # "[ISO] sub_atom/5: expected(succeed)".
 
 subatom_test1(S) :- sub_atom(abracadabra, 0, 5, _, S).
 
 %% REVIEW:DONE                   
-%test 2
 :- test subatom_test2(S) => (S='dabra')
 # "[ISO] sub_atom/5: expected(succeed)".
 
 subatom_test2(S) :- sub_atom(abracadabra, _, 5, 0, S).
 
-%test 3
 :- test subatom_test3(L, S) => (Y=5, S='acada')
 # "[ISO] sub_atom/5: expected(succeed)".
 
 subatom_test3(L, S) :- sub_atom(abracadabra, 3, L, 3, S).
 
-%test 4
 :- test subatom_test4(Result) => (Result=[[0, 9], [7, 2]])
 # "[ISO] sub_atom/5: expected(succeed)".
 
 subatom_test4(Result) :-
 	findall([B, A], sub_atom(abracadabra, B, 2, A, ab), Result).
 
-%test 5
 :- test subatom_test5(S) => (S='an')
 # "[ISO] sub_atom/5: expected(succeed)".
 
 subatom_test5(S) :- sub_atom(banana, 3, 2, _, S).
 
-%test 6
 :- test subatom_test6(Result) => (Result=['cha', 'har', 'ari', 'rit', 'ity'])
 # "[ISO] sub_atom/5: expected(succeed)".
 
 subatom_test6(Result) :-
 	findall(S, sub_atom(charity, _, 3, _, S), Result).
 
-%test 7
 :- test subatom_test7(Result)
 	=> ( Result=[[0, 0, ''], [0, 1, 'a'], [0, 2, 'ab'], [1, 0, ''],
 		[1, 1, 'b'], [2, 0, '']] )
@@ -7533,7 +7410,6 @@ subatom_test7(Result) :-
 
 
 
-%test 8
 :- test subatom_test8 + exception(error(instantiation_error, ImplDep))
 # "[ISO-eddbali] sub_atom/5: expected(error)".
 
@@ -7546,7 +7422,6 @@ subatom_test8 :- sub_atom(_W, 3, 2, _Z, _S).
 subatom_test9 :- sub_atom(f(a), 2, 2, _Z, _S).
 
 %% REVIEW:PENDING
-%test 10                                             **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 2), _))
 %%   [ciao]: no throws
 :- test subatom_test10 + exception(error(type_error(atom, 2), ImplDep))
@@ -7737,43 +7612,36 @@ subatom_test35(Result) :-
 % ---------------------------------------------------------------------------
 %! ## 8.16.4 ISOcore#p108
 
-%test 1
 :- test atomchars_test1(L) => (L=[])
 # "[ISO] atom_chars/2: expected(succeed)".
 
 atomchars_test1(L) :- atom_chars('', L).
 
-%test 2
 :- test atomchars_test2(L) => (L=['[', ']'])
 # "[ISO] atom_chars/2: expected(succeed)".
 
 atomchars_test2(L) :- atom_chars([], L).
 
-%test 3
 :- test atomchars_test3(L) => (L=[''''])
 # "[ISO] atom_chars/2: expected(succeed)".
 
 atomchars_test3(L) :- atom_chars('''', L).
 
-%test 4
 :- test atomchars_test4(L) => (L=['a', 'n', 't'])
 # "[ISO] atom_chars/2: expected(succeed)".
 
 atomchars_test4(L) :- atom_chars('ant', L).
 
-%test 5
 :- test atomchars_test5(Str) => (Str='sop')
 # "[ISO] atom_chars/2: expected(succeed)".
 
 atomchars_test5(Str) :- atom_chars(Str, ['s', 'o', 'p']).
 
-%test 6
 :- test atomchars_test6(X) => (X=['o', 'r', 't', 'h'])
 # "[ISO] atom_chars/2: expected(succeed)".
 
 atomchars_test6(X) :- atom_chars('North', ['N'|X]).
 
-%test 7
 :- test atomchars_test7 + fails
 # "[ISO] atom_chars/2: expected(fail)".
 
@@ -7800,7 +7668,6 @@ atomchars_test9 :- atom_chars(_A, [a, _E, c]).
 %% REVIEW:PENDING                                       **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, ImplDep))
 %%   [ciao]: no throws
-%test 10
 :- test atomchars_test10 + exception(error(instantiation_error, ImplDep))
 # "[ISO-eddbali] atom_chars/2: expected(error)".
 
@@ -7850,43 +7717,36 @@ atomchars_test15(A) :- atom_chars(A, ['P', 'é', 'c', 's']).
 % ---------------------------------------------------------------------------
 %! ## 8.16.5 ISOcore#p109
 
-%test 1
 :- test atomcodes_test1(L) => (L=[])
 # "[ISO] atom_codes/2: expected(succeed)".
 
 atomcodes_test1(L) :- atom_codes('', L).
 
-%test 2
 :- test atomcodes_test2(L) => (L=[0'[, 0']])
 # "[ISO] atom_codes/2: expected(succeed)".
 
 atomcodes_test2(L) :- atom_codes([], L).
 
-%test 3
 :- test atomcodes_test3(L) => (L=[0'''])
 # "[ISO] atom_codes/2: expected(succeed)".
 
 atomcodes_test3(L) :- atom_codes('''', L).
 
-%test 4
 :- test atomcodes_test4(L) => (L=[0'a, 0'n, 0't])
 # "[ISO] atom_codes/2: expected(succeed)".
 
 atomcodes_test4(L) :- atom_codes('ant', L).
 
-%test 5
 :- test atomcodes_test5(Str) => (Str='sop')
 # "[ISO] atom_codes/2: expected(succeed)".
 
 atomcodes_test5(Str) :- atom_codes(Str, [0's, 0'o, 0'p]).
 
-%test 6
 :- test atomcodes_test6(X) => (X=[0'o, 0'r, 0't, 0'h])
 # "[ISO] atom_codes/2: expected(succeed)".
 
 atomcodes_test6(X) :- atom_codes('North', [0'N|X]).
 
-%test 7
 :- test atomcodes_test7 + fails
 # "[ISO] atom_codes/2: expected(fail)".
 
@@ -7945,7 +7805,6 @@ atomcodes_extra_errortest_6 :- atom_codes(1, [0'1]).
 
 atomcodes_test9 :- atom_codes(f(a), _L).
 
-%test 10 
 :- test atomcodes_test10 + exception(error(type_error(list, 0'x), ImplDep))
 # "[ISO-eddbali] atom_codes/2: expected(error) bug(wrong_error)".
 
@@ -7983,7 +7842,6 @@ atomcodes_test16 :- atom_codes(_A, [a, b, c]).
 % ---------------------------------------------------------------------------
 %! ## 8.16.6 ISOcore#p110
 
-%test 1
 :- test charcode_test1(Code) => (Code=0'a)
 # "[ISO] char_code/2: expected(succeed)".
 
@@ -7995,7 +7853,6 @@ charcode_test1(Code) :- char_code('a', Code).
 
 charcode_test2(Str) :- char_code(Str, 99).
 
-%test 3
 :- test charcode_test3(Str) => (Str=c)
 # "[ISO] char_code/2: expected(succeed)".
 
@@ -8007,7 +7864,6 @@ charcode_test3(Str) :- char_code(Str, 0'c).
 
 charcode_test4(X) :- char_code(X, 163).
 
-%test 5
 :- test charcode_test5
 # "[ISO] char_code/2: expected(succeed)".
 
@@ -8016,75 +7872,60 @@ charcode_test5 :- char_code('b', 0'b).
 %% REVIEW:PENDING                                                        **Label_2**
 %%   [gprolog]: throws  exception(error(type_error(character, ab), _))
 %%   [ciao]: no throws
-%test 6 
 :- test charcode_test6 + exception(error(type_error(character, ab), ImplDep))
 # "[ISO] char_code/2: expected(error) bug(fail)".
 
 charcode_test6 :- char_code('ab', _Int).
 
-
-%test 7 
 :- test charcode_test7 + exception(error(instantiation_error, ImplDep))
 # "[ISO] char_code/2: expected(error)".
 
 charcode_test7 :- char_code(_C, _I).
 
-
-
-%test 8
 :- test charcode_test8 + exception(error(type_error(integer, x), ImplDep))
 # "[ISO-eddbali] char_code/2: expected(error) bug(fail)".
 
 charcode_test8 :- char_code(a, x).
 
-%test 9
 :- test charcode_test9
 	+ exception(error(representation_error(character_code), ImplDep))
 # "[ISO-eddbali] char_codes/2: expected(error) bug(wrong_error)".
 
 charcode_test9 :- char_code(_Str, -2).
 
-
 %! ## 8.16.7 ISOcore#p111
 
-%test1
 :- test numberchars_test1(L) => (L=['3', '3'])
 # "[ISO] number_chars/2: expected(succeed)".
 
 numberchars_test1(L) :- number_chars(33, L).
 
-%test2
 :- test numberchars_test2
 # "[ISO] number_chars/2: expected(succeed)".
 
 numberchars_test2 :- number_chars(33, ['3', '3']).
 
-%test3 
 :- test numberchars_test3(N) => (N=33.0)
 # "[ISO] number_chars/2: expected(impldep)".
 
 numberchars_test3(N) :- number_chars(33.0, Y), number_chars(N, Y).
 
-%test4 
 :- test numberchars_test4(X) => (near(X, 3.3, 0.02))
 # "[ISO] number_chars/2: expected(succeed)".
 
 numberchars_test4(X) :- number_chars(X, ['3', '.', '3', 'E', +, '0']).
 
-%test5 
 :- test numberchars_test5 + fails
 # "[ISO] number_chars/2: expected(impldep)".
 
 numberchars_test5 :- number_chars(3.3, ['3', '.', '3', 'E', +, '0']).
 
-%test6
 :- test numberchars_test6(A) => (A=(-25))
 # "[ISO] number_chars/2: expected(succeed)".
 
 numberchars_test6(A) :- number_chars(A, [-, '2', '5']).
 
 %% REVIEW:PENDING                                           **Label_4**
-%test7 
 :- test numberchars_test7(A) => (A=3)
 # "[ISO] number_chars/2: expected(succeed) bug(fail)".
 
@@ -8093,7 +7934,6 @@ numberchars_test7(A) :- number_chars(A, ['\n', '', '3']).
 %% REVIEW:PENDING                                                **Label_2**
 %%   [gprolog]: throws type_error(character,'')  
 %%   [ciao]: no throws
-%test8 
 :- test numberchars_test8
 	+ exception(error(syntax_error(imp_dep_atom), ImplDep))
 # "[ISO] number_chars/2: expected(error) bug(fail)".
@@ -8101,39 +7941,32 @@ numberchars_test7(A) :- number_chars(A, ['\n', '', '3']).
 numberchars_test8 :- number_chars(_A, ['3', '']).
 
 %% REVIEW:PENDING                                            **Label_4**
-%test9 
 :- test numberchars_test9(A) => (A=15)
 # "[ISO] number_chars/2: expected(succeed) bug(fail)".
 
 numberchars_test9(A) :- number_chars(A, ['0', x, f]).
 
 %% REVIEW:PENDING                                  **Label_4**
-%test10 
 :- test numberchars_test10(A) => (A=0'a)
 # "[ISO] number_chars/2: expected(succeed) bug(fail)".
 
 numberchars_test10(A) :- number_chars(A, ['0', '''', a]).
 
-%test11
 :- test numberchars_test11(A) => (A=4.2)
 # "[ISO] number_chars/2: expected(succeed)".
 
 numberchars_test11(A) :- number_chars(A, ['4', '.', '2']).
 
-%test12
 :- test numberchars_test12(A) => (A=4.2)
 # "[ISO] number_chars/2: expected(succeed)".
 
 numberchars_test12(A) :- number_chars(A, ['4', '2', '.', '0', 'e', '-', '1']).
 
-
-%test 13
 :- test numberchars_test13 + exception(error(instantiation_error, ImplDep))
 # "[ISO-eddbali] number_chars/2: expected(error)".
 
 numberchars_test13 :- number_chars(_X, _Y).
 
-%test 14
 :- test numberchars_test14 + exception(error(type_error(number, a), ImplDep))
 # "[ISO-eddbali] number_chars/2: expected(error)".
 
@@ -8142,7 +7975,6 @@ numberchars_test14 :- number_chars(a, _Y).
 %% REVIEW:PENDING                                                   **Label_2**
 %%   [gprolog]: throws exception(error(type_error(list, 4), _))
 %%   [ciao]: no throws
-%test 15 
 :- test numberchars_test15 + exception(error(type_error(list, 4), ImplDep))
 # "[ISO-eddbali] number_chars/2: expected(error) bug(fail)".
 
@@ -8151,20 +7983,17 @@ numberchars_test15 :- number_chars(_, 4).
 %% REVIEW:PENDING                                                **Label_3**
 %%   [gprolog]: throws exception(error(type_error(character, 2), _))
 %%   [ciao]: throws exception(error(type_error(atom,2),'atomic_basic:$constant_codes'/3-1))
-%test 16
 :- test numberchars_test16
 	+ exception(error(type_error(character, 2), ImplDep))
 # "[ISO-eddbali] number_chars/2: expected(error) bug(wrong_error)".
 
 numberchars_test16 :- number_chars(_A, ['4', 2]).
 
-%test 17
 :- test numberchars_test17 + exception(error(instantiation_error, ImplDep))
 # "[ISO-sics] number_chars/2: expected(error)".
 
 numberchars_test17 :- number_chars(_A, [a|_]).
 
-%test 18
 :- test numberchars_test18
 	+ exception(error(instantiation_error, ImplDep))
 # "[ISO-sics] number_chars/2: expected(error)".
@@ -8172,21 +8001,18 @@ numberchars_test17 :- number_chars(_A, [a|_]).
 numberchars_test18 :- number_chars(_A, [a, _]).
 
 %% REVIEW:PENDING                                              **Label_4**
-%test 19 
 :- test numberchars_test19(A) => (A=9)
 # "[ISO-sics] number_chars/2: expected(succeed) bug(fail)".
 
 numberchars_test19(A) :- number_chars(A, [' ', '0', 'o', '1', '1']).
 
 %% REVIEW:PENDING                                           **Label_4**
-%test 20
 :- test numberchars_test20(A) => (A=17)
 # "[ISO-sics] number_chars/2: expected(succeed) bug(fail)".
 
 numberchars_test20(A) :- number_chars(A, [' ', '0', 'x', '1', '1']).               
 
 %% REVIEW:PENDING                                       **Label_4**
-%test 21 
 :- test numberchars_test21(A) => (A=3)
 # "[ISO-sics] number_chars/2: expected(succeed) bug(fail)".
 
@@ -8195,7 +8021,6 @@ numberchars_test21(A) :- number_chars(A, [' ', '0', 'b', '1', '1']).
 %% REVIEW:PENDING                                        **Label_2**
 %%   [gprolog]: throws error(syntax_error('constant term stream:1 (char:2) non numeric character'),number_chars/2)
 %%   [ciao]: no throws
-%test 22 
 :- test numberchars_test22
 	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
 # "[ISO-sics] number_chars/2: expected(error) bug(fail)".
@@ -8205,7 +8030,6 @@ numberchars_test22 :- number_chars(_A, ['0', 'o', '8']).
 %% REVIEW:PENDING                                             **Label_2**
 %%   [gprolog]: exception(error(syntax_error(_), _)) 
 %%   [ciao]: no throws
-%test 23 
 :- test numberchars_test23
 	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
 # "[ISO-sics] number_chars/2: expected(error) bug(fail)".
@@ -8215,7 +8039,6 @@ numberchars_test23 :- number_chars(_A, [' ', 'b', '2']).
 %% REVIEW:PENDING                                             **Label_2**
 %%   [gprolog]: throws exception(error(syntax_error(_), _))
 %%   [ciao]: no throws
-%test 24 
 :- test numberchars_test24
 	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
 # "[ISO-sics] number_chars/2: expected(error) bug(fail)".
@@ -8225,7 +8048,6 @@ numberchars_test24 :- number_chars(_A, [' ', 'x', 'g']).
 %% REVIEW:PENDING                                          **Label_2**
 %%   [gprolog]: throws  error(type_error(character,'\xc3\\xa1\'),number_chars/2)
 %%   [ciao]: no throws
-%test 25 
 :- test numberchars_test25
 	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
 # "[ISO-sics] number_chars/2: expected(error) bug(fail)".
@@ -8235,7 +8057,6 @@ numberchars_test25 :- number_chars(_A, ['á']).
 %% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: throws exception(error(syntax_error(_), _))
 %%   [ciao]: no throws
-%test 26 
 :- test numberchars_test26
 	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
 # "[ISO-sics] number_chars/2: expected(error) bug(fail)".
@@ -8245,80 +8066,67 @@ numberchars_test26 :- number_chars(_A, ['a']).
 %% REVIEW:PENDING                                                                **Label_2**
 %%   [gprolog]: throws exception(error(syntax_error(_), _))
 %%   [ciao]: no throws
-%test 27 
 :- test numberchars_test27
 	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
 # "[ISO-sics] number_chars/2: expected(error) bug(fail)".
 
 numberchars_test27 :- number_chars(_A, ['0', 'x', '0', '.', '0']).
 
-
 % ---------------------------------------------------------------------------
 %! ## 8.16.8 ISOcore#p112
 
-%test 1
 :- test numbercodes_test1(L) => (L=[0'3, 0'3])
 # "[ISO] number_codes/2: expected(succeed)".
 
 numbercodes_test1(L) :- number_codes(33, L).
 
-%test 2
 :- test numbercodes_test2
 # "[ISO] number_codes/2: expected(succeed)".
 
 numbercodes_test2 :- number_codes(33, [0'3, 0'3]).
 
-%test 3 
 :- test numbercodes_test3(Y) => (number_codes(N, Y), N=33.0)
 # "[ISO] number_codes/2: expected(impldep)".
 
 numbercodes_test3(Y) :- number_codes(33.0, Y).
 
-%test 4 
 :- test numbercodes_test4
 # "[ISO] number_codes/2: expected(impldep)".
 
 numbercodes_test4 :- number_codes(33.0, [0'3|_L]).
 
-%test 5
 :- test numbercodes_test5(A) => (A=(-25))
 # "[ISO] number_codes/2: expected(succeed)".
 
 numbercodes_test5(A) :- number_codes(A, [0'-, 0'2, 0'5]).
 
 %% REVIEW:PENDING                                                        **Label_4**
-%test 6 
 :- test numbercodes_test6(A) => (A=3)
 # "[ISO] number_codes/2: expected(succeed) bug(fail)".
 
 numbercodes_test6(A) :- number_codes(A, [0' , 0'3]).
 
 %% REVIEW:PENDING                                         **Label_4**
-%test 7 
 :- test numbercodes_test7(A) => (A=15)
 # "[ISO] number_codes/2: expected(succeed) bug(fail)".
 
 numbercodes_test7(A) :- number_codes(A, [0'0, 0'x, 0'f]).
 
 %% REVIEW:PENDING                                       **Label_4**
-%test 8 
 :- test numbercodes_test8(A) => (A=0'a)
 # "[ISO] number_codes/2: expected(succeed) bug(fail)".
 
 numbercodes_test8(A) :- number_codes(A, [0'0, 0''', 0'a]).
 
-%test 9
 :- test numbercodes_test9(A) => (A=4.2)
 # "[ISO] number_codes/2: expected(succeed)".
 
 numbercodes_test9(A) :- number_codes(A, [0'4, 0'., 0'2]).
 
-%test 10
 :- test numbercodes_test10(A) => (A=4.2)
 # "[ISO] number_codes/2: expected(succeed)".
 
 numbercodes_test10(A) :- number_codes(A, [0'4, 0'2, 0'., 0'0, 0'e, 0'-, 0'1]).
-
 
 :- test numbercodes_extra_errortest_1
 	+ exception(error(instantiation_error, _ImpDep))
@@ -8356,48 +8164,38 @@ numbercodes_extra_errortest_5 :- number_codes(_, [-1]).
 
 numbercodes_extra_errortest_6 :- number_codes('1', [0'1]).
 
-
-
-%test 11
 :- test numbercodes_test11 + exception(error(instantiation_error, ImplDep))
 # "[ISO-eddbali] number_codes/2: expected(error)".
 
 numbercodes_test11 :- number_codes(_, _).
 
-%test 12
 :- test numbercodes_test12 + exception(error(type_error(number, a), ImplDep))
 # "[ISO-eddbali] number_codes/2: expected(error)".
 
 numbercodes_test12 :- number_codes(a, _Y).
 
-%test 13 
 :- test numbercodes_test13 + exception(error(type_error(list, 4), ImplDep))
 # "[ISO-eddbali] number_codes/2: expected(error) bug(wrong_error)".
 
 numbercodes_test13 :- number_codes(_X, 4).
 
-
-%test 14
 :- test numbercodes_test14
 	+ exception(error(representation_error(character_code), ImplDep))
 # "[ISO-eddbali] number_codes/2: expected(error) bug(wrong_error)".
 
 numbercodes_test14 :- number_codes(_X, [0'4, -1]).
 
-%test 15 
 :- test numbercodes_test15 + exception(error(instantiation_error, ImplDep))
 # "[ISO-sics] number_codes/2: expected(error)".
 
 numbercodes_test15 :- number_codes(_X, [0'a|_]).
 
-%test 16 
 :- test numbercodes_test16 + exception(error(instantiation_error, ImplDep))
 # "[ISO-sics] number_codes/2: expected(error)".
 
 numbercodes_test16 :- number_codes(_X, [0'a, _]).
 
 %% REVIEW:PENDING                                                  **Label_4**
-%test 17 
 :- test numbercodes_test17(A, S) => (A=273, S=[50, 55, 51])
 # "[ISO-sics] number_codes/2: expected(succeed) bug(fail)".
 
@@ -8406,7 +8204,6 @@ numbercodes_test17(A, S) :-
 	number_codes(A, S).
 
 %% REVIEW:PENDING                                        **Label_4**
-%test 18 
 :- test numbercodes_test18(A, S) => (A=73, S=[55, 51])
 # "[ISO-sics] number_codes/2: expected(succeed) bug(fail)".
 
@@ -8415,7 +8212,6 @@ numbercodes_test18(A, S) :-
 	number_codes(A, S).
 
 %% REVIEW:PENDING                                                         **Label_4**
-%test 19  
 :- test numbercodes_test19(A, S) => (A=7, S=[55])
 # "[ISO-sics] number_codes/2: expected(succeed) bug(fail)".
 
@@ -8426,7 +8222,6 @@ numbercodes_test19(A, S) :-
 %% REVIEW:PENDING                          **It's correct in GNU**                             **Label_2**
 %%   [gprolog]: throws FOO
 %%   [ciao]: no throws
-%test 20 
 :- test numbercodes_test20
 	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
 # "[ISO-sics] number_codes/2: expected(error) bug(succeed)".
@@ -8436,19 +8231,16 @@ numbercodes_test20 :- number_codes(_X, "ä").
 %% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(syntax_error(_), _))
 %%   [ciao]: no throws
-%test 21 
 :- test numbercodes_test21
 	+ exception(error(syntax_error(ImplDep_atom), ImplDep))
 # "[ISO-sics] number_codes/2: expected(error) bug(fail)".
 
 numbercodes_test21 :- number_codes(_A, [0'0, 0'x, 0'0, 0'., 0'0]).
 
-
 % ===========================================================================
 %! # 8.17 Implementation defined hooks
 %! ## 8.17.1 ISOcore#p112
 
-%test 1
 :- test setflag_test1
 # "[ISO] set_prolog_flag/2: expected(succeed)".
 
@@ -8457,7 +8249,6 @@ setflag_test1 :- set_prolog_flag(unknown, fail).
 %% REVIEW:PENDING                                                        **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
-%test 2 
 :- test setflag_test2 + exception(error(instantiation_error, ImplDep))
 # "[ISO] set_flag/2: expected(error) bug(fail)".
 
@@ -8466,7 +8257,6 @@ setflag_test2 :- set_prolog_flag(_X, off).
 %% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 5), _))
 %%   [ciao]: no throws
-%test 3 
 :- test setflag_test3 + exception(error(type_error(atom, 5), ImplDep))
 # "[ISO] set_flag/2: expected(error) bug(fail)".
 
@@ -8475,7 +8265,6 @@ setflag_test3 :- set_prolog_flag(5, decimals).
 %% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(flag, date), _))
 %%   [ciao]: no throws
-%test 4 
 :- test setflag_test4 + exception(error(domain_error(flag, date), ImplDep))
 # "[ISO] set_flag/2: expected(error) bug(fail)".
 
@@ -8484,7 +8273,6 @@ setflag_test4 :- set_prolog_flag(date, 'July 1988').
 %% REVIEW:PENDING                                                       **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(flag_value, debug+trace), _))
 %%   [ciao]: no throws
-%test 5 
 :- test setflag_test5
 	+ exception(error(domain_error(flag_value, debug+trace), ImplDep))
 # "[ISO] set_flag/2: expected(error) bug(fail)".
@@ -8494,20 +8282,16 @@ setflag_test5 :- set_prolog_flag(debug, trace).
 %% REVIEW:PENDING                                                        **Label_2**
 %%   [gprolog]: throws exception(error(permission_error(modify, flag, max_arity), _))
 %%   [ciao]: no throws
-%test 6 
 :- test setflag_test6
 	+ exception(error(permission_error(modify, flag, max_arity), ImplDep))
 # "[ISO-eddbali] set_flag/2: expected(error) bug(fail)".
 
 setflag_test6 :- set_prolog_flag(max_arity, 40).
 
-
-
 % ---------------------------------------------------------------------------
 %! ## 8.17.2 ISOcore#p113
 
 %% REVIEW:PENDING                                       **Label_4**
-%test 1 
 :- test currentflag_test1 :
    true =>
    (X=debug, Y=off) +
@@ -8518,7 +8302,6 @@ currentflag_test1 :- current_prolog_flag(debug, off).
 
 setup_currentflag1(X,Y):- set_prolog_flag(X, Y).
 
-%test 2 
 :- test currentflag_test2(Result) => (Result\=[])
 # "[ISO] current_prolog_flag/2: expected(succeed)".
 
@@ -8528,14 +8311,11 @@ currentflag_test2(Result) :-
 %% REVIEW:PENDING                                                      **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 5), _))
 %%   [ciao]: no throws
-%test 3 
 :- test currentflag_test3 + exception(error(type_error(atom, 5), ImplDep))
 # "[ISO] current_prolog_flag/2: expected(error) bug(fail)".
 
 currentflag_test3 :- current_prolog_flag(5, _Y).
 
-
-%test 4
 :- test currentflag_test4 +
    (setup(setup_currentflag4(X,Y)))
 # "[ISO-eddbali] current_prolog_flag/2: expected(succeed)".
@@ -8544,7 +8324,6 @@ currentflag_test4 :- current_prolog_flag(unknown, warning).
 
 setup_currentflag4(X,Y):- (X=unknown, Y=warning, set_prolog_flag(X, Y)).
 
-%test 5
 :- test currentflag_test5 +
    (setup(setup_currentflag5(X,Y)),
     fails)
@@ -8555,7 +8334,6 @@ currentflag_test5 :- current_prolog_flag(unknown, error).
 setup_currentflag5(X,Y):- (X=unknown, Y=warning, set_prolog_flag(X, Y)).
 
 %% REVIEW:PENDING                                               **Label_4**
-%test 6 
 :- test currentflag_test6
 # "[ISO-eddbali] current_prolog_flag/2: expected(succeed) bug(fail)".
 
@@ -8564,7 +8342,6 @@ currentflag_test6 :- current_prolog_flag(debug, off).
 %% REVIEW:PENDING                                                 **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(prolog_flag, warning), _))
 %%   [ciao]: no throws
-%test 7 
 :- test currentflag_test7
 	+ exception(error(domain_error(prolog_flag, warning), ImplDep))
 # "[ISO-eddbali] current_prolog_flag/2: expected(error) bug(fail)".
@@ -8574,7 +8351,6 @@ currentflag_test7 :- current_prolog_flag(warning, _Y).
 %% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 1 + 2), _))
 %%   [ciao]: no throws
-%test 8 
 :- test currentflag_test8
 	+ exception(error(type_error(atom, 1 + 2), ImplDep))
 # "[ISO-eddbali] current_prolog_flag/2: expected(error) bug(fail)".
@@ -8745,7 +8521,7 @@ eval_test19(S) :- S is '*'(77, _N).
 eval_test20(S) :- S is '*'(foo, 77).
 
 :- test eval_test21(S) => (S=0)
-   # "[ISO] arith '//'/2".
+   # "[ISO-cor1] arith '//'/2".
 
 eval_test21(S) :- S is '//'(7, 35).
 
@@ -8755,14 +8531,14 @@ eval_test21(S) :- S is '//'(7, 35).
 eval_test22(S) :- S is '/'(7.0, 35).
 
 :- test eval_test23(S) => (S=10)
-   # "[ISO] arith '//'/2".
+   # "[ISO-cor1] arith '//'/2".
 
-eval_test23(S) :- S is '//'(140, 3 +11).
+eval_test23(S) :- S is '//'(140, 3+11).
 
 :- test eval_test24(S) => (near(S, 1.42, 0.0001))
-   # "[ISO] arith '/'/2".
+   # "[ISO-cor1] arith '/'/2".
 
-eval_test24(S) :- S is '/'(20.164, 3.2 +11).
+eval_test24(S) :- S is '/'(20.164, 3.2+11).
 
 :- test eval_test25(S)
    # "[ISO] arith '//'/2".
