@@ -7366,98 +7366,102 @@ atomchars_test15(A) :- atom_chars(A, ['P', 'é', 'c', 's']).
 %! ## 8.16.5 atom_codes/2 ISOcore#p109
 
 :- test atomcodes_test1(L) => (L=[])
-# "[ISO] atom_codes/2: expected(succeed)".
+   # "[ISO] atom_codes/2".
 
 atomcodes_test1(L) :- atom_codes('', L).
 
 :- test atomcodes_test2(L) => (L=[0'[, 0']])
-# "[ISO] atom_codes/2: expected(succeed)".
+   # "[ISO] atom_codes/2".
 
 atomcodes_test2(L) :- atom_codes([], L).
 
-:- test atomcodes_test3(L) => (L=[0'''])
-# "[ISO] atom_codes/2: expected(succeed)".
+:- test atomcodes_test3(L) => (L=[0''']) % '
+   # "[ISO] atom_codes/2".
 
 atomcodes_test3(L) :- atom_codes('''', L).
 
 :- test atomcodes_test4(L) => (L=[0'a, 0'n, 0't])
-# "[ISO] atom_codes/2: expected(succeed)".
+   # "[ISO] atom_codes/2".
 
 atomcodes_test4(L) :- atom_codes('ant', L).
 
 :- test atomcodes_test5(Str) => (Str='sop')
-# "[ISO] atom_codes/2: expected(succeed)".
+   # "[ISO] atom_codes/2".
 
 atomcodes_test5(Str) :- atom_codes(Str, [0's, 0'o, 0'p]).
 
 :- test atomcodes_test6(X) => (X=[0'o, 0'r, 0't, 0'h])
-# "[ISO] atom_codes/2: expected(succeed)".
+   # "[ISO] atom_codes/2".
 
 atomcodes_test6(X) :- atom_codes('North', [0'N|X]).
 
 :- test atomcodes_test7 + fails
-# "[ISO] atom_codes/2: expected(fail)".
+   # "[ISO] atom_codes/2".
 
 atomcodes_test7 :- atom_codes('soap', [0's, 0'o, 0'p]).
 
-:- test atomcodes_test8 + exception(error(instantiation_error, ImplDep))
-# "[ISO] atom_codes/2: expected(error)".
+:- test atomcodes_test8
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO] atom_codes/2".
 
 atomcodes_test8 :- atom_codes(_X, _Y).
 
+% TODO:[JF] update tests?
 %%% Errors of atom_codes are corrected in both
 %%% * ISO/IEC 13211-1:1995/Cor.1:2007(E) (page 4)
 %%% * ISO/IEC 13211-1:1995/Cor.2:2012(E) (page 18)
 
 :- test atomcodes_extra_errortest_1
-	+ exception(error(instantiation_error, _ImpDep))
-# "[ISO] atom_code/2: Extra test for exception.".
+   + exception(error(instantiation_error, _ImplDep))
+   # "[ISO] atom_codes/2".
 
 atomcodes_extra_errortest_1 :- atom_codes(_, [1|_]).
 
 :- test atomcodes_extra_errortest_2
-	+ exception(error(type_error(list, a), _ImpDep))
-# "[ISO] atom_code/2: Extra test for exception.".
+   + exception(error(type_error(list, a), _ImplDep))
+   # "[ISO] atom_codes/2".
 
 atomcodes_extra_errortest_2 :- atom_codes(_, a).
 
 :- test atomcodes_extra_errortest_3
-	+ exception(error(instantiation_error, _ImpDep))
-# "[ISO] atom_code/2: Extra test for exception.".
+   + exception(error(instantiation_error, _ImplDep))
+   # "[ISO] atom_codes/2".
 
 atomcodes_extra_errortest_3 :- atom_codes(_, [1,_]).
 
 :- test atomcodes_extra_errortest_4
-	+ exception(error(type_error(integer, a), _ImpDep))
-# "[ISO] atom_code/2: Extra test for exception.".
+   + exception(error(type_error(integer, a), _ImplDep))
+   # "[ISO] atom_codes/2".
 
 atomcodes_extra_errortest_4 :- atom_codes(_, [1,a]).
 
 :- test atomcodes_extra_errortest_5
-	+ exception(error(representation_error(character_code), _ImpDep))
-# "[ISO] atom_code/2: Extra test for exception.".
+   + exception(error(representation_error(character_code), _ImplDep))
+   # "[ISO] atom_codes/2".
 
 atomcodes_extra_errortest_5 :- atom_codes(_, [-1]).
 
 :- test atomcodes_extra_errortest_6
-	+ exception(error(type_error(atom, 1), _ImpDep))
-# "[ISO] atom_code/2: Extra test for exception.".
+   + exception(error(type_error(atom, 1), _ImplDep))
+   # "[ISO] atom_codes/2".
 
 atomcodes_extra_errortest_6 :- atom_codes(1, [0'1]).
 
-:- test atomcodes_test9 + exception(error(type_error(atom, f(a)), ImplDep))
-# "[ISO-eddbali] atom_codes/2: expected(error)".
+:- test atomcodes_test9
+   + exception(error(type_error(atom, f(a)), ImplDep))
+   # "[ISO-eddbali] atom_codes/2".
 
 atomcodes_test9 :- atom_codes(f(a), _L).
 
-:- test atomcodes_test10 + exception(error(type_error(list, 0'x), ImplDep))
-# "[ISO-eddbali] atom_codes/2: expected(error) bug(wrong_error)".
+:- test atomcodes_test10
+   + exception(error(type_error(list, 0'x), ImplDep))
+   # "[ISO-eddbali] atom_codes/2".
 
 atomcodes_test10 :- atom_codes(_, 0'x).
 
 :- test atomcodes_test11
-	+ exception(error(representation_error(character_code), ImplDep))
-# "[ISO-eddbali] atom_codes/2: expected(error) bug(wrong_error)".
+   + exception(error(representation_error(character_code), ImplDep))
+   # "[ISO-eddbali] atom_codes/2".
 
 atomcodes_test11 :- atom_codes(_X, [0'i, 0's, -1]).
 
@@ -7472,10 +7476,9 @@ atomcodes_test11 :- atom_codes(_X, [0'i, 0's, -1]).
 %% REVIEW:PENDING                                                     **Label_3**
 %%   [gprolog]: throws exception(error(type_error(integer,a),'atomic_basic:$constant_codes'/3-2))
 %%   [ciao]: throws exception(error(type_error(integer,a),'atomic_basic:$constant_codes'/3-2))
-%test 16 
 :- test atomcodes_test16
-	+ exception(error(representation_error(character_code), ImplDep))
-# "[ISO-sics] atom_codes/2: expected(error) bug(wrong_error)".
+   + exception(error(representation_error(character_code), ImplDep))
+   # "[ISO-sics] atom_codes/2: bug()".
 
 atomcodes_test16 :- atom_codes(_A, [a, b, c]).
 
@@ -7767,37 +7770,37 @@ numbercodes_test9(A) :- number_codes(A, [0'4, 0'., 0'2]).
 numbercodes_test10(A) :- number_codes(A, [0'4, 0'2, 0'., 0'0, 0'e, 0'-, 0'1]).
 
 :- test numbercodes_extra_errortest_1
-	+ exception(error(instantiation_error, _ImpDep))
+	+ exception(error(instantiation_error, _ImplDep))
 # "[ISO] number_codes/2: Extra test for exception.".
 
 numbercodes_extra_errortest_1 :- number_codes(_, [1|_]).
 
 :- test numbercodes_extra_errortest_2
-	+ exception(error(type_error(list, a), _ImpDep))
+	+ exception(error(type_error(list, a), _ImplDep))
 # "[ISO] number_codes/2: Extra test for exception.".
 
 numbercodes_extra_errortest_2 :- number_codes(_, a).
 
 :- test numbercodes_extra_errortest_3
-	+ exception(error(instantiation_error, _ImpDep))
+	+ exception(error(instantiation_error, _ImplDep))
 # "[ISO] number_codes/2: Extra test for exception.".
 
 numbercodes_extra_errortest_3 :- number_codes(_, [1,_]).
 
 :- test numbercodes_extra_errortest_4
-	+ exception(error(type_error(integer, a), _ImpDep))
+	+ exception(error(type_error(integer, a), _ImplDep))
 # "[ISO] number_codes/2: Extra test for exception.".
 
 numbercodes_extra_errortest_4 :- number_codes(_, [1,a]).
 
 :- test numbercodes_extra_errortest_5
-	+ exception(error(representation_error(character_code), _ImpDep))
+	+ exception(error(representation_error(character_code), _ImplDep))
 # "[ISO] number_codes/2: Extra test for exception.".
 
 numbercodes_extra_errortest_5 :- number_codes(_, [-1]).
 
 :- test numbercodes_extra_errortest_6
-	+ exception(error(type_error(number, '1'), _ImpDep))
+	+ exception(error(type_error(number, '1'), _ImplDep))
 # "[ISO] number_codes/2: Extra test for exception.".
 
 numbercodes_extra_errortest_6 :- number_codes('1', [0'1]).
