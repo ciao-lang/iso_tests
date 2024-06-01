@@ -12,7 +12,10 @@ for checking compliance of Ciao with the ISO Prolog standard using the
 @lib{iso_strict} package. The description of each test annotates:
 
  - the source of the test:
-   - `[ISO]` tests based on ISO Prolog standard document
+   - `[ISO]` tests based on ISO Prolog standard document ISO+IEC+13211
+   - `[ISO-cor1]` tests based or modified according to Corrigenda 1
+   - `[ISO-cor2]` tests based or modified according to Corrigenda 2
+   - `[ISO-cor3]` tests based or modified according to Corrigenda 3
    - `[ISO-sics]` other tests based Péter Szabó (SICStus) tests
    - `[ISO-eddbali]` other tests based on A Ed-Dbali's tests
    - `[ISO-ciao]` other ISO tests unique to this test suite
@@ -31,6 +34,10 @@ expected behavior:
 
 and the current status in Ciao:
 
+ - `bug()`: The test fails but fixing it is feasible in Ciao.
+ - `bug(wontfix)`: The test fails but we are not considering fixing it
+     (without breaking some useful Ciao feature).
+
  - `bug(succeed)`: The predicate succeeds, but it should not.
  - `bug(fail)`: The predicate fails, but it should not.
  - `bug(error)`: The predicate raises an exception (error), but it should not.
@@ -38,6 +45,15 @@ and the current status in Ciao:
  - `bug(wrong_succeed)`: The predicate succeeds but the solution is not the expected.
  - `bug(wrong_error)`: The predicate raises an exception (error), but
    it is not the expected.
+
+The tests follow (when possible) the order specified in the ISO/IEC
+13211-1 document. Additionally, it contain references to the documents
+as follows:
+
+ - `ISOcore#pNNN` means *ISO/IEC 13211-1:1995. Part 1: General Core* page NNN
+ - `ISOcor1#pNNN` means *ISO/IEC 13211-1:1995 TECHNICAL CORRIGENDUM 1* page NNN
+ - `ISOcor2#pNNN` means *ISO/IEC 13211-1:1995 TECHNICAL CORRIGENDUM 2* page NNN
+ - `ISOcor3#pNNN` means *ISO/IEC 13211-1:1995 TECHNICAL CORRIGENDUM 3* page NNN
 ").
 
 % ===========================================================================
@@ -116,10 +132,6 @@ bird(_) :- fail.
 
 :- load_test_module(iso_tests(iso_tests_common)).
 :- use_module(iso_tests_common).
-
-% NOTE: ISOcore#pNNN means "ISO/IEC 13211-1. Part 1: General Core" page NNN
-
-% The tests follow the order specified in the ISO/IEC 13211-1 document.
 
 % ===========================================================================
 %! # 6.3 Term syntax
@@ -1610,45 +1622,45 @@ functor_test10 :- functor([_|_], '.', 2).
 functor_test11 :- functor([], [], 0).
 
 :- test functor_test12(X, Y)
-    + exception(error(instantiation_error, Imp_dep))
+    + exception(error(instantiation_error, ImplDep))
 # "[ISO] functor/3: ...".
 
 functor_test12(X, Y) :- functor(X, Y, 3).
 
 :- test functor_test13(X, N)
-    + exception(error(instantiation_error, Imp_dep))
+    + exception(error(instantiation_error, ImplDep))
 # "[ISO] functor/3: ...".
 
 functor_test13(X, N) :- functor(X, foo, N).
 
 :- test functor_test14(X)
-    + exception(error(type_error(integer, a), Imp_dep))
+    + exception(error(type_error(integer, a), ImplDep))
 # "[ISO] functor/3: ...".
 
 functor_test14(X) :- functor(X, foo, a).
 
 :- test functor_test15(X)
-    + exception(error(type_error(atom, 1.5), Imp_dep))
+    + exception(error(type_error(atom, 1.5), ImplDep))
 # "[ISO] functor/3: ...".
 
 functor_test15(X) :- functor(X, 1.5, 1).
 
 :- test functor_test16(X)
-    + exception(error(type_error(atomic, foo(a)), Imp_dep))
+    + exception(error(type_error(atomic, foo(a)), ImplDep))
 # "[ISO] functor/3: ...".
 
 functor_test16(X) :- functor(X, foo(a), 1).
 
 :- test functor_test17(T, X) :
     (current_prolog_flag(max_arity, A), X is A +1)
-    + exception(error(representation_error(max_arity), Imp_dep))
+    + exception(error(representation_error(max_arity), ImplDep))
 # "[ISO] functor/3: ...".
 
 functor_test17(T, X) :- functor(T, foo, X).
 
 :- test functor_test18(F, Minus_1) :
     (Minus_1 is (0 -1))
-    + exception(error(domain_error(not_less_than_zero, -1), Imp_dep))
+    + exception(error(domain_error(not_less_than_zero, -1), ImplDep))
 # "[ISO] functor/3: ...".
 
 functor_test18(F, Minus_1) :- functor(F, foo, Minus_1).
@@ -1691,23 +1703,23 @@ arg_test6 :- arg(0, foo(a, b), foo).
 
 arg_test7(N) :- arg(3, foo(3, 4), N).
 
-:- test arg_test8(X) + exception(error(instantiation_error, Imp_dep))
+:- test arg_test8(X) + exception(error(instantiation_error, ImplDep))
 # "[ISO] arg/3: expected(error) bug(fail)".
 
 arg_test8(X) :- arg(X, foo(a, b), a).
 
-:- test arg_test9(X) + exception(error(instantiation_error, Imp_dep))
+:- test arg_test9(X) + exception(error(instantiation_error, ImplDep))
 # "[ISO] arg/3: expected(error) bug(fail)".
 
 arg_test9(X) :- arg(1, X, a).
 
 :- test arg_test10(A)
-    + exception(error(type_error(compound, atom), Imp_dep))
+    + exception(error(type_error(compound, atom), ImplDep))
 # "[ISO] arg/3: expected(error) bug(fail)".
 
 arg_test10(A) :- arg(0, atom, A).
 
-:- test arg_test11(A) + exception(error(type_error(compound, 3), Imp_dep))
+:- test arg_test11(A) + exception(error(type_error(compound, 3), ImplDep))
 # "[ISO] arg/3: expected(error) bug(fail)".
 
 arg_test11(A) :- arg(0, 3, A).
@@ -1718,13 +1730,13 @@ arg_test11(A) :- arg(0, 3, A).
 arg_test12(X) :- arg(1, foo(X), u(X)).
 
 :- test arg_test13
-    + exception(error(domain_error(not_less_than_zero, -3), Imp_dep))
+    + exception(error(domain_error(not_less_than_zero, -3), ImplDep))
 # "[ISO-eddbali] arg/3: ...".
 
 arg_test13 :- arg(-3, foo(a, b), _).
 
 :- test arg_test14(X)
-    + exception(error(type_error(integer, a), Imp_dep))
+    + exception(error(type_error(integer, a), ImplDep))
 # "[ISO-eddbali] arg/3: ...".
 
 arg_test14(X) :- arg(a, foo(a, b), X).
@@ -1734,7 +1746,7 @@ arg_test14(X) :- arg(a, foo(a, b), X).
 
 arg_test15(X, Y) :- arg(2, foo(a, f(X, b), c), f(a, Y)).
 
-:- test arg_test16 + exception(error(type_error(compound, 3), Imp_dep))
+:- test arg_test16 + exception(error(type_error(compound, 3), ImplDep))
 # "[ISO-sics] arg/3: ...".
 
 arg_test16 :- arg(1, 3, _).
@@ -1772,42 +1784,42 @@ univ_test5 :- '=..'(1, [1]).
 
 univ_test6 :- '=..'(foo(a, b), [foo, b, a]).
 
-:- test univ_test7(X, Y) + exception(error(instantiation_error, Imp_dep))
+:- test univ_test7(X, Y) + exception(error(instantiation_error, ImplDep))
 # "[ISO] '=..'/2: ...".
 
 univ_test7(X, Y) :- '=..'(X, Y).
 
-:- test univ_test8(X, Y) + exception(error(instantiation_error, Imp_dep))
+:- test univ_test8(X, Y) + exception(error(instantiation_error, ImplDep))
 # "[ISO] '=..'/2: ...".
 
 univ_test8(X, Y) :- '=..'(X, [foo, a|Y]).
 
-:- test univ_test9(X) + exception(error(type_error(list, [foo|bar]), Imp_dep))
+:- test univ_test9(X) + exception(error(type_error(list, [foo|bar]), ImplDep))
 # "[ISO] '=..'/2: ...".
 
 univ_test9(X) :- '=..'(X, [foo|bar]).
 
-:- test univ_test10(X, Foo) + exception(error(instantiation_error, Imp_dep))
+:- test univ_test10(X, Foo) + exception(error(instantiation_error, ImplDep))
 # "[ISO] '=..'/2: ...".
 
 univ_test10(X, Foo) :- '=..'(X, [Foo, bar]).
 
-:- test univ_test11(X) + exception(error(type_error(atom, 3), Imp_dep))
+:- test univ_test11(X) + exception(error(type_error(atom, 3), ImplDep))
 # "[ISO] '=..'/2: ...".
 
 univ_test11(X) :- '=..'(X, [3, 1]).
 
-:- test univ_test12(X) + exception(error(type_error(atom, 1.1), Imp_dep))
+:- test univ_test12(X) + exception(error(type_error(atom, 1.1), ImplDep))
 # "[ISO] '=..'/2: ...".
 
 univ_test12(X) :- '=..'(X, [1.1, foo]).
 
-:- test univ_test13(X) + exception(error(type_error(atom, a(b)), Imp_dep))
+:- test univ_test13(X) + exception(error(type_error(atom, a(b)), ImplDep))
 # "[ISO] '=..'/2: ...".
 
 univ_test13(X) :- '=..'(X, [a(b), 1]).
 
-:- test univ_test14(X) + exception(error(type_error(list, 4), Imp_dep))
+:- test univ_test14(X) + exception(error(type_error(list, 4), ImplDep))
 # "[ISO] '=..'/2: ...".
 
 univ_test14(X) :- '=..'(X, 4).
@@ -1817,13 +1829,13 @@ univ_test14(X) :- '=..'(X, 4).
 
 univ_test15(X) :- '=..'(f(X), [f, u(X)]).
 
-:- test univ_test16(X) + exception(error(type_error(atomic, f(a)), Imp_dep))
+:- test univ_test16(X) + exception(error(type_error(atomic, f(a)), ImplDep))
 # "[ISO-sics] '=..'/2: ...".
 
 univ_test16(X) :- '=..'(X, [f(a)]).
 
 :- test univ_test17(X)
-    + exception(error(domain_error(non_empty_list, []), Imp_dep))
+    + exception(error(domain_error(non_empty_list, []), ImplDep))
 # "[ISO-sics] '=..'/2: ...".
 
 univ_test17(X) :- '=..'(X, []).
@@ -1832,7 +1844,7 @@ univ_test17(X) :- '=..'(X, []).
     ( current_prolog_flag(max_arity, MAX),
         N is (MAX+1),
         my_list_of(N, 1, L)
-    ) + exception(error(representation_error(max_arity), Imp_dep))
+    ) + exception(error(representation_error(max_arity), ImplDep))
 # "[ISO-sics] '=..'/2: ...".
 
 univ_test18(X, L) :- '=..'(X, [f|L]).
@@ -2021,31 +2033,31 @@ arithcomp_test19(X) :- '=:='(X, 5).
 
 :- test arithcomp_test20(X)
    + exception(error(instantiation_error, ImplDep))
-   # "[ISO] arith =\\=/2: expected(error) bug(fail)".
+   # "[ISO] arith =\\=/2".
 
 arithcomp_test20(X) :- X =\= 5.
 
 :- test arithcomp_test21(X)
    + exception(error(instantiation_error, ImplDep))
-   # "[ISO] arith '<'/2: expected(error) bug(fail)".
+   # "[ISO] arith '<'/2".
 
 arithcomp_test21(X) :- '<'(X, 5).
 
 :- test arithcomp_test22(X)
    + exception(error(instantiation_error, ImplDep))
-   # "[ISO] arith '>'/2: expected(error) bug(fail)".
+   # "[ISO] arith '>'/2".
 
 arithcomp_test22(X) :- '>'(X, 5).
 
 :- test arithcomp_test23(X)
    + exception(error(instantiation_error, ImplDep))
-   # "[ISO] arith '>='/2: expected(error) bug(fail)".
+   # "[ISO] arith '>='/2".
 
 arithcomp_test23(X) :- '>='(X, 5).
 
 :- test arithcomp_test24(X)
    + exception(error(instantiation_error, ImplDep))
-   # "[ISO] arith '=<'/2: expected(error) bug(fail)".
+   # "[ISO] arith '=<'/2".
 
 arithcomp_test24(X) :- '=<'(X, 5).
 
@@ -2227,10 +2239,10 @@ currentpredicate_test5(Result) :-
 currentpredicate_test6 :- current_predicate(4).
 
 %% REVIEW:PENDING                                                     **Label_2**
-%%   [gprolog]: throw exception(error(type_error(predicat_indicator, 0/dog), _))
+%%   [gprolog]: throw exception(error(type_error(predicate_indicator, 0/dog), _))
 %%   [ciao]: no throw 
 :- test currentpredicate_test7(X) : (X=dog)
-	+ exception(error(type_error(predicat_indicator, 0/dog), ImplDep))
+	+ exception(error(type_error(predicate_indicator, 0/dog), ImplDep))
 # "[ISO-eddbali] current_predicate/2: expected(error) bug(fail)".
 
 currentpredicate_test7(X) :- current_predicate(X).
@@ -2239,7 +2251,7 @@ currentpredicate_test7(X) :- current_predicate(X).
 %%   [gprolog]: throws exception: error(type_error(atom,0),current_predicate/1)
 %%   [ciao]: no throw 
 :- test currentpredicate_test8(X) : (X=0/dog)
-	+ exception(error(type_error(predicat_indicator, 0/dog), ImplDep))
+	+ exception(error(type_error(predicate_indicator, 0/dog), ImplDep))
 # "[ISO-eddbali] current_predicate/2: expected(error) bug(fail)".
 
 currentpredicate_test8(X) :- current_predicate(X).
@@ -8605,1013 +8617,1050 @@ halt_test4 :- halt(_).
 
 % ===========================================================================
 %! # 9.1 Simple arithmetic functors
-%! ## 9.1.7 ISOcore#p117
+
+% NOTE: Current issues in Ciao:
+%
+%  - Culprit term in type error evaluable must report `N/A` instead of
+%    the culprit term (e.g., `type_error(evaluable, foo/3)` intead of
+%    `type_error(evaluable, foo(a,b,c))`)
+%    (see `"fix internals:error_term for type_error(evaluable)"` comments)
+%  - Some arithmetic functors are not implemented (see comments).
+%  - `xor/2` is implemented as `(#)/2`.
+%
+% NOTE: Incompatibilities in Ciao:
+%
+%  - For floating point computations, Ciao supports `0.Inf`, `-0.Inf`
+%    and `0.Nan`, so we do not throw some `undefined` errors.
+%    Other Prologs like GNU Prolog seems to do the same (with a
+%    different representation).
+
+%! ## 9.1.7 is/2 ISOcore#p117
 
 :- test eval_test1(S) => (S=42)
-# "[ISO] arith '+'/2: expected(succeed)".
+   # "[ISO] arith '+'/2".
 
 eval_test1(S) :- S is '+'(7, 35).
 
 :- test eval_test2(S) => (S=14)
-# "[ISO] arith '+'/2: expected(succeed)".
+   # "[ISO] arith '+'/2".
 
 eval_test2(S) :- S is '+'(0, 3 +11).
 
 :- test eval_test3(S) => (near(S, 14.2000, 0.0001))
-# "[ISO] arith '+'/2: expected(succeed)".
+   # "[ISO] arith '+'/2".
 
 eval_test3(S) :- S is '+'(0, 3.2 +11).
 
-:- test eval_test4(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith '+'/2: expected(error) bug(fail)".
+:- test eval_test4(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith '+'/2".
 
 eval_test4(S) :- S is '+'(77, _N).
 
-%% REVIEW:PENDING                                                      **Label_3**
-%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test eval_test5(S)
-   + exception(error(type_error(number, foo), Imp_dep))
-   # "[ISO] arith '+'/2: expected(error) bug(fail)".
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith '+'/2: bug()".
 
 eval_test5(S) :- S is '+'(foo, 77).
 
 :- test eval_test6(S) => (S=(-7))
-# "[ISO] arith '-'/2: expected(succeed)".
+   # "[ISO] arith '-'/2".
 
 eval_test6(S) :- S is '-'(7).
 
 :- test eval_test7(S) => (S=(8))
-# "[ISO] arith '-'/2: expected(succeed)".
+   # "[ISO] arith '-'/2".
 
 eval_test7(S) :- S is '-'(3 -11).
 
 :- test eval_test8(S) => (near(S, 7.8000, 0.0001))
-# "[ISO] arith '-'/2: expected(succeed)".
+   # "[ISO] arith '-'/2".
 
 eval_test8(S) :- S is '-'(3.2 -11).
 
-:- test eval_test9(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith '-'/2: expected(error) bug(fail)".
+:- test eval_test9(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith '-'/2".
 
 eval_test9(S) :- S is '-'(_N).
 
-%% REVIEW:PENDING                                                           **Label_3**
-%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-:- test eval_test10(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith '-'/2: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test eval_test10(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith '-'/2: bug()".
 
 eval_test10(S) :- S is '-'(foo).
 
 :- test eval_test11(S) => (S=(-28))
-# "[ISO] arith '-'/2: expected(succeed)".
+   # "[ISO] arith '-'/2".
 
 eval_test11(S) :- S is '-'(7, 35).
 
 :- test eval_test12(S) => (S=6)
-# "[ISO] arith '-'/2: expected(succeed)".
+   # "[ISO] arith '-'/2".
 
 eval_test12(S) :- S is '-'(20, 3 +11).
 
 :- test eval_test13(S) => (near(S, -14.2000, 0.0001))
-# "[ISO] arith '-'/2: expected(succeed)".
+   # "[ISO] arith '-'/2".
 
 eval_test13(S) :- S is '-'(0, 3.2 +11).
 
-:- test eval_test14(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith '-'/2: expected(error) bug(fail)".
+:- test eval_test14(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith '-'/2".
 
 eval_test14(S) :- S is '-'(77, _N).
 
-%% REVIEW:PENDING                                                  **Label_3**
-%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-:- test eval_test15(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith '-'/2: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test eval_test15(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith '-'/2: bug()".
 
 eval_test15(S) :- S is '-'(foo, 77).
 
 :- test eval_test16(S) => (S=245)
-# "[ISO] arith '*'/2: expected(succeed)".
+   # "[ISO] arith '*'/2".
 
 eval_test16(S) :- S is '*'(7, 35).
 
 :- test eval_test17(S) : (X=0, Y=(3 +11)) => (S=0)
-# "[ISO] arith '*'/2: expected(succeed)".
+   # "[ISO] arith '*'/2".
 
 eval_test17(S) :- S is '*'(0, 3 +11).
 
 :- test eval_test18(S) => (near(S, 21.3, 0.0001))
-# "[ISO] arith '*'/2: expected(succeed)".
+   # "[ISO] arith '*'/2".
 
 eval_test18(S) :- S is '*'(1.5, 3.2 +11).
 
-:- test eval_test19(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith '*'/2: expected(error) bug(fail)".
+:- test eval_test19(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith '*'/2".
 
 eval_test19(S) :- S is '*'(77, _N).
 
-%% REVIEW:PENDING                                                      **Label_3**
-%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-:- test eval_test20(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith '*'/2: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test eval_test20(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith '*'/2: bug()".
 
 eval_test20(S) :- S is '*'(foo, 77).
 
 :- test eval_test21(S) => (S=0)
-# "[ISO] arith '//'/2: expected(succeed)".
+   # "[ISO] arith '//'/2".
 
 eval_test21(S) :- S is '//'(7, 35).
 
 :- test eval_test22(S) => (near(S, 0.2000, 0.0001))
-# "[ISO] arith '//'/2: expected(succeed)".
+   # "[ISO] arith '//'/2".
 
 eval_test22(S) :- S is '/'(7.0, 35).
 
 :- test eval_test23(S) => (S=10)
-# "[ISO] arith '//'/2: expected(succeed)".
+   # "[ISO] arith '//'/2".
 
 eval_test23(S) :- S is '//'(140, 3 +11).
 
 :- test eval_test24(S) => (near(S, 1.42, 0.0001))
-# "[ISO] arith '/'/2: expected(succeed)".
+   # "[ISO] arith '/'/2".
 
 eval_test24(S) :- S is '/'(20.164, 3.2 +11).
 
 :- test eval_test25(S)
-# "[ISO] arith '//'/2: expected(impldep)".
+   # "[ISO] arith '//'/2".
 
 eval_test25(S) :- S is '//'(7, -3).
 
 :- test eval_test26(S)
-# "[ISO] arith '//'/2: expected(impldep)".
+   # "[ISO] arith '//'/2".
 
 eval_test26(S) :- S is '//'(-7, 3).
 
-%% REVIEW:DONE                             
-:- test eval_test27(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith '/'/2: expected(error) bug(fail)".
+:- test eval_test27(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith '/'/2".
 
 eval_test27(S) :- S is '/'(77, _N).
 
-%% REVIEW:PENDING                                                              **Label_3**
-%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-:- test eval_test28(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith '/'/2: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test eval_test28(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith '/'/2: bug()".
 
 eval_test28(S) :- S is '/'(foo, 77).
 
-%% REVIEW:DONE                             
-:- test eval_test29(S) + exception(error(evaluation_error(zero_divisor),
-		Imp_dep))
-# "[ISO-sics] arith '/'/2: expected(error) bug(succeed)".
+% TODO:[JF] we support dividing 0.Inf
+:- test eval_test29(S)
+   + exception(error(evaluation_error(zero_divisor), ImplDep))
+   # "[ISO-sics] arith '/'/2: bug(wontfix)".
 
-eval_test29(S) :- S is '//'(3, 0).
+eval_test29(S) :- S is '/'(3, 0).
+
+% TODO:[JF] we support dividing 0.Inf
+:- test eval_test29b(S)
+   + exception(error(evaluation_error(zero_divisor), ImplDep))
+   # "[ISO-ciao] arith '//'/2".
+
+eval_test29b(S) :- S is '//'(3, 0).
 
 :- test eval_test30(S) => (S=1)
-# "[ISO] arith mod/2: expected(succeed)".
+   # "[ISO] arith mod/2".
 
 eval_test30(S) :- S is mod(7, 3).
 
 :- test eval_test31(S) => (S=0)
-# "[ISO] arith mod/2: expected(succeed)".
+   # "[ISO] arith mod/2".
 
 eval_test31(S) :- S is mod(0, 3 +11).
 
 :- test eval_test32(S) => (S=(-1))
-# "[ISO] arith mod/2: expected(succeed)".
+   # "[ISO] arith mod/2".
 
 eval_test32(S) :- S is mod(7, -2).
 
-:- test eval_test33(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith 'mod'/2: expected(error) bug(fail)".
+:- test eval_test33(S)
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith 'mod'/2".
 
 eval_test33(S) :- S is mod(77, _N).
 
-%% REVIEW:PENDING                                                      **Label_3**
-%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-:- test eval_test34(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith 'mod'/2: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test eval_test34(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith 'mod'/2: bug()".
 
 eval_test34(S) :- S is mod(foo, 77).
 
-:- test eval_test35(S) + exception(error(type_error(integer, 7.5), Imp_dep))
-# "[ISO] arith mod/2: expected(error) bug(succeed)".
+:- test eval_test35(S) + exception(error(type_error(integer, 7.5), ImplDep))
+   # "[ISO] arith mod/2".
 
 eval_test35(S) :- S is mod(7.5, 2).
 
 :- test eval_test36(S)
-	+ exception(error(evaluation_error(zero_divisor), Imp_dep))
-# "[ISO] arith mod/2: expected(error)".
+	+ exception(error(evaluation_error(zero_divisor), ImplDep))
+   # "[ISO] arith mod/2".
 
 eval_test36(S) :- S is mod(7, 0).
 
 :- test eval_test37(S) => (S=7)
-# "[ISO] arith floor/1: expected(succeed)".
+   # "[ISO] arith floor/1".
 
 eval_test37(S) :- S is floor(7.4).
 
 :- test eval_test38(S) => (S=(-1))
-# "[ISO] arith floor/1: expected(succeed)".
+   # "[ISO] arith floor/1".
 
 eval_test38(S) :- S is floor(-0.4).
 
 :- test eval_test39(S) => (S=8)
-# "[ISO] arith round/1: expected(succeed)".
+   # "[ISO] arith round/1".
 
 eval_test39(S) :- S is round(7.5).
 
 :- test eval_test40(S) => (S=8)
-# "[ISO] arith round/1: expected(succeed)".
+   # "[ISO] arith round/1".
 
 eval_test40(S) :- S is round(7.6).
 
 :- test eval_test41(S) => (S=(-1))
-# "[ISO] arith round/1: expected(succeed)".
+   # "[ISO] arith round/1".
 
 eval_test41(S) :- S is round(-0.6).
 
-:- test eval_test42(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith round/2: expected(error) bug(fail)".
+:- test eval_test42(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith round/2".
 
 eval_test42(S) :- S is round(_X).
 
 :- test eval_test43(S) => (S=0)
-# "[ISO] arith ceiling/1: expected(succeed)".
+   # "[ISO] arith ceiling/1".
 
 eval_test43(S) :- S is ceiling(-0.5).
 
 :- test eval_test44(S) => (S=0)
-# "[ISO] arith ceiling/1: expected(succeed)".
+   # "[ISO] arith ceiling/1".
 
 eval_test44(S) :- S is truncate(-0.5).
 
-%% REVIEW:PENDING                                                        **Label_3**
-%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws  exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-:- test eval_test45(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith truncate/1: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test eval_test45(S) 
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith truncate/1: bug()".
 
 eval_test45(S) :- S is truncate(foo).
 
 :- test eval_test46(S) => (S=7.0)
-# "[ISO] arith float/1: expected(succeed)".
+   # "[ISO] arith float/1".
 
 eval_test46(S) :- S is float(7).
 
 :- test eval_test47(S) => (near(S, 7.3, 0.0001))
-# "[ISO] arith float/1: expected(succeed)".
+   # "[ISO] arith float/1".
 
 eval_test47(S) :- S is float(7.3).
 
 :- test eval_test48(S) => (S=1.0)
-# "[ISO] arith float/1: expected(succeed)".
+   # "[ISO] arith float/1".
 
 eval_test48(S) :- S is float(5//3).
 
-:- test eval_test49(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith float/1: expected(error) bug(fail)".
+:- test eval_test49(S)
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith float/1".
 
 eval_test49(S) :- S is float(_X).
 
-%% REVIEW:PENDING                                                            **Label_3**
-%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-:- test eval_test50(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith float/1: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test eval_test50(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith float/1: bug()".
 
 eval_test50(S) :- S is float(foo).
 
 :- test eval_test51(S) => (S=7)
-# "[ISO] arith abs/1: expected(succeed)".
+   # "[ISO] arith abs/1".
 
 eval_test51(S) :- S is abs(7).
 
 :- test eval_test52(S) => (S=8)
-# "[ISO] arith abs/1: expected(succeed)".
+   # "[ISO] arith abs/1".
 
 eval_test52(S) :- S is abs(3 -11).
 
 :- test eval_test53(S) => (near(S, 7.8000, 0.0001))
-# "[ISO] arith abs/1: expected(succeed)".
+   # "[ISO] arith abs/1".
 
 eval_test53(S) :- S is abs(3.2 -11.0).
 
-:- test eval_test54(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith abs/1: expected(error) bug(fail)".
+:- test eval_test54(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith abs/1".
 
 eval_test54(S) :- S is abs(_N).
 
-%% REVIEW:PENDING                                                       **Label_3**
-%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws  exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-:- test eval_test55(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith abs/1: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test eval_test55(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith abs/1: bug()".
 
 eval_test55(S) :- S is abs(foo).
 
 :- test eval_test56(S) => (S=(5.0))
-# "[ISO] arith '/'/2: expected(succeed)".
+   # "[ISO] arith '/'/2".
 
 eval_test56(S) :- S is '/'(10,2).
 
 :- test eval_test57(S) => (S=(0.0))
-# "[ISO] arith '/'/2: expected(succeed)".
+   # "[ISO] arith '/'/2".
 
 eval_test57(S) :- S is '/'(0,3+11).
 
 :- test eval_test58(S) => (S=(-2.5))
-# "[ISO] arith '/'/2: expected(succeed)".
+   # "[ISO] arith '/'/2".
 
 eval_test58(S) :- S is '/'(-5,2).
 
 :- test eval_test59(S) => (S=(-0.1))
-# "[ISO] arith '/'/2: expected(succeed)".
+   # "[ISO] arith '/'/2".
 
 eval_test59(S) :- S is '/'(1,-10).
 
 :- test eval_test60(S) => (S=(0))
-# "[ISO] arith '//'/2: expected(succeed)".
+   # "[ISO] arith '//'/2".
 
 eval_test60(S) :- S is '//'(0,3+11).
 
 :- test eval_test61(S) => (S=(-1))
-# "[ISO] arith '//'/2: expected(succeed)".
+   # "[ISO] arith '//'/2".
 
 eval_test61(S) :- S is '//'(-5,3).
 
 :- test eval_test62(S) => (S=(0))
-# "[ISO] arith '//'/2: expected(succeed)".
+   # "[ISO] arith '//'/2".
 
 eval_test62(S) :- S is '//'(1,-12).
 
-%test 63                                                              **Label_3**
-%% REVIEW:PENDING
-%%   [gprolog]: S = 3
-%%   [ciao]: throws exception(error(type_error(evaluable,max(2,3)),'arithmetic:is'/2-2))
-:- test eval_test63(S) => (S=(3)) + no_exception
-# "[ISO] arith max/2: expected(succeed) bug(fail)".
-
-eval_test63(S) :- S is max(2, 3).
-
-%test 64                                                                **Label_3**
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception: error(instantiation_error,(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,max(_,3)),'arithmetic:is'/2-2))
-:- test eval_test64(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith max/2: expected(succeed) bug(fail)".
-
-eval_test64(S) :- S is max(_N,3).
-
-%test 65                                                              **Label_3**
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws  exception(error(type_error(evaluable,max(3,foo)),'arithmetic:is'/2-2))
-:- test eval_test65(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith max/2: expected(succeed) bug(fail)".
-
-eval_test65(S) :- S is max(3,foo).
-
-%test 66                                                                 **Label_3**
-%% REVIEW:PENDING
-%%   [gprolog]: S = 2
-%%   [ciao]: throws exception(error(type_error(evaluable,min(2,3)),'arithmetic:is'/2-2))
-:- test eval_test66(S) => (S=(2)) + no_exception
-# "[ISO] arith min/2: expected(succeed) bug(fail)".
-
-eval_test66(S) :- S is min(2, 3).
-
-%test 67                                                                  **Label_3**
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception: error(instantiation_error,(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,min(_,3)),'arithmetic:is'/2-2))
-:- test eval_test67(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith min/2: expected(succeed) bug(fail)".
-
-eval_test67(S) :- S is min(_N,3).
-
-%test 68                                                                 **Label_3**
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,min(3,foo)),'arithmetic:is'/2-2))
-:- test eval_test68(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith min/2: expected(succeed) bug(fail)".
-
-eval_test68(S) :- S is min(3,foo).
-
 % ===========================================================================
 %! # 9.3 Other arithmetic functors
-%! ## 9.3.1 ISOcore#p120
+%! ## 9.3.1 arith **/2 ISOcore#p120
 
 :- test power_test1(S) => (S=125.0000)
-# "[ISO] arith '**'/2: expected(succeed)".
+   # "[ISO] arith '**'/2".
 
 power_test1(S) :- S is '**'(5, 3).
 
 :- test power_test2(S) => (S=(-125.0000))
-# "[ISO] arith '**'/2: expected(succeed)".
+   # "[ISO] arith '**'/2".
 
 power_test2(S) :- S is '**'(-5.0, 3).
 
 :- test power_test3(S) => (S=0.2000)
-# "[ISO] arith '**'/2: expected(succeed)".
+   # "[ISO] arith '**'/2".
 
 power_test3(S) :- S is '**'(5, -1).
 
-:- test power_test4(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith '**'/2: expected(error) bug(fail)".
+:- test power_test4(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith '**'/2".
 
 power_test4(S) :- S is '**'(77, _N).
 
-%% REVIEW:PENDING                                                          **Label_3**
-%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-%test 5 
-:- test power_test5(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith '**'/2: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test power_test5(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith '**'/2: bug()".
 
 power_test5(S) :- S is '**'(foo, 2).
 
-%test 6
 :- test power_test6(S) => (S=125.0000)
-# "[ISO] arith '**'/2: expected(succeed)".
+   # "[ISO] arith '**'/2".
 
 power_test6(S) :- S is '**'(5, 3.0).
 
 :- test power_test7(S) => (S=1.0)
-# "[ISO] arith '**'/2: expected(succeed)".
+   # "[ISO] arith '**'/2".
 
 power_test7(S) :- S is '**'(0.0, 0).
 
 % ---------------------------------------------------------------------------
-%! ## 9.3.2 ISOcore#p120
+%! ## 9.3.2 arith sin/1 ISOcore#p120
 
-%test 1
 :- test sin_test1(S) => (S=0.0)
-# "[ISO] arith sin/1: expected(succeed)".
+   # "[ISO] arith sin/1".
 
 sin_test1(S) :- S is sin(0.0).
 
-%test 2 
-:- test sin_test2(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith sin/1: expected(error) bug(fail)".
+:- test sin_test2(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith sin/1".
 
 sin_test2(S) :- S is sin(_N).
 
-%test 3
 :- test sin_test3(S) => (S=0.0)
-# "[ISO] arith sin/1: expected(succeed)".
+   # "[ISO] arith sin/1".
 
 sin_test3(S) :- S is sin(0).
 
-%% REVIEW:PENDING                                                            **Label_3**
-%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-%test 4 
-:- test sin_test4(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith sin/1: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test sin_test4(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith sin/1: bug()".
 
 sin_test4(S) :- S is sin(foo).
 
-%test 5  
-:- test sin_test5(PI, S) :
-	(PI is atan(1.0) *4)
-	=> (near(S, 1.0000, 0.0001), near(PI, 3.14159, 0.0001))
-# "[ISO] arith sin/1: expected(succeed)".
+:- test sin_test5(PI, S)
+   : (PI is atan(1.0) *4)
+   => (near(S, 1.0000, 0.0001), near(PI, 3.14159, 0.0001))
+   # "[ISO] arith sin/1".
 
 sin_test5(PI, S) :- S is sin(PI/2.0).
 
 % ---------------------------------------------------------------------------
-%! ## 9.3.3 ISOcore#p120
+%! ## 9.3.3 arith cos/1 ISOcore#p120
 
-%test 1
 :- test cos_test1(S) => (S=1.0)
-# "[ISO] arith cos/1: expected(succeed)".
+   # "[ISO] arith cos/1".
 
 cos_test1(S) :- S is cos(0.0).
 
-%test 2 
 :- test cos_test2(S)
-	+ exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith cos/1: expected(error) bug(fail)".
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith cos/1".
 
 cos_test2(S) :- S is cos(_N).
 
-%test 3
 :- test cos_test3(S) => (S=1.0)
-# "[ISO] arith cos/1: expected(succeed)".
+   # "[ISO] arith cos/1".
 
 cos_test3(S) :- S is cos(0).
 
-%% REVIEW:PENDING                                                           **Label_3**
-%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-%test 4 
-:- test cos_test4(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith cos/1: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test cos_test4(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith cos/1: bug()".
 
 cos_test4(S) :- S is cos(foo).
 
-%test 5  
 :- test cos_test5(PI, S)
-	: (PI is atan(1.0) *4)
-	=> (near(S, 0.0000, 0.02), near(PI, 3.14159, 0.02))
-# "[ISO] arith cos/1: expected(succeed)".
+   : (PI is atan(1.0) *4)
+   => (near(S, 0.0000, 0.02), near(PI, 3.14159, 0.02))
+   # "[ISO] arith cos/1".
 
 cos_test5(PI, S) :- S is cos(PI/2.0).
 
 % ---------------------------------------------------------------------------
-%! ## 9.3.3 ISOcore#p121
+%! ## 9.3.3 arith atan/1 ISOcore#p121
 
-%test 1
 :- test atan_test1(S) => (S=0.0)
-# "[ISO] arith atan/1: expected(succeed)".
+   # "[ISO] arith atan/1".
 
 atan_test1(S) :- S is atan(0.0).
 
-%test2 
 :- test atan_test2(PI) => (near(PI, 3.14159, 0.02))
-# "[ISO] arith atan/1: expected(succeed)".
+   # "[ISO] arith atan/1".
 
 atan_test2(PI) :- PI is atan(1.0) *4.
 
-%test 3 
-:- test atan_test3(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith atan/1: expected(error) bug(fail)".
+:- test atan_test3(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith atan/1".
 
 atan_test3(S) :- S is atan(_N).
 
-%test 4
 :- test atan_test4(S) => (S=0.0)
-# "[ISO] arith atan/1: expected(succeed)".
+   # "[ISO] arith atan/1".
 
 atan_test4(S) :- S is atan(0.0).
 
-%% REVIEW:PENDING                                                     **Label_3**
-%%   [gprolog]: throws error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-%test 5 
-:- test atan_test5(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith atan/1: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test atan_test5(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith atan/1: bug()".
 
 atan_test5(S) :- S is atan(foo).
 
 % ---------------------------------------------------------------------------
-%! ## 9.3.5 ISOcore#p121
+%! ## 9.3.5 arith exp/1 ISOcore#p121
 
-%test 1
 :- test exp_test1(S) => (S=1.0)
-# "[ISO] arith exp/1: expected(succeed)".
+   # "[ISO] arith exp/1".
 
 exp_test1(S) :- S is exp(0.0).
 
-%test 2 
 :- test exp_test2(S) => (near(S, 2.7818, 0.1))
-# "[ISO] arith exp/1: expected(succeed)".
+   # "[ISO] arith exp/1".
 
 exp_test2(S) :- S is exp(1.0).
 
-%test 3 
-:- test exp_test3(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith exp/1: expected(error) bug(fail)".
+:- test exp_test3(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith exp/1".
 
 exp_test3(S) :- S is exp(_N).
 
-%test 4
 :- test exp_test4(S) => (S=1.0)
-# "[ISO] arith exp/1: expected(succeed)".
+   # "[ISO] arith exp/1".
 
 exp_test4(S) :- S is exp(0).
-%%REVIEW:PENDING                                      **Label_3**
-%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-%test 5 
-:- test exp_test5(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith exp/1: expected(error) bug(fail)".
+
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test exp_test5(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith exp/1: bug()".
 
 exp_test5(S) :- S is exp(foo).
 
 % ---------------------------------------------------------------------------
-%! ## 9.3.6 ISOcore#p121
+%! ## 9.3.6 arith log/1 ISOcore#p121
 
-%test 1
 :- test log_test1(S) => (S=0.0)
-# "[ISO] arith log/1: expected(succeed)".
+   # "[ISO] arith log/1".
 
 log_test1(S) :- S is log(1.0).
 
-%test 2 
 :- test log_test2(S) => (near(S, 1.0000, 0.02))
-# "[ISO] arith log/1: expected(succeed)".
+   # "[ISO] arith log/1".
 
 log_test2(S) :- S is log(2.71828).
 
-%test 3 
-:- test log_test3(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith log/1: expected(error) bug(fail)".
+:- test log_test3(S)
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith log/1".
 
 log_test3(S) :- S is log(_N).
 
-%% REVIEW:PENDING                                                    **Label_2**
-%%   [gprolog]: S = -inf
-%%   [ciao]: no throws
-%test 4 
-:- test log_test4(S) + exception(error(evaluation_error(undefined), Imp_dep))
-# "[ISO] arith log/2: expected(error) bug(succeed)".
+% TODO:[JF] different behavior since we support 0.Inf; customize with a flag?
+% TODO: what other prologs do?
+%   evaluation_error(undefined)
+%   evaluation_error(float_overflow)
+%   S = -inf (gprolog)
+%   S = -0.Inf (ciao)
+:- test log_test4(S)
+   + exception(error(evaluation_error(undefined), ImplDep))
+   # "[ISO] arith log/2: bug(wontfix)".
 
 log_test4(S) :- S is log(0).
 
-%% REVIEW:PENDING                                                  **Label_3**
-%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-%test 5 
-:- test log_test5(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith log/1: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test log_test5(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith log/1: bug()".
 
 log_test5(S) :- S is log(foo).
 
-%% REVIEW:PENDING                                         **Label_2**
-%%   [gprolog]: S = -inf
-%%   [ciao]: no throws
-%test 6 
-:- test log_test6(S) + exception(error(evaluation_error(undfined), Imp_dep))
-# "[ISO] arith log/2: expected(error) bug(succeed)".
+% TODO:[JF] same as log_test4
+:- test log_test6(S)
+   + exception(error(evaluation_error(undefined), ImplDep))
+   # "[ISO] arith log/1: bug(wontfix)".
 
 log_test6(S) :- S is log(0.0).
 
 % ---------------------------------------------------------------------------
-%! ## 9.3.7 ISOcore#p122
+%! ## 9.3.7 arith sqrt/1 ISOcore#p122
 
-%test 1
 :- test sqrt_test1(S) => (S=0.0)
-# "[ISO] arith sqrt/1: expected(succeed)".
+   # "[ISO] arith sqrt/1".
 
 sqrt_test1(S) :- S is sqrt(0.0).
 
-%test 2
 :- test sqrt_test2(S) => (S=1.0)
-# "[ISO] arith sqrt/1: expected(succeed)".
+   # "[ISO] arith sqrt/1".
 
 sqrt_test2(S) :- S is sqrt(1).
 
-%test 3 
-:- test sqrt_test3(X, S) : (X=1.21) => (near(S, 1.1000, 0.02))
-# "[ISO] arith sqrt/1: expected(succeed)".
+:- test sqrt_test3(X, S)
+   : (X=1.21) => (near(S, 1.1000, 0.02))
+   # "[ISO] arith sqrt/1".
 
 sqrt_test3(X, S) :- S is sqrt(X).
 
-%test 4 
-:- test sqrt_test4(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith sqrt/1: expected(error) bug(fail)".
+:- test sqrt_test4(S)
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith sqrt/1".
 
 sqrt_test4(S) :- S is sqrt(_N).
 
-%% REVIEW:PENDING                                             **Label_2**
-%%   [gprolog]: S = -nan
-%%   [ciao]: no throws
-%test 5 
-:- test sqrt_test5(S) + exception(error(evaluation_error(undefined), Imp_dep))
-# "[ISO] arith sqrt/1: expected(error) bug(succeed)".
+% TODO:[JF] different behavior since we support 0.Nan; customize with a flag?
+% TODO: what other prologs do?
+%   evaluation_error(undefined)
+%   S = nan (gprolog)
+%   S = 0.Nan (ciao)
+:- test sqrt_test5(S)
+   + exception(error(evaluation_error(undefined), ImplDep))
+   # "[ISO] arith sqrt/1: bug(wontfix)".
 
 sqrt_test5(S) :- S is sqrt(-1.0).
 
-%% REVIEW:PENDING                                                **Label_3**
-%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: no throws
-%test 6
-:- test sqrt_test6(S) + exception(error(type_error(number, foo), Imp_dep))
-# "[ISO] arith sqrt/1: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test sqrt_test6(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith sqrt/1: bug()".
 
 sqrt_test6(S) :- S is sqrt(foo).
 
+% ---------------------------------------------------------------------------
+%! ## 9.3.8 arith max/2 ISOcor2#p20
+
+% NOTE: Current issues in Ciao:
+%
+%  - max/2 is not implemented
+%  - some tests from ISOcor2 are missing
+
+% TODO:[JF] implement max/2
+:- test eval_test63(S) => (S=(3)) + no_exception
+   # "[ISO-cor2] arith max/2: bug()".
+
+eval_test63(S) :- S is max(2, 3).
+
+% TODO:[JF] implement max/2
+:- test eval_test64(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO-cor2] arith max/2: bug()".
+
+eval_test64(S) :- S is max(_N,3).
+
+% TODO:[JF] implement max/2
+:- test eval_test65(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-ciao] arith max/2: bug()".
+
+eval_test65(S) :- S is max(3,foo).
+
+% ---------------------------------------------------------------------------
+%! ## 9.3.9 arith min/2 ISOcor2#p21
+
+% NOTE: Current issues in Ciao:
+%
+%  - min/2 is not implemented
+%  - some tests from ISOcor2 are missing
+
+% TODO:[JF] implement min/2
+:- test eval_test66(S) => (S=(2)) + no_exception
+   # "[ISO] arith min/2: bug()".
+
+eval_test66(S) :- S is min(2, 3).
+
+% TODO:[JF] implement min/2
+:- test eval_test67(S)
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith min/2: bug()".
+
+eval_test67(S) :- S is min(_N,3).
+
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test eval_test68(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-ciao] arith min/2: bug()".
+
+eval_test68(S) :- S is min(3,foo).
+
+% ---------------------------------------------------------------------------
+%! ## 9.3.10 arith (^)/2 ISOcor2#p22
+
+% NOTE: Current issues in Ciao:
+%
+%  - (^)/2 is not implemented
+%  - tests from ISOcor2 are missing
+
+% TODO:[JF] implement, this is a dummy test
+:- test eval_test69(S) + not_fails
+   # "[ISO-cor2] arith ^/2: bug()".
+
+eval_test69(S) :- S is 3^3.
+
+% ---------------------------------------------------------------------------
+%! ## 9.3.11 arith asin/1 ISOcor2#p24
+
+% NOTE: Current issues in Ciao:
+%
+%  - asin/1 is not implemented
+%  - tests from ISOcor2 are missing
+
+% TODO:[JF] implement, this is a dummy test
+:- test eval_test70(S) + not_fails
+   # "[ISO-cor2] arith asin/1: bug()".
+
+eval_test70(S) :- S is asin(0).
+
+% ---------------------------------------------------------------------------
+%! ## 9.3.12 arith acos/1 ISOcor2#p24
+
+% NOTE: Current issues in Ciao:
+%
+%  - acos/1 is not implemented
+%  - tests from ISOcor2 are missing
+
+% TODO:[JF] implement, this is a dummy test
+:- test eval_test71(S) + not_fails
+   # "[ISO-cor2] arith acos/1: bug()".
+
+eval_test71(S) :- S is acos(0).
+
+% ---------------------------------------------------------------------------
+%! ## 9.3.13 arith atan2/2 ISOcor2#p25
+
+% NOTE: Current issues in Ciao:
+%
+%  - atan2/2 is not implemented
+%  - tests from ISOcor2 are missing
+
+% TODO:[JF] implement, this is a dummy test
+:- test eval_test72(S) + not_fails
+   # "[ISO-cor2] arith atan2/1: bug()".
+
+eval_test72(S) :- S is atan2(0,0).
+
+% ---------------------------------------------------------------------------
+%! ## 9.3.14 arith tan/1 ISOcor2#p26
+
+% NOTE: Current issues in Ciao:
+%
+%  - tan/1 is not implemented
+%  - tests from ISOcor2 are missing
+
+% TODO:[JF] implement, this is a dummy test
+:- test eval_test73(S) + not_fails
+   # "[ISO-cor2] arith tan/1: bug()".
+
+eval_test73(S) :- S is tan(0).
+
+% ---------------------------------------------------------------------------
+%! ## 9.3.15 arith pi/0 ISOcor2#p26
+
+% NOTE: Current issues in Ciao:
+%
+%  - pi/0 is not implemented
+%  - tests from ISOcor2 are missing
+
+% TODO:[JF] implement, this is a dummy test
+:- test eval_test74(S) + not_fails
+   # "[ISO-cor2] arith pi/0: bug()".
+
+eval_test74(S) :- S is pi.
+
 % ===========================================================================
 %! # 9.4 Bitwise functors
-%! ## 9.4.1 ISOcore#p122
+%! ## 9.4.1 arith (>>)/2 ISOcore#p122
 
-%test 1
 :- test bit_rl_test1(S) => (S=4)
-# "[ISO] arith '>>'/2: expected(succeed)".
+   # "[ISO] arith '>>'/2".
 
 bit_rl_test1(S) :- S is '>>'(16, 2).
 
-%test 2
 :- test bit_rl_test2(S) => (S=4)
-# "[ISO] arith '>>'/2: expected(succeed)".
+   # "[ISO] arith '>>'/2".
 
 bit_rl_test2(S) :- S is '>>'(19, 2).
 
-%test 3 
 :- test bit_rl_test3(S) => (S=(-4))
-# "[ISO] arith '>>'/2: expected(impldep)".
+   # "[ISO] arith '>>'/2".
 
 bit_rl_test3(S) :- S is '>>'(-16, 2).
 
-%test 4 
-:- test bit_rl_test4(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith '>>'/2: expected(error) bug(fail)".
+:- test bit_rl_test4(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith '>>'/2".
 
 bit_rl_test4(S) :- S is '>>'(77, _N).
 
-%% REVIEW:PENDING                                                      **Label_3**
-%%   [gprolog]: throws  exception: error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws  exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-%test 5 
-:- test bit_rl_test5(S) + exception(error(type_error(integer, foo), Imp_dep))
-# "[ISO] arith '>>'/2: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test bit_rl_test5(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith '>>'/2: bug()".
 
 bit_rl_test5(S) :- S is '>>'(foo, 2).
 
-%test 6 
-:- test bit_rl_test6(S) + exception(error(type_error(integer, 1.0), Imp_dep))
-# "[ISO-sics] arith '>>'/2: expected(error) bug(succeed)".
+:- test bit_rl_test6(S) + exception(error(type_error(integer, 1.0), ImplDep))
+   # "[ISO-sics] arith '>>'/2".
 
 bit_rl_test6(S) :- S is '>>'(1.0, 2).
 
 % ---------------------------------------------------------------------------
-%! ## 9.4.2 ISOcore#p123
+%! ## 9.4.2 arith (<<)/2 ISOcore#p123
 
-%test 1
 :- test bit_lr_test1(S) => (S=64)
-# "[ISO] arith '<<'/2: expected(succeed)".
+   # "[ISO] arith '<<'/2".
 
 bit_lr_test1(S) :- S is '<<'(16, 2).
 
-%test 2
 :- test bit_lr_test2(S) => (S=76)
-# "[ISO] arith '<<'/2: expected(succeed)".
+   # "[ISO] arith '<<'/2".
 
 bit_lr_test2(S) :- S is '<<'(19, 2).
 
-%test 3 
 :- test bit_lr_test3(S) => (S=(-64))
-# "[ISO] arith '<<'/2: expected(impldep)".
+   # "[ISO] arith '<<'/2".
 
 bit_lr_test3(S) :- S is '<<'(-16, 2).
 
-%test 4 
-:- test bit_lr_test4(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith '<<'/2: expected(error) bug(fail)".
+:- test bit_lr_test4(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith '<<'/2".
 
 bit_lr_test4(S) :- S is '<<'(77, _N).
 
-%% REVIEW:PENDING                                                                 **Label_3**
-%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-%test 5 
-:- test bit_lr_test5(S) + exception(error(type_error(integer, foo), Imp_dep))
-# "[ISO] arith '<<'/2: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test bit_lr_test5(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith '<<'/2: bug()".
 
 bit_lr_test5(S) :- S is '<<'(foo, 2).
 
-%test 6 
-:- test bit_lr_test6(S) + exception(error(type_error(integer, 1.0), Imp_dep))
-# "[ISO-sics] arith '<<'/2: expected(error) bug(succeed)".
+:- test bit_lr_test6(S) + exception(error(type_error(integer, 1.0), ImplDep))
+   # "[ISO-sics] arith '<<'/2".
 
 bit_lr_test6(S) :- S is '<<'(1.0, 2).
 
 % ---------------------------------------------------------------------------
-%! ## 9.4.3 ISOcore#p123
+%! ## 9.4.3 arith (/\)/2 ISOcore#p123
 
-%test 1
 :- test bit_and_test1(S) => (S=8)
-# "[ISO] arith '/\\'/2: expected(succeed)".
+   # "[ISO] arith '/\\'/2".
 
 bit_and_test1(S) :- S is '/\\'(10, 12).
 
-%test 2
 :- test bit_and_test2(S) => (S=8)
-# "[ISO] arith '/\'/2: expected(succeed)".
+   # "[ISO] arith '/\'/2".
 
 bit_and_test2(S) :- S is /\(10, 12).
 
-%test 3 
 :- test bit_and_test3(S) => (S=125)
-# "[ISO] arith '/\\'/2: expected(impldep)".
+   # "[ISO] arith '/\\'/2".
 
 bit_and_test3(S) :- S is '/\\'(17*256 +125, 255).
 
-%test 4
 :- test bit_and_test4(S) => (S=4)
-# "[ISO] arith '/\'/2: expected(impldep)".
+   # "[ISO] arith '/\'/2".
 
 bit_and_test4(S) :- S is /\(-10, 12).
 
-%test 5 
-:- test bit_and_test5(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith '/\\'/2: expected(error) bug(fail)".
+:- test bit_and_test5(S) + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith '/\\'/2".
 
 bit_and_test5(S) :- S is '/\\'(77, _N).
 
-%% REVIEW:PENDING                                                            **Label_3**
-%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-%test 6 
-:- test bit_and_test6(S) + exception(error(type_error(integer, foo), Imp_dep))
-# "[ISO] arith '/\\'/2: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test bit_and_test6(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith '/\\'/2: bug()".
 
 bit_and_test6(S) :- S is '/\\'(foo, 2).
 
-%test 7 
-:- test bit_and_test7(S) + exception(error(type_error(integer, 1.0), Imp_dep))
-# "[ISO-sics] arith '/\\'/2: expected(error) bug(succeed)".
+:- test bit_and_test7(S) + exception(error(type_error(integer, 1.0), ImplDep))
+   # "[ISO-sics] arith '/\\'/2".
 
 bit_and_test7(S) :- S is '/\\'(1.0, 2).
 
 % ---------------------------------------------------------------------------
-%! ## 9.4.4 ISOcore#p124
+%! ## 9.4.4 (\/)/2 ISOcore#p124
 
-%test 1
 :- test bit_or_test1(S) => (S=14)
-# "[ISO] arith '\\/'/2: expected(succeed)".
+   # "[ISO] arith '\\/'/2".
 
 bit_or_test1(S) :- S is '\\/'(10, 12).
 
-%test 2
 :- test bit_or_test2(S) => (S=14)
-# "[ISO] arith '\/'/2: expected(succeed)".
+   # "[ISO] arith '\/'/2".
 
 bit_or_test2(S) :- S is \/(10, 12).
 
-%test 3 
 :- test bit_or_test3(S) => (S=255)
-# "[ISO] arith '\\/'/2: expected(succeed)".
+   # "[ISO] arith '\\/'/2".
 
 bit_or_test3(S) :- S is '\\/'(125, 255).
 
-%test 4 
 :- test bit_or_test4(S) => (S=(-2))
-# "[ISO] arith '\/'/2: expected(impldep)".
+   # "[ISO] arith '\/'/2".
 
 bit_or_test4(S) :- S is \/(-10, 12).
 
-%test 5
-:- test bit_or_test5(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith '\\/'/2: expected(error) bug(fail)".
+:- test bit_or_test5(S)
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith '\\/'/2".
 
 bit_or_test5(S) :- S is '\\/'(77, _N).
 
-%% REVIEW:PENDING                                                      **Label_3**
-%%   [gprolog]: throws exception: error(type_error(evaluable,foo/0),(is)/2)
-%%   [ciao]: throws exception(error(type_error(evaluable,foo),'arithmetic:is'/2-2))
-%test 6
-:- test bit_or_test6(S) + exception(error(type_error(integer, foo), Imp_dep))
-# "[ISO] arith '\\/'/2: expected(error) bug(fail)".
+% TODO:[JF] fix internals:error_term for type_error(evaluable)
+:- test bit_or_test6(S)
+   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   # "[ISO-cor1] arith '\\/'/2: bug()".
 
 bit_or_test6(S) :- S is '\\/'(foo, 2).
 
-%test 7 
-:- test bit_or_test7(S) + exception(error(type_error(integer, 1.0), Imp_dep))
-# "[ISO-sics] arith '\\/'/2: expected(error) bug(succeed)".
+:- test bit_or_test7(S)
+   + exception(error(type_error(integer, 1.0), ImplDep))
+   # "[ISO-sics] arith '\\/'/2".
 
 bit_or_test7(S) :- S is '\\/'(1.0, 2).
 
 % ---------------------------------------------------------------------------
-%! ## 9.4.5 ISOcore#p124
+%! ## 9.4.5 arith (\)/1 ISOcore#p124
 
-%test 1
 :- test bit_not_test1(S) => (S=10)
-# "[ISO] arith '\\'/1: expected(succeed)".
+   # "[ISO] arith '\\'/1".
 
 bit_not_test1(S) :- S is '\\'('\\'(10)).
 
-%test 2
 :- test bit_not_test2(S) => (S=10)
-# "[ISO] arith '\\'/1: expected(succeed)".
+   # "[ISO] arith '\\'/1".
 
 bit_not_test2(S) :- S is \(\(10)).
 
-%test 3 
 :- test bit_not_test3(S)
-	=> (S=(-11))
-# "[ISO] arith '\'/1: expected(impldep)".
+   => (S=(-11))
+   # "[ISO] arith '\'/1".
 
 bit_not_test3(S) :- S is \(10).
 
-%test 4
-:- test bit_not_test4(S) + exception(error(instantiation_error, Imp_dep))
-# "[ISO] arith '\\'/2: expected(error) bug(fail)".
+:- test bit_not_test4(S)
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO] arith '\\'/2".
 
 bit_not_test4(S) :- S is '\\'(_N).
 
-%test 5 
-:- test bit_not_test5(S) + exception(error(type_error(integer, 2.5), Imp_dep))
-# "[ISO] arith '\\'/2: expected(error) bug(succeed)".
+:- test bit_not_test5(S)
+   + exception(error(type_error(integer, 2.5), ImplDep))
+   # "[ISO] arith '\\'/2".
 
 bit_not_test5(S) :- S is '\\'(2.5).
 
-%test 6 
-:- test bit_not_test6(S) + exception(error(type_error(integer, 2.5), Imp_dep))
-# "[ISO-sics] arith '\\'/2: expected(error) bug(succeed)".
+:- test bit_not_test6(S)
+   + exception(error(type_error(integer, 2.5), ImplDep))
+   # "[ISO-sics] arith '\\'/2".
 
 bit_not_test6(S) :- S is '\\'(2.5).
 
+% ---------------------------------------------------------------------------
+%! ## 9.4.6 arith xor/2 ISOcor2#p27
+
+% NOTE: Current issues in Ciao:
+%
+%  - xor/2 is implemented but with other name ((#)/2)
+%  - tests from ISOcor2 are missing
+
+% TODO:[JF] rename # by xor
+% TODO:[JF] add more tests
+:- test xor_test1(S) + not_fails
+   # "[ISO-cor2] arith xor/2: bug()".
+
+xor_test1(S) :- S is xor(0,0).
+
+% ===========================================================================
 %! # 9.x Unbounded arithmetic
 
-% These tests verifying the operation of unbounded based on logtalk tests.
+% These tests verifying the operation of unbounded based on logtalk
+% tests.
 
-%test 1
 :- test unbounded_test1(N) => (N=( 123456789012345678901234567890))
-# "[ISO-lg] arith '-'/2: expected(succeed)".
+   # "[ISO-lg] arith '-'/2".
 
 unbounded_test1(N) :- N is '-'( 123456789012345678901234567891, 1).
 
-%test 2
 :- test unbounded_test2(N) => (N=(-1.3419876543210988e+34))
-# "[ISO-lg] arith '-'/2: expected(succeed)".
+   # "[ISO-lg] arith '-'/2".
 
 unbounded_test2(N) :- N is '-'( 123456789012345678901234567890, 13.42e+33).
 
-%test 3
 :- test unbounded_test3(N) => (N=(123456789012345678901234567890))
-# "[ISO-lg] arith '-'/2: expected(succeed)".
+   # "[ISO-lg] arith '-'/2".
 
 unbounded_test3(N) :- N is '-'( 246913578024691357802469135780,123456789012345678901234567890).
 
-%test 4
 :- test unbounded_test4(N) => (N=(-123456789012345678901234567890))
-# "[ISO-lg] arith '-'/1: expected(succeed)".
+   # "[ISO-lg] arith '-'/1".
 
 unbounded_test4(N):- N is '-'(1,123456789012345678901234567891).
 
-%test 5
 :- test unbounded_test5(N) => (N=(123456789012345678901234567891))
-# "[ISO-lg] arith '+'/2: expected(succeed)".
+   # "[ISO-lg] arith '+'/2".
 
 unbounded_test5(N):- N is '+'(1,123456789012345678901234567890).
 
-%test 6
 :- test unbounded_test6(N) => (N=(246913578024691357802469135780))
-# "[ISO-lg] arith '+'/2: expected(succeed)".
+   # "[ISO-lg] arith '+'/2".
 
 unbounded_test6(N):- N is '+'(123456789012345678901234567890,123456789012345678901234567890).
 
-%test 7
 :- test unbounded_test7(N) => (N=(1.3420123456789013e+34))
-# "[ISO-lg] arith '+'/2: expected(succeed)".
+   # "[ISO-lg] arith '+'/2".
 
 unbounded_test7(N):- N is '+'(123456789012345678901234567890,13.42e+33).
 
-%test 8
 :- test unbounded_test8(N) => (N=(370370367037037036703703703670))
-# "[ISO-lg] arith '*'/2: expected(succeed)".
+   # "[ISO-lg] arith '*'/2".
 
 unbounded_test8(N):- N is '*'(123456789012345678901234567890,3).
 
-%test 9
 :- test unbounded_test9(N) => (N=(15241578753238836750495351562536198787501905199875019052100))
-# "[ISO-lg] arith '*'/2: expected(succeed)".
+   # "[ISO-lg] arith '*'/2".
 
 unbounded_test9(N):- N is '*'(123456789012345678901234567890,123456789012345678901234567890).
 
-%test 10
 :- test unbounded_test10(N) => (N=( 1.656790108545679e+63))
-# "[ISO-lg] arith '*'/2: expected(succeed)".
+   # "[ISO-lg] arith '*'/2".
 
 unbounded_test10(N):- N is '*'(123456789012345678901234567890,13.42e+33).
 
-%test 11
 :- test unbounded_test11(N) => (N=(41152263004115226300411522630))
-# "[ISO-lg] arith '//'/2: expected(succeed)".
+   # "[ISO-lg] arith '//'/2".
 
 unbounded_test11(N):- N is '//'(123456789012345678901234567890,3).
 
-%test 12
 :- test unbounded_test12(N) => (N=(0))
-# "[ISO-lg] arith '-'/2: expected(succeed)".
+   # "[ISO-lg] arith '-'/2".
 
 unbounded_test12(N):- N is '//'(3,123456789012345678901234567890).
 
-%test 13
 :- test unbounded_test13(N) => (N=( 41152263004115226300411522630))
-# "[ISO-lg] arith '//'/2: expected(succeed)".
+   # "[ISO-lg] arith '//'/2".
 
 unbounded_test13(N):- N is '//'(15241578753238836750495351562536198787501905199875019052100, 370370367037037036703703703670).
 
-%test 14
 :- test unbounded_test14(N) => (N=(4.115226300411523e+28))
-# "[ISO-lg] arith '/'/2: expected(succeed)".
+   # "[ISO-lg] arith '/'/2".
 
 unbounded_test14(N):- N is '/'(123456789012345678901234567890,3).
 
-%test 15
 :- test unbounded_test15(N) => (N=( 2.4300000218700003e-29))
-# "[ISO-lg] arith '/'/2: expected(succeed)".
+   # "[ISO-lg] arith '/'/2".
 
 unbounded_test15(N):- N is '/'(3,123456789012345678901234567890).
 
-%test 16
 :- test unbounded_test16(N) => (N=( 3.0000000000000004))
-# "[ISO-lg] arith '/'/2: expected(succeed)".
+   # "[ISO-lg] arith '/'/2".
 
 unbounded_test16(N):- N is '/'(370370367037037036703703703670,123456789012345678901234567890).
 
-%test 17
 :- test unbounded_test17(N) => (N=( 2.7598388005740465e-05))
-# "[ISO-lg] arith '/'/2: expected(succeed)".
+   # "[ISO-lg] arith '/'/2".
 
 unbounded_test17(N):- N is '/'(370370367037037036703703703670,13.42e+33).
-
