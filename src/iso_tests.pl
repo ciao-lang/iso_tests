@@ -7465,17 +7465,22 @@ atomcodes_test10 :- atom_codes(_, 0'x).
 
 atomcodes_test11 :- atom_codes(_X, [0'i, 0's, -1]).
 
-% TODO:[JF] missing test12, test13, test14, test15 !!
+% TODO:[JF] fix utf8 support
+:- test atomcodes_test12(L) => (L=[0'P,0'é,0'c,0's])
+   # "[ISO-sics] atom_codes/2: bug".
 
-%:- test atomcodes_test12(L) => (L=[0'P,0'é,0'c,0's]).  
-%atomcodes_test12(L) :- atom_codes('Pécs',L).
+atomcodes_test12(L) :- atom_codes('Pécs',L).
 
-%:- test atomcodes_test13(A) => (A='Pécs').
-%atomcodes_test13(A) :- atom_codes(A,[0'P,0'é,0'c,0's]).
+% TODO:[JF] fix utf8 support
+:- test atomcodes_test13(A) => (A='Pécs')
+   # "[ISO-sics] atom_codes/2: bug".
 
-%% REVIEW:PENDING                                                     **Label_3**
-%%   [gprolog]: throws exception(error(type_error(integer,a),'atomic_basic:$constant_codes'/3-2))
-%%   [ciao]: throws exception(error(type_error(integer,a),'atomic_basic:$constant_codes'/3-2))
+atomcodes_test13(A) :- atom_codes(A,[0'P,0'é,0'c,0's]).
+
+% TODO:[JF] missing atomcodes_test14 (max_char_code)
+% TODO:[JF] missing atomcodes_test15 (max_char_code)
+
+% TODO:[JF] fix type error
 :- test atomcodes_test16
    + exception(error(representation_error(character_code), ImplDep))
    # "[ISO-sics] atom_codes/2: bug()".
