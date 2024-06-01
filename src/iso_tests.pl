@@ -72,30 +72,10 @@ as follows:
 %   }
 % ===========================================================================
 
-% TODO: use a package containing all reexports so the file is cleaner
+:- reexport(library(iso_incomplete)). % TODO: remove
 
-% TODO: rewrite with use test modules?
-:- reexport(engine(runtime_control)).
-%:- reexport(library(streams)).
-:- reexport(library(streams), [open/3]).
-:- reexport(library(iso_incomplete)).
-
-:- reexport(library(write), [
-    writeq/1,
-    write_canonical/1
-]).
-
-:- reexport(library(iso_char), [
-    char_code/2, atom_chars/2, number_chars/2,char_codes/2
-]).
-:- reexport(library(iso_incomplete)).
-:- reexport(library(compiler)).
-
-% TODO:[JF] sending some of this data breaks the unit test runner!
-% :- compilation_fact(fixed_utf8). % TODO: Enable when UTF8 support is completed
-
-% TODO: type(binary) not implemented
-% TODO: type(text) not implemented
+% TODO:[JF] wrong utf8 support sends corrupted data, which breaks unit tests runnersending, uncomment the following line when fixed
+% :- compilation_fact(fixed_utf8).
 
 % ---------------------------------------------------------------------------
 % TODO: fix
@@ -1650,12 +1630,15 @@ functor_test15(X) :- functor(X, 1.5, 1).
 
 functor_test16(X) :- functor(X, foo(a), 1).
 
-:- test functor_test17(T, X) :
-    (current_prolog_flag(max_arity, A), X is A +1)
-    + exception(error(representation_error(max_arity), ImplDep))
+:- test functor_test17(T, X)
+   + (setup(setup_max_arity_plus_1(X)),
+      exception(error(representation_error(max_arity), ImplDep)))
 # "[ISO] functor/3: ...".
 
 functor_test17(T, X) :- functor(T, foo, X).
+
+setup_max_arity_plus_1(X) :-
+    current_prolog_flag(max_arity, A), X is A + 1.
 
 :- test functor_test18(F, Minus_1) :
     (Minus_1 is (0 -1))
@@ -1839,14 +1822,17 @@ univ_test16(X) :- '=..'(X, [f(a)]).
 
 univ_test17(X) :- '=..'(X, []).
 
-:- test univ_test18(X, L) :
-    ( current_prolog_flag(max_arity, MAX),
-        N is (MAX+1),
-        my_list_of(N, 1, L)
-    ) + exception(error(representation_error(max_arity), ImplDep))
+:- test univ_test18(X, L)
+   + (setup(setup_univ_test18(L)),
+      exception(error(representation_error(max_arity), ImplDep)))
 # "[ISO-sics] '=..'/2: ...".
 
 univ_test18(X, L) :- '=..'(X, [f|L]).
+
+setup_univ_test18(L) :-
+    current_prolog_flag(max_arity, MAX),
+    N is (MAX+1),
+    my_list_of(N, 1, L).
 
 % ---------------------------------------------------------------------------
 %! ## 8.5.4 ISOcore#p74
@@ -2538,8 +2524,8 @@ abolish_test11 :- abolish(foo /(-1)).
 %%   [gprolog]: throws exception(error(representation_error(max_arity), _))
 %%   [ciao]: no throws
 :- test abolish_test12(X)
-	: (current_prolog_flag(max_arity, M), X is M+1)
-	+ exception(error(representation_error(max_arity), ImplDep))
+   + (setup(setup_max_arity_plus_1(X)),
+      exception(error(representation_error(max_arity), ImplDep)))
 # "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
 
 abolish_test12(X) :- abolish(foo/X).
@@ -7076,357 +7062,308 @@ atomconcat_test14(_Result) :- throw(bug).
 :- endif.
 
 % ---------------------------------------------------------------------------
-%! ## 8.16.3 ISOcore#p108
+%! ## 8.16.3 sub_atom/5 ISOcore#p108
 
 :- test subatom_test1(S) => (S='abrac')
-# "[ISO] sub_atom/5: expected(succeed)".
+   # "[ISO] sub_atom/5".
 
 subatom_test1(S) :- sub_atom(abracadabra, 0, 5, _, S).
 
-%% REVIEW:DONE                   
 :- test subatom_test2(S) => (S='dabra')
-# "[ISO] sub_atom/5: expected(succeed)".
+   # "[ISO] sub_atom/5".
 
 subatom_test2(S) :- sub_atom(abracadabra, _, 5, 0, S).
 
 :- test subatom_test3(L, S) => (Y=5, S='acada')
-# "[ISO] sub_atom/5: expected(succeed)".
+   # "[ISO] sub_atom/5".
 
 subatom_test3(L, S) :- sub_atom(abracadabra, 3, L, 3, S).
 
 :- test subatom_test4(Result) => (Result=[[0, 9], [7, 2]])
-# "[ISO] sub_atom/5: expected(succeed)".
+   # "[ISO] sub_atom/5".
 
 subatom_test4(Result) :-
-	findall([B, A], sub_atom(abracadabra, B, 2, A, ab), Result).
+    findall([B, A], sub_atom(abracadabra, B, 2, A, ab), Result).
 
 :- test subatom_test5(S) => (S='an')
-# "[ISO] sub_atom/5: expected(succeed)".
+   # "[ISO] sub_atom/5".
 
 subatom_test5(S) :- sub_atom(banana, 3, 2, _, S).
 
 :- test subatom_test6(Result) => (Result=['cha', 'har', 'ari', 'rit', 'ity'])
-# "[ISO] sub_atom/5: expected(succeed)".
+   # "[ISO] sub_atom/5".
 
 subatom_test6(Result) :-
-	findall(S, sub_atom(charity, _, 3, _, S), Result).
+    findall(S, sub_atom(charity, _, 3, _, S), Result).
 
 :- test subatom_test7(Result)
-	=> ( Result=[[0, 0, ''], [0, 1, 'a'], [0, 2, 'ab'], [1, 0, ''],
-		[1, 1, 'b'], [2, 0, '']] )
-# "[ISO] sub_atom/5: expected(succeed)".
+   => ( Result=[[0, 0, ''],
+                [0, 1, 'a'],
+                [0, 2, 'ab'],
+                [1, 0, ''],
+		[1, 1, 'b'],
+                [2, 0, '']] )
+   # "[ISO] sub_atom/5".
 
 subatom_test7(Result) :-
-	findall([Start, Length, S], sub_atom(ab, Start, Length, _, S), Result).
+    findall([Start, Length, S], sub_atom(ab, Start, Length, _, S), Result).
 
-
-
-:- test subatom_test8 + exception(error(instantiation_error, ImplDep))
-# "[ISO-eddbali] sub_atom/5: expected(error)".
+:- test subatom_test8
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO-eddbali] sub_atom/5".
 
 subatom_test8 :- sub_atom(_W, 3, 2, _Z, _S).
 
-%test 9
-:- test subatom_test9 + exception(error(type_error(atom, f(a)), ImplDep))
-# "[ISO-eddbali] sub_atom/5: expected(error)".
+:- test subatom_test9
+   + exception(error(type_error(atom, f(a)), ImplDep))
+   # "[ISO-eddbali] sub_atom/5".
 
 subatom_test9 :- sub_atom(f(a), 2, 2, _Z, _S).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(atom, 2), _))
-%%   [ciao]: no throws
-:- test subatom_test10 + exception(error(type_error(atom, 2), ImplDep))
-# "[ISO-eddbali] sub_atom/5: expected(error) bug(fail)".
+% TODO:[JF] missing type check on 5th argument
+:- test subatom_test10
+   + exception(error(type_error(atom, 2), ImplDep))
+   # "[ISO-eddbali] sub_atom/5: bug()".
 
 subatom_test10 :- sub_atom('Banana', 4, 2, _Z, 2).
 
-%% REVIEW:PENDING                                          **Label_2**
-%%   [gprolog]: throws exception(error(type_error(integer, a), _))
-%%   [ciao]: no throws
-%test 11 
-:- test subatom_test11 + exception(error(type_error(integer, a), ImplDep))
-# "[ISO-eddbali] sub_atom/5: expected(error) bug(fail)".
+% TODO:[JF] missing type check on 2nd argument
+:- test subatom_test11
+   + exception(error(type_error(integer, a), ImplDep))
+   # "[ISO-eddbali] sub_atom/5: bug()".
 
 subatom_test11 :- sub_atom('Banana', a, 2, _Z, _S).
 
-%% REVIEW:PENDING                                        **Label_2**
-%%   [gprolog]: throws exception(error(type_error(integer, n), _))
-%%   [ciao]: no throws
-%test 12
-:- test subatom_test12 + exception(error(type_error(integer, n), ImplDep))
-# "[ISO-eddbali] sub_atom/5: expected(error) bug(fail)".
+% TODO:[JF] missing type check on 3rd argument
+:- test subatom_test12
+   + exception(error(type_error(integer, n), ImplDep))
+   # "[ISO-eddbali] sub_atom/5: bug()".
 
 subatom_test12 :- sub_atom('Banana', 4, n, _Z, _S).
 
-%% REVIEW:PENDING                                           **Label_2**
-%%   [gprolog]: throws exception(error(type_error(integer, m), _))
-%%   [ciao]: no throws
-%test 13 
-:- test subatom_test13 + exception(error(type_error(integer, m), ImplDep))
-# "[ISO-eddbali] sub_atom/5: expected(error) bug(fail)".
+% TODO:[JF] missing type check on 4th argument
+:- test subatom_test13
+   + exception(error(type_error(integer, m), ImplDep))
+   # "[ISO-eddbali] sub_atom/5: bug()".
 
 subatom_test13 :- sub_atom('Banana', 4, _Y, m, _S).
 
-%% REVIEW:PENDING                                     **Label_2**
-%%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -2), _))
-%%   [ciao]: no throws
-%test 14 
+% TODO:[JF] missing type check on 2nd argument
 :- test subatom_test14
-	+ exception(error(domain_error(not_less_than_zero, -2), ImplDep))
-# "[ISO-sics] sub_atom/5: expected(error) bug(fail)".
+   + exception(error(domain_error(not_less_than_zero, -2), ImplDep))
+   # "[ISO-sics] sub_atom/5: bug()".
 
 subatom_test14 :- sub_atom('Banana', -2, 3, 4, _S).
 
-%% REVIEW:PENDING                                          **Label_2**
-%%   [gprolog]: throws  exception(error(domain_error(not_less_than_zero, -3),_))
-%%   [ciao]: no throws
-%test 15 
+% TODO:[JF] missing type check on 3rd argument
 :- test subatom_test15
-	+ exception(error(domain_error(not_less_than_zero, -3), ImplDep))
-# "[ISO-sics] sub_atom/5: expected(error) bug(fail)".
+   + exception(error(domain_error(not_less_than_zero, -3), ImplDep))
+   # "[ISO-sics] sub_atom/5: bug()".
 
 subatom_test15 :- sub_atom('Banana', 2, -3, 4, _S).
 
-%% REVIEW:PENDING                                     **Label_2**
-%%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -4),_))
-%%   [ciao]: no throws
-%test 16.
+% TODO:[JF] missing type check on 4th argument
 :- test subatom_test16
-	+ exception(error(domain_error(not_less_than_zero, -4), ImplDep))
-# "[ISO-sics] sub_atom/5: expected(error) bug(fail)".
+   + exception(error(domain_error(not_less_than_zero, -4), ImplDep))
+   # "[ISO-sics] sub_atom/5: bug()".
 
 subatom_test16 :- sub_atom('Banana', 2, 3, -4, _S).
 
-%test 17
 :- test subatom_test17(Z) => (Z=1)
-# "[ISO-sics] sub_atom/5: expected(succeed)".
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test17(Z) :- sub_atom('Banana', 2, 3, Z, 'nan').
 
-%test 18 
 :- test subatom_test18(X) => (X=2)
-# "[ISO-sics] sub_atom/5: expected(succeed)".
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test18(X) :- sub_atom('Banana', X, 3, 1, 'nan').
 
-%test 19 
 :- test subatom_test19(Y) => (Y=3)
-# "[ISO-sics] sub_atom/5: expected(succeed)".
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test19(Y) :- sub_atom('Banana', 2, Y, 1, 'nan').
 
-%test 20 
 :- test subatom_test20(Y, Z) => (Y=3, Z=1)
-# "[ISO-sics] sub_atom/5: expected(succeed)".
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test20(Y, Z) :- sub_atom('Banana', 2, Y, Z, 'nan').
 
-%test 21 
 :- test subatom_test21(X, Y) => (X=2, Y=3)
-# "[ISO-sics] sub_atom/5: expected(succeed)".
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test21(X, Y) :- sub_atom('Banana', X, Y, 1, 'nan').
 
-%test 22 
 :- test subatom_test22 + fails
-# "[ISO-sics] sub_atom/5: expected(fail)".
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test22 :- sub_atom('Banana', 2, 3, 1, 'ana').
 
-%test 23
 :- test subatom_test23 + fails
-# "[ISO-sics] sub_atom/5: expected(fail)".
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test23 :- sub_atom('Banana', 2, 3, 2, 'nan').
 
-%test 24
 :- test subatom_test24 + fails
-# "[ISO-sics] sub_atom/5: expected(fail)".
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test24 :- sub_atom('Banana', 2, 3, 2, _S).
 
-%test 25
 :- test subatom_test25 + fails
-# "[ISO-sics] sub_atom/5: expected(fail)".
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test25 :- sub_atom('Banana', 2, 3, 1, 'anan').
 
-%test 26
 :- test subatom_test26 + fails
-# "[ISO-sics] sub_atom/5: expected(fail)".
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test26 :- sub_atom('Banana', 0, 7, 0, _S).
 
-%test 27
 :- test subatom_test27 + fails
-# "[ISO-sics] sub_atom/5: expected(fail)".
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test27 :- sub_atom('Banana', 7, 0, 0, _S).
 
-%test 28
 :- test subatom_test28 + fails
-# "[ISO-sics] sub_atom/5: expected(fail)".
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test28 :- sub_atom('Banana', 0, 0, 7, _S).
 
-:- if(defined(fixed_utf8)).
-%% REVIEW:PENDING                   **Failure due to accent marks**                               **Label_1**
-%%   [gprolog]: Y = 7
-%%   [ciao]: Y = 7
-%test 31
+% TODO:[JF] fix utf8 support
 :- test subatom_test31(Z, S) => (Z=5, S='ók')
-# "[ISO-sics] sub_atom/5: expected(succeed)".
+   # "[ISO-sics] sub_atom/5: expected(succeed)".
 
 subatom_test31(Z, S) :- sub_atom('Bartók Béla', 4, 2, Z, S).
-:- endif.
 
-:- if(defined(fixed_utf8)).
-%% REVIEW:PENDING                   **Failure due to accent marks**                                **Label_1**
-%%   [gprolog]: Y = 4
-%%   [ciao]: Y = 4
-%test 32 
+% TODO:[JF] fix utf8 support
 :- test subatom_test32(Y, S) => (Y=2, S='ók')
-# "[ISO-sics] sub_atom/5: expected(succeed)".
+   # "[ISO-sics] sub_atom/5: expected(succeed)".
 
 subatom_test32(Y, S) :- sub_atom('Bartók Béla', 4, Y, 5, S).
-:- endif.
 
-:- if(defined(fixed_utf8)).
-%% REVIEW:PENDING                   **Failure due to accent marks**                                **Label_1**
-%%   [gprolog]: Y = 6
-%%   [ciao]: Y = 6
-%test 33 
+% TODO:[JF] fix utf8 support
 :- test subatom_test33(X, S) => (X=4, S='ók')
-# "[ISO-sics] sub_atom/5: expected(succeed)".
+   # "[ISO-sics] sub_atom/5: expected(succeed)".
 
 subatom_test33(X, S) :- sub_atom('Bartók Béla', X, 2, 5, S).
-:- endif.
+
+:- test subatom_test34(Result)
+   => (Result=[[0, 2, 'Pé'], [1, 1, 'éc'], [2, 0, 'cs']])
+   + not_fails
+   # "[ISO-sics] sub_atom/5: expected(succeed)".
 
 :- if(defined(fixed_utf8)).
-%test 34 
-:- test subatom_test34(Result)
-	=> (Result=[[0, 2, 'Pé'], [1, 1, 'éc'], [2, 0, 'cs']])
-# "[ISO-sics] sub_atom/5: expected(succeed)".
-
-subatom_test34(Result) :- findall([X, Z, S], sub_atom('Pécs', X, 2, Z, S),
-	    Result).
+subatom_test34(Result) :-
+    findall([X, Z, S], sub_atom('Pécs', X, 2, Z, S), Result).
+:- else.
+subatom_test34(_Result) :- throw(bug).
 :- endif.
 
-%test 35
-:- test subatom_test35(Result) => (Result=[[0, 4, 7], [7, 4, 0]])
-# "[ISO-sics] sub_atom/5: expected(succeed)".
+:- test subatom_test35(Result)
+   => (Result=[[0, 4, 7], [7, 4, 0]])
+   # "[ISO-sics] sub_atom/5".
 
 subatom_test35(Result) :-
-	findall([X, Y, Z], sub_atom('abracadabra', X, Y, Z, abra), Result).
-
+    findall([X, Y, Z], sub_atom('abracadabra', X, Y, Z, abra), Result).
 
 % ---------------------------------------------------------------------------
-%! ## 8.16.4 ISOcore#p108
+%! ## 8.16.4 atom_chars/2 ISOcore#p108
 
 :- test atomchars_test1(L) => (L=[])
-# "[ISO] atom_chars/2: expected(succeed)".
+   # "[ISO] atom_chars/2".
 
 atomchars_test1(L) :- atom_chars('', L).
 
 :- test atomchars_test2(L) => (L=['[', ']'])
-# "[ISO] atom_chars/2: expected(succeed)".
+   # "[ISO] atom_chars/2".
 
 atomchars_test2(L) :- atom_chars([], L).
 
 :- test atomchars_test3(L) => (L=[''''])
-# "[ISO] atom_chars/2: expected(succeed)".
+   # "[ISO] atom_chars/2".
 
 atomchars_test3(L) :- atom_chars('''', L).
 
 :- test atomchars_test4(L) => (L=['a', 'n', 't'])
-# "[ISO] atom_chars/2: expected(succeed)".
+   # "[ISO] atom_chars/2".
 
 atomchars_test4(L) :- atom_chars('ant', L).
 
 :- test atomchars_test5(Str) => (Str='sop')
-# "[ISO] atom_chars/2: expected(succeed)".
+   # "[ISO] atom_chars/2".
 
 atomchars_test5(Str) :- atom_chars(Str, ['s', 'o', 'p']).
 
 :- test atomchars_test6(X) => (X=['o', 'r', 't', 'h'])
-# "[ISO] atom_chars/2: expected(succeed)".
+   # "[ISO] atom_chars/2".
 
 atomchars_test6(X) :- atom_chars('North', ['N'|X]).
 
 :- test atomchars_test7 + fails
-# "[ISO] atom_chars/2: expected(fail)".
+   # "[ISO] atom_chars/2".
 
 atomchars_test7 :- atom_chars('soap', ['s', 'o', 'p']).
 
-%% REVIEW:PENDING                                           **Label_2**
-%%   [gprolog]: throws exception(error(instantiation_error, _))
-%%   [ciao]: no throws
-%test 8 
+% TODO:[JF] missing checks
 :- test atomchars_test8
-	+ exception(error(instantiation_error, ImplDep))
-# "[ISO] atom_chars/2: expected(error) bug(succeed)".
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO] atom_chars/2: bug()".
 
 atomchars_test8 :- atom_chars(_X, _Y).
 
-
-
-%test 9
-:- test atomchars_test9 + exception(error(instantiation_error, ImplDep))
-# "[ISO-eddbali] atom_chars/2: expected(error)".
+:- test atomchars_test9
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO-eddbali] atom_chars/2".
 
 atomchars_test9 :- atom_chars(_A, [a, _E, c]).
 
-%% REVIEW:PENDING                                       **Label_2**
-%%   [gprolog]: throws exception(error(instantiation_error, ImplDep))
-%%   [ciao]: no throws
-:- test atomchars_test10 + exception(error(instantiation_error, ImplDep))
-# "[ISO-eddbali] atom_chars/2: expected(error)".
+% TODO:[JF] missing checks
+:- test atomchars_test10
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO-eddbali] atom_chars/2: bug()".
 
 atomchars_test10 :- atom_chars(_A, [a, b|_L]).
 
-%test 11
-:- test atomchars_test11 + exception(error(type_error(atom, f(a)), ImplDep))
-# "[ISO-eddbali] atom_chars/2: expected(error)".
+:- test atomchars_test11
+   + exception(error(type_error(atom, f(a)), ImplDep))
+   # "[ISO-eddbali] atom_chars/2".
 
 atomchars_test11 :- atom_chars(f(a), _L).
 
-%% REVIEW:PENDING                                           **Label_2**
-%%   [gprolog]: throws exception(error(type_error(list, iso), ImplDep))
-%%   [ciao]: no throws
-%test 12 
-:- test atomchars_test12 + exception(error(type_error(list, iso), ImplDep))
-# "[ISO-eddbali] atom_chars/2: expected(error) bug(fail)".
+% TODO:[JF] wrong checks
+:- test atomchars_test12
+   + exception(error(type_error(list, iso), ImplDep))
+   # "[ISO-eddbali] atom_chars/2: bug()".
 
 atomchars_test12 :- atom_chars(_A, iso).
 
-%% REVIEW:PENDING                                                  **Label_3**
-%%   [gprolog]: throws exception(error(type_error(character, f(b)), _))
-%%   [ciao]: throws exception(error(type_error(atom,f(b)),'atomic_basic:$constant_codes'/3-1))
-%test 13 
+% TODO:[JF] wrong checks
 :- test atomchars_test13
-	+ exception(error(type_error(character, f(b)), ImplDep))
-# "[ISO-eddbali] atom_chars/2: expected(error) bug(wrong_error)".
+   + exception(error(type_error(character, f(b)), ImplDep))
+   # "[ISO-eddbali] atom_chars/2: bug()".
 
 atomchars_test13 :- atom_chars(_A, [a, f(b)]).
 
-:- if(defined(fixed_utf8)).
-%test 14 
+% TODO:[JF] fix utf8 support
 :- test atomchars_test14(L) => (L=['P', 'é', 'c', 's'])
-# "[ISO-sics] atom_chars/2: expected(succeed) bug(error)".
+   + not_fails
+   # "[ISO-sics] atom_chars/2: bug()".
 
+:- if(defined(fixed_utf8)).
 atomchars_test14(L) :- atom_chars('Pécs', L).
+:- else.
+atomchars_test14(_L) :- throw(bug).
 :- endif.
 
-:- if(defined(fixed_utf8)).
-%test 15 
+% TODO:[JF] fix utf8 support
 :- test atomchars_test15(A) => (A='Pécs')
-# "[ISO-sics] atom_chars/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO-sics] atom_chars/2: bug()".
 
 atomchars_test15(A) :- atom_chars(A, ['P', 'é', 'c', 's']).
-:- endif.
 
 % ---------------------------------------------------------------------------
-%! ## 8.16.5 ISOcore#p109
+%! ## 8.16.5 atom_codes/2 ISOcore#p109
 
 :- test atomcodes_test1(L) => (L=[])
 # "[ISO] atom_codes/2: expected(succeed)".
@@ -7463,7 +7400,6 @@ atomcodes_test6(X) :- atom_codes('North', [0'N|X]).
 
 atomcodes_test7 :- atom_codes('soap', [0's, 0'o, 0'p]).
 
-%test 8 
 :- test atomcodes_test8 + exception(error(instantiation_error, ImplDep))
 # "[ISO] atom_codes/2: expected(error)".
 
@@ -7509,8 +7445,6 @@ atomcodes_extra_errortest_5 :- atom_codes(_, [-1]).
 
 atomcodes_extra_errortest_6 :- atom_codes(1, [0'1]).
 
-
-%test 9
 :- test atomcodes_test9 + exception(error(type_error(atom, f(a)), ImplDep))
 # "[ISO-eddbali] atom_codes/2: expected(error)".
 
@@ -7521,7 +7455,6 @@ atomcodes_test9 :- atom_codes(f(a), _L).
 
 atomcodes_test10 :- atom_codes(_, 0'x).
 
-%test 11
 :- test atomcodes_test11
 	+ exception(error(representation_error(character_code), ImplDep))
 # "[ISO-eddbali] atom_codes/2: expected(error) bug(wrong_error)".
@@ -7530,11 +7463,9 @@ atomcodes_test11 :- atom_codes(_X, [0'i, 0's, -1]).
 
 % TODO:[JF] missing test12, test13, test14, test15 !!
 
-%test 12 
 %:- test atomcodes_test12(L) => (L=[0'P,0'é,0'c,0's]).  
 %atomcodes_test12(L) :- atom_codes('Pécs',L).
 
-%test 13 
 %:- test atomcodes_test13(A) => (A='Pécs').
 %atomcodes_test13(A) :- atom_codes(A,[0'P,0'é,0'c,0's]).
 
@@ -7548,17 +7479,14 @@ atomcodes_test11 :- atom_codes(_X, [0'i, 0's, -1]).
 
 atomcodes_test16 :- atom_codes(_A, [a, b, c]).
 
-
-
 % ---------------------------------------------------------------------------
-%! ## 8.16.6 ISOcore#p110
+%! ## 8.16.6 char_code/2 ISOcore#p110
 
 :- test charcode_test1(Code) => (Code=0'a)
 # "[ISO] char_code/2: expected(succeed)".
 
 charcode_test1(Code) :- char_code('a', Code).
 
-%test 2 
 :- test charcode_test2(Str) => (Str=c)
 # "[ISO] char_code/2: expected(succeed)".
 
@@ -7569,7 +7497,6 @@ charcode_test2(Str) :- char_code(Str, 99).
 
 charcode_test3(Str) :- char_code(Str, 0'c).
 
-%test 4 
 :- test charcode_test4(X)
 # "[ISO] char_code/2: expected(succeed)".
 
@@ -7604,7 +7531,7 @@ charcode_test8 :- char_code(a, x).
 
 charcode_test9 :- char_code(_Str, -2).
 
-%! ## 8.16.7 ISOcore#p111
+%! ## 8.16.7 number_chars/2 ISOcore#p111
 
 :- test numberchars_test1(L) => (L=['3', '3'])
 # "[ISO] number_chars/2: expected(succeed)".
@@ -7784,7 +7711,7 @@ numberchars_test26 :- number_chars(_A, ['a']).
 numberchars_test27 :- number_chars(_A, ['0', 'x', '0', '.', '0']).
 
 % ---------------------------------------------------------------------------
-%! ## 8.16.8 ISOcore#p112
+%! ## 8.16.8 number_codes/2 ISOcore#p112
 
 :- test numbercodes_test1(L) => (L=[0'3, 0'3])
 # "[ISO] number_codes/2: expected(succeed)".
