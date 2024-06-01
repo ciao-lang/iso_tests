@@ -722,7 +722,7 @@ cut_test9 :- goal(X), call(X), write('Forwards '), fail.
    + (user_output("C Forwards Moss Forwards "),fails)
    # "[ISO] cut: bug()".
 % cut_test10 :- twice(_), (\+(\+(!))), write('Forwards '), fail.
-cut_test10 :- throw(bug_not_implemented).
+cut_test10 :- throw(bug).
 
 :- test cut_test11 + (user_output("C Forwards Moss Forwards "), fails)
    # "[ISO] cut".
@@ -879,7 +879,7 @@ ifthenelse_test8(X) :- ';'('->'(';'(X=1, X=2), true), true).
    # "[ISO] if-then-else".
 
 % ifthenelse_test9 :- ';'('->'(','(!, fail), true), true).
-ifthenelse_test9 :- throw(bug_not_implemented).
+ifthenelse_test9 :- throw(bug).
 
 % ---------------------------------------------------------------------------
 %! ## 7.8.9 catch/3 ISOcore#p52
@@ -6922,169 +6922,159 @@ repeat_test2 :- repeat, !, fail.
 
 % ===========================================================================
 %! # 8.16 Atomic term processing
-%! ## 8.16.1 ISOcore#p106
 
-%test1
+% NOTE: Current issues in Ciao:
+%
+%  - Code and chars are still based on bytes rather than code points,
+%    See `compilation_fact(fixed_utf8)`.
+
+% ---------------------------------------------------------------------------
+%! ## 8.16.1 atom_length/2 ISOcore#p106
+
 :- test atomlength_test1(N) => (N=17)
-# "[ISO] atom_length/2: expected(succeed)".
+   # "[ISO] atom_length/2".
 
 atomlength_test1(N) :- atom_length('enchanted evening', N).
 
-%test2
 :- test atomlength_test2(N) => (N=17)
-# "[ISO] atom_length/2: expected(succeed)".
+   # "[ISO] atom_length/2".
 
 atomlength_test2(N) :- atom_length('enchanted\
  evening', N).
 
-%test3
 :- test atomlength_test3(N) => (N=0)
-# "[ISO] atom_length/2: expected(succeed)".
+   # "[ISO] atom_length/2".
 
 atomlength_test3(N) :- atom_length('', N).
 
-%test4
 :- test atomlength_test4(N) : (N=5) + fails
-# "[ISO] atom_length/2: expected(fail)".
+   # "[ISO] atom_length/2".
 
 atomlength_test4(N) :- atom_length('scarlet', N).
 
-%test5 
-:- test atomlength_test5 + exception(error(instantiation_error, Imp_def))
-# "[ISO] atomlength/2: expected(error)".
+:- test atomlength_test5
+   + exception(error(instantiation_error, Imp_def))
+   # "[ISO] atom_length/2".
 
 atomlength_test5 :- atom_length(_Atom, 4).
 
-%test6 
-:- test atomlength_test6 + exception(error(type_error(atom, 1.23), Imp_def))
-# "[ISO] atomlength/2: expected(error)".
+:- test atomlength_test6
+   + exception(error(type_error(atom, 1.23), Imp_def))
+   # "[ISO] atom_length/2".
 
 atomlength_test6 :- atom_length(1.23, 4).
 
-%test7 
-:- test atomlength_test7 + exception(error(type_error(integer, '4'), Imp_def))
-# "[ISO] atomlength/2: expected(error)".
+:- test atomlength_test7
+   + exception(error(type_error(integer, '4'), Imp_def))
+   # "[ISO] atom_length/2".
 
 atomlength_test7 :- atom_length(atom, '4').
 
-% TODO:[JF] fix
-%% REVIEW:PENDING                                    **Label_2**
-%%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -4), Imp_def))
-%%   [ciao]: no throws
-%test8 
+% TODO:[JF] include missing check
 :- test atomlength_test8
-	+ exception(error(domain_error(not_less_than_zero, -4), Imp_def))
-# "[ISO-eddbali] atom_length/2: expected(error) bug(fail)".
+   + exception(error(domain_error(not_less_than_zero, -4), Imp_def))
+   # "[ISO-eddbali] atom_length/2: bug()".
 
 atomlength_test8 :- atom_length(atom, -4).
 
-:- if(defined(fixed_utf8)).
 % TODO:[JF] requires utf8 codes
-%% REVIEW:PENDING                              **Label_1**
-%%   [gprolog]: L = 13
-%%   [ciao]: L = 13
-%test9
 :- test atomlength_test9(L) => (L=11)
-# "[ISO-sics] atom_length/2: expected(succeed)".
-
+   + not_fails
+   # "[ISO-sics] atom_length/2: bug()".
 atomlength_test9(L) :- atom_length('Bartók Béla', L).
-:- endif.
 
-%! ## 8.16.2 ISOcore#p107
+% ---------------------------------------------------------------------------
+%! ## 8.16.2 atom_concat/2 ISOcore#p107
 
-%test1
 :- test atomconcat_test1(S3) => (S3='hello world')
-# "[ISO] atom_concat/2: expected(succeed)".
+   # "[ISO] atom_concat/2".
 
 atomconcat_test1(S3) :- atom_concat('hello', ' world', S3).
 
-%test2
 :- test atomconcat_test2(T) => (T='small')
-# "[ISO] atom_concat/2: expected(succeed)".
+   # "[ISO] atom_concat/2".
 
 atomconcat_test2(T) :- atom_concat(T, ' world', 'small world').
 
-%test3
 :- test atomconcat_test3 + fails
-# "[ISO] atom_concat/3: expected(fail)".
+   # "[ISO] atom_concat/3".
 
 atomconcat_test3 :- atom_concat('hello', ' world', 'small world').
 
-%test4
 :- test atomconcat_test4(Result)
-	=> ( S=[['', 'hello'], ['h', 'ello'], ['he', 'llo'], ['hel', 'lo'],
-		['hell', 'o'], ['hello', '']] )
-# "[ISO] atom_concat/2: expected(succeed)".
+   => ( S=[['', 'hello'],
+           ['h', 'ello'],
+           ['he', 'llo'],
+           ['hel', 'lo'],
+           ['hell', 'o'],
+           ['hello', '']] )
+   # "[ISO] atom_concat/2".
 
-atomconcat_test4(Result) :- findall([T1, T2], atom_concat(T1, T2, 'hello'),
-	    Result).
+atomconcat_test4(Result) :-
+    findall([T1, T2], atom_concat(T1, T2, 'hello'), Result).
 
-%test5
 :- test atomconcat_test5 + exception(error(instantiation_error, Imp_def))
-# "[ISO] atom_concat/2: expected(error)".
+   # "[ISO] atom_concat/2".
 
 atomconcat_test5 :- atom_concat(small, _V2, _V4).
 
-
-%test6
 :- test atomconcat_test6 + exception(error(instantiation_error, ImplDep))
-# "[ISO-eddbali] atom_concat/2: expected(error)".
+   # "[ISO-eddbali] atom_concat/2".
 
 atomconcat_test6 :- atom_concat(_T1, 'iso', _S).
 
-%test7
 :- test atomconcat_test7 + exception(error(instantiation_error, ImplDep))
-# "[ISO-eddbali] atom_concat/2: expected(error)".
+   # "[ISO-eddbali] atom_concat/2".
 
 atomconcat_test7 :- atom_concat('iso', _T2, _S).
 
-%test8
 :- test atomconcat_test8(X, Y, S) : (X=f(a), Y='iso')
-	+ exception(error(type_error(atom, f(a)), ImplDep))
-# "[ISO-eddbali] atom_concat/2: expected(error)".
+   + exception(error(type_error(atom, f(a)), ImplDep))
+   # "[ISO-eddbali] atom_concat/2".
 
 atomconcat_test8(X, Y, S) :- atom_concat(X, Y, S).
 
-%test9
 :- test atomconcat_test9 + exception(error(type_error(atom, f(a)), ImplDep))
-# "[ISO-eddbali] atom_concat/2: expected(error)".
+   # "[ISO-eddbali] atom_concat/2".
 
 atomconcat_test9 :- atom_concat('iso', f(a), _S).
 
-%test10
 :- test atomconcat_test10 + exception(error(type_error(atom, f(a)), ImplDep))
-# "[ISO-eddbali] atom_concat/2: expected(error)".
+   # "[ISO-eddbali] atom_concat/2".
 
 atomconcat_test10 :- atom_concat(_T1, _T2, f(a)).
 
-%test11
 :- test atomconcat_test11(S) => (S='Bartók Béla')
-# "[ISO-sics] atom_concat/2: expected(succeed)".
+   # "[ISO-sics] atom_concat/2".
 
 atomconcat_test11(S) :- atom_concat('Bartók ', 'Béla', S).
 
-%test12
 :- test atomconcat_test12(T1) => (T1='Bartók ')
-# "[ISO-sics] atom_concat/2: expected(succeed)".
+   # "[ISO-sics] atom_concat/2".
 
 atomconcat_test12(T1) :- atom_concat(T1, 'Béla', 'Bartók Béla').
 
-%test13
 :- test atomconcat_test13(T2) => (T2='Béla')
-# "[ISO-sics] atom_concat/2: expected(succeed)".
+   # "[ISO-sics] atom_concat/2".
 
 atomconcat_test13(T2) :- atom_concat('Bartók ', T2, 'Bartók Béla').
 
-:- if(defined(fixed_utf8)).
-%test14 
+% TODO:[JF] corrupted data breaks unit tests runner
 :- test atomconcat_test14(Result)
-	=> ( Result=[['', 'Pécs'], ['P', 'écs'], ['Pé', 'cs'], ['Péc', 's'],
+   => ( Result=[['', 'Pécs'],
+                ['P', 'écs'],
+                ['Pé', 'cs'],
+                ['Péc', 's'],
 		['Pécs', '']] )
-# "[ISO-sics] atom_concat/2: expected(succeed)".
-
+   + not_fails
+   # "[ISO-sics] atom_concat/2: bug()".
+:- if(defined(fixed_utf8)).
 atomconcat_test14(Result) :-
-	findall([T1, T2], atom_concat(T1, T2, 'Pécs'), Result).
+    findall([T1, T2], atom_concat(T1, T2, 'Pécs'), Result).
+:- else.
+atomconcat_test14(_Result) :- throw(bug).
 :- endif.
+
 % ---------------------------------------------------------------------------
 %! ## 8.16.3 ISOcore#p108
 
