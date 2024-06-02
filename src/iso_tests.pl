@@ -2479,8 +2479,6 @@ abolish_test4 :- abolish(foo(_)).
 %
 % abolish_test5(X) :- abolish(X).
 
-%%%%%%%%%%%%%%%%%%%%%%%% TEST FROM SICTUS AND EDDBALI %%%%%%%%%%%%%%%%%%%%%%%%
-
 %%%%%%%%%% THESE PREDICATES ARE NECESARIES FOR THE NEXT TESTS %%%%%%%%%%%%%%%%
 :- dynamic(foo/1).
 
@@ -2930,7 +2928,7 @@ setof_test28(A) :- setof(X, X=1, [1|A]).
 setof_test29 :- setof(X, X=1, [_|1]).
 
 %! # 8.11 Stream selection and control
-%! ## 8.11.1 (FROM SICTUS AND EDDBALI) ISOcore#p86
+%! ## 8.11.1 ISOcore#p86
 
 :- test currentinput_test1(S)
 # "[ISO-sics] current_input/1: expected(succeed)".
@@ -2971,16 +2969,16 @@ setup_currentinput4(S2) :-
     open('/tmp/foo', write, S, [type(text)]), close(S),
     open('/tmp/foo', read, S2, []), close(S2).
 
-% TODO:[JF] xfail? shouldn't it be existence error at least? the standard is strange w.r.t. this point
 :- test currentinput_test5(S)
-   + setup(currentinput_test5_setup(S))
-   # "[ISO-sics] current_input/1: expected(succeed)".
+   + (not_fails,
+      setup(currentinput_test5_setup(S)))
+   # "[ISO-sics] current_input/1".
 
 currentinput_test5(S) :- current_input(S).
 
 currentinput_test5_setup(S) :- current_input(S).
 
-%! ## 8.11.2 (FROM SICTUS AND EDDBALI) ISOcore#p86
+%! ## 8.11.2 ISOcore#p86
 
 :- test currentoutput_test1(S)
 # "[ISO-sics] current_output/1: expected(succeed)".
@@ -2996,56 +2994,65 @@ currentoutput_test1(S) :- current_output(S).
 
 currentoutput_test2 :- current_output(foo).
 
-% TODO:[JF] requires setup/cleanup
-:- test currentoutput_test3(S) : (current_input(S)) + fails
-# "[ISO-sics] current_output/1: expected(fail)".
+:- test currentoutput_test3(S)
+   + (fails,
+      setup(currentoutput_test3_setup(S)))
+   # "[ISO-sics] current_output/1".
 
 currentoutput_test3(S) :- current_output(S).
 
-% TODO:[JF] requires setup/cleanup
-%% REVIEW:PENDING                                                     **Label_2**
-%%   [gprolog]: no throws
-%%   [ciao]: no throws
+currentoutput_test3_setup(S) :- current_input(S).
+
+% TODO:[JF] check behaviour of other Prologs (gprolog, ciao, scryer: no exception;
+%   swipl: existence error, trealla: domain error)
 :- test currentoutput_test4(S)
-   : (open('/tmp/foo', write, S, [type(text)]), close(S))
-   + exception(error(domain_error(stream, S), ImplDep))
-# "[ISO-sics] current_output/1: expected(error) bug(fail)".
+   + (setup(currentoutput_test4_setup(S)),
+      exception(error(domain_error(stream, S), ImplDep)))
+   # "[ISO-sics] current_output/1: bug()".
 
 currentoutput_test4(S) :- current_output(S).
 
-% TODO:[JF] requires setup/cleanup
-:- test currentoutput_test5(S) : (current_output(S))
-# "[ISO-sics] current_output/1: expected(succeed) bug(fail)".
+currentoutput_test4_setup(S) :-
+    open('/tmp/foo', write, S, [type(text)]), close(S).
+
+:- test currentoutput_test5(S)
+   + (not_fails,
+      setup(currentoutput_test5_setup(S)))
+   # "[ISO-sics] current_output/1".
 
 currentoutput_test5(S) :- current_output(S).
 
-%! ## 8.11.3 (FROM SICTUS AND EDDBALI) ISOcore#p87
+currentoutput_test5_setup(S) :- current_output(S).
 
-% TODO:[JF] requires setup/cleanup
-:- test setinput_test1(S) : (current_input(S))
-# "[ISO-sics] set_input/1: expected(succeed)".
+%! ## 8.11.3 ISOcore#p87
+
+:- test setinput_test1(S)
+   + (not_fails,
+      setup(setinput_test1_setup(S)))
+   # "[ISO-sics] set_input/1".
 
 setinput_test1(S) :- set_input(S).
 
-:- test setinput_test2 + exception(error(instantiation_error, ImplDep))
-# "[ISO-sics] set_input/1: expected(error)".
+setinput_test1_setup(S) :- current_input(S).
+
+:- test setinput_test2
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO-sics] set_input/1".
 
 setinput_test2 :- set_input(_).
 
 % TODO:[JF] both acceptable in ISO % TODO: unittest do not allow alternative here, fix
 :- test setinput_test3
-	+ exception(error(existence_error(stream, foo), ImplDep))
-# "[ISO-sics] set_input/1: expected(error)".
-% :- test setinput_test3
-% 	+ exception(error(domain_error(stream_or_alias, foo), ImplDep))
-% # "[ISO-sics] set_input/1: expected(error)".
+   % + exception(error(domain_error(stream_or_alias, foo), ImplDep))
+   + exception(error(existence_error(stream, foo), ImplDep))
+   # "[ISO-sics] set_input/1".
 
 setinput_test3 :- set_input(foo).
 
 :- test setinput_test4(S1)
-	+ (setup(setinput_test4_setup(S1)),
-           exception(error(existence_error(stream, S1), ImplDep)))
-# "[ISO-sics] set_input/1: expected(error) bug(succeed)".
+   + (setup(setinput_test4_setup(S1)),
+      exception(error(existence_error(stream, S1), ImplDep)))
+   # "[ISO-sics] set_input/1".
 
 setinput_test4(S1) :- set_input(S1).
 
@@ -3053,20 +3060,14 @@ setinput_test4_setup(S1) :-
     open('/tmp/foo', write, S, []), close(S),
     open('/tmp/foo', read, S1, []), close(S1).
 
-%% REVIEW:PENDING                                                    **Label_3**
-%%   [gprolog]: throws  exception(error(permission_error(input, stream, S), _))
-%%   [ciao]: throws  exception(error(permission_error(access,stream,user_output),'stream_basic:set_input'/1-1))
-% TODO:[JF] OK now
 :- test setinput_test5(S)
    + (setup(setup_setinput(S)),
       exception(error(permission_error(input, stream, S), ImplDep)))
-# "[ISO-sics] set_input/1: expected(error) bug(wrong_error)".
+   # "[ISO-sics] set_input/1".
 
-setinput_test5(S) :-
-    set_input(S).
+setinput_test5(S) :- set_input(S).
 
-setup_setinput(S) :-
-    current_output(S).
+setup_setinput(S) :- current_output(S).
 
 % ---------------------------------------------------------------------------
 %! ## 8.11.4 ISOcore#p87
@@ -3351,7 +3352,7 @@ close_test9_setup(S) :-
 close_test10(Sc) :- close(Sc, [force(true)]).
 
 % ---------------------------------------------------------------------------
-%! ## 8.11.7 (FROM SICTUS AND EDDBALI) ISOcore#p89
+%! ## 8.11.7 ISOcore#p89
 
 %% REVIEW:PENDING                                              **Label_6**
 :- test flush_output_test1(S,S1)
@@ -3619,7 +3620,7 @@ setup_aeostr7(S1):-
 
 cleanup_aeostr7(S1):- close(S1).
 
-%! ## 8.11.9 (FROM SICTUS AND EDDBALI) ISOcore#p90
+%! ## 8.11.9 ISOcore#p90
 
 % TODO:[JF] implement position/1 property!
 %% REVIEW:PENDING                                                  **Label_6**
@@ -4376,8 +4377,7 @@ cleanup_pco10(Sc,S2):- close_instreams(Sc, S2).
 %% REVIEW:PENDING                                   **Label_6**
 :- test peekchar_test11 
    + (setup(setup_pc11(S2,P)),
-      exception(error(permission_error(input, past_end_of_stream, S),
-                      ImplDep)))
+      exception(error(permission_error(input, past_end_of_stream, S), ImplDep)))
 # "[ISO] peek_char/2: expected(error) bug(wrong_error)".
 
 peekchar_test11 :-
