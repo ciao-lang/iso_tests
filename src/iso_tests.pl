@@ -42,7 +42,6 @@ and the current status in Ciao:
  - `bug(fail)`: The predicate fails, but it should not.
  - `bug(error)`: The predicate raises an exception (error), but it should not.
  - `bug(not_implemented)`: The predicate is not implemented in Ciao.
- - `bug(wrong_succeed)`: The predicate succeeds but the solution is not the expected.
  - `bug(wrong_error)`: The predicate raises an exception (error), but
    it is not the expected.
 
@@ -105,8 +104,6 @@ foo :- fail.
 foo(_, _) :- fail.
 :- pop_prolog_flag(multi_arity_warnings).
 bird(_) :- fail.
-%at_end_of_stream(_) :- fail. % TODO: Non-ISO and not implemented
-%set_stream_position(_, _) :- fail. % TODO: Non-ISO and not implemented
 
 % ---------------------------------------------------------------------------
 
@@ -3620,16 +3617,18 @@ setup_aeostr7(S1):-
 
 cleanup_aeostr7(S1):- close(S1).
 
-%! ## 8.11.9 ISOcore#p90
+%! ## 8.11.9 set_stream_position/2 ISOcore#p90
 
-% TODO:[JF] implement position/1 property!
-%% REVIEW:PENDING                                                  **Label_6**
+% NOTE: Current issues in Ciao:
+%
+%  - reposition(true) is not implemented in open/4
+%  - position(Pos) property is not implemented in stream_property/2
+
+% TODO:[JF] implement position/1 property in streams and reposition(true) in open/4
 :- test set_stream_position_test1(S, Pos) 
    + (setup(setup_ssp1(S,Pos)),
       exception(error(instantiation_error, ImplDep)))
-# "[ISO-sics] set_stream_position/2: expected(error) bug(not_implemented)".
-% TODO: position(Pos) in stream_property/2 not implemented
-% TODO: we will not implement reposition(true) in open/4 % TODO:[JF] we will
+   # "[ISO-sics] set_stream_position/2: bug()".
 
 set_stream_position_test1(S, Pos) :-
     stream_property(S, position(Pos)),
@@ -3639,30 +3638,22 @@ setup_ssp1(S,Pos):-
     open('/tmp/bar', write, S, [reposition(true)]),
     stream_property(S, position(Pos)).
 
-% TODO:[JF] implement set_stream_position/2
-%% REVIEW:PENDING                                 **Label_2**
-%%   [gprolog]: throws exception: error(permission_error(reposition,stream,'$stream'(0)),set_stream_position/2)
-%%   [ciao]: no throws
 :- test set_stream_position_test2(S, _Pos)
    + (setup(set_stream_position_test2_setup(S)),
       exception(error(instantiation_error, ImplDep)))
-# "[ISO-sics] set_stream_position/2: expected(error)".
+   # "[ISO-sics] set_stream_position/2".
 
 set_stream_position_test2(S, _Pos) :- set_stream_position(S, _Pos).
 
 set_stream_position_test2_setup(S) :- current_input(S).
 
-% TODO:[JF] implement position/1 property!
-% TODO:[JF] both acceptable in ISO 
-%% REVIEW:PENDING                                              **Label_6**
+% TODO:[JF] implement position/1 property in streams and reposition(true) in open/4
+% TODO:[JF] both errors acceptable in ISO 
 :- test set_stream_position_test3(Pos)
    + (setup(setup_ssp3(Pos)),
+%     exception(error(domain_error(stream_or_alias, foo), ImplDep)))
       exception(error(existence_error(stream, foo), ImplDep)))
-% :- test set_stream_position_test3(Pos)
-%    + (setup(setup_ssp3(S,Pos)),
-%       exception(error(domain_error(stream_or_alias, foo), ImplDep)))
-# "[ISO-sics] set_stream_position/2: expected(error) bug(not_implemented)".
-% TODO: we will not implement reposition(true) in open/4
+   # "[ISO-sics] set_stream_position/2: bug()".
 
 set_stream_position_test3(Pos) :-
     set_stream_position(foo, Pos).
@@ -3671,13 +3662,11 @@ setup_ssp3(Pos):-
     open('/tmp/bar', write, S, [reposition(true)]),
     stream_property(S, position(Pos)).
 
-% TODO:[JF] implement position/1 property!
-%% REVIEW:PENDING                                              **Label_6**
+% TODO:[JF] implement position/1 property in streams and reposition(true) in open/4
 :- test set_stream_position_test4(S, Pos) 
    + (setup(setup_ssp4(S,Pos)),
       exception(error(existence_error(stream, S), ImplDep)))
-# "[ISO-sics] set_stream_position/2: expected(error) bug(not_implemented)".
-% TODO: we will not implement reposition(true) in open/4
+   # "[ISO-sics] set_stream_position/2: bug()".
 
 set_stream_position_test4(S, Pos) :-
     set_stream_position(S, Pos).
@@ -3687,27 +3676,22 @@ setup_ssp4(S,Pos):-
     stream_property(S, position(Pos)),
     close(S).
 
-% TODO:[JF] implement position/1 property!
-%% REVIEW:PENDING                           **Label_2**
-%%   [gprolog]: throwsexception: error(permission_error(reposition,stream,'$stream'(0)),set_stream_position/2)
-%%   [ciao]: no throws
 :- test set_stream_position_test5(S)
    + (setup(set_stream_position_test5_setup(S)),
       exception(error(domain_error(stream_position, foo), ImplDep)))
-# "[ISO-sics] set_stream_position/2: expected(error) bug(not_implemented)".
+   # "[ISO-sics] set_stream_position/2".
 
 set_stream_position_test5(S) :- set_stream_position(S, foo).
 
 set_stream_position_test5_setup(S) :-
     current_input(S).
 
-% TODO:[JF] implement position/1 property!
+% TODO:[JF] implement position/1 property in streams and reposition(true) in open/4
 % TODO:[JF] implement set_stream_position/2
-%% REVIEW:PENDING                                            **Label_4**
 :- test set_stream_position_test6(S, Pos) 
    + (setup(setup_ssp6(S,Pos)),
       exception(error(permission_error(reposition, stream, S), ImplDep)))
-# "[ISO-sics] set_stream_position/2: expected(error) bug(not_implemented)".
+   # "[ISO-sics] set_stream_position/2: bug()".
 
 set_stream_position_test6(S, Pos) :-
     set_stream_position(S, Pos).
@@ -5238,8 +5222,7 @@ cleanup_pb4(S2,Sc):- close_instreams(Sc, S2).
 %%   [gprolog]: throws exception(error(permission_error(input, stream, user_output),_))
 %%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_byte'/2-1))
 :- test peekbyte_test5
-	+ exception(error(permission_error(input, stream, user_output),
-		ImplDep))
+   + exception(error(permission_error(input, stream, user_output), ImplDep))
 # "[ISO] peek_byte/2: expected(error) bug(not_implemented)".
 
 peekbyte_test5 :- peek_byte(user_output, _).
