@@ -3970,8 +3970,7 @@ getchar_test18(S, _) :- get_char(S, _).
 %%getchar_test19 :- get_char(_).
 %%
 %%setup_gch19(S,Sc,S1):- open('/tmp/tmp.in', write, S, [type(binary)]), close(S),
-%%    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]),
-%%    current_input(S1).
+%%    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]).
 %%
 %%cleanup_gch19(Sc,S1):- (close_instreams(Sc, S1)).
 
@@ -3989,7 +3988,6 @@ getchar_test20 :-
 setup_gch20(Sc,S1):-
     open('/tmp/tmp.in', write, S, [type(text)]), close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
-    current_input(S1),
     get_char(_X).
 
 cleanup_gch20(Sc,S1):- close_instreams(Sc, S1).
@@ -4110,8 +4108,7 @@ getcode_test30 :-
 
 setup_gco30(Sc,S1):-
     open('/tmp/tmp.in', write, S, [type(binary)]), close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]),
-    current_input(S1).
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]).
 
 cleanup_gco30(Sc, S1):- close_instreams(Sc, S1).    
 
@@ -4129,7 +4126,6 @@ getcode_test31 :-
 setup_gco31(Sc,S1):-
     open('/tmp/tmp.in', write, S, [type(text)]), close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
-    current_input(S1),
     get_code(_X).
 
 cleanup_gco31(Sc,S1):- close_instreams(Sc, S1).
@@ -4567,8 +4563,7 @@ peekcode_test30(S1) :-
 
 setup_pco30(S1,Sc):-
     open('/tmp/tmp.in', write, S, [type(binary)]), close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]),
-    current_input(S1).
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]).
 
 cleanup_pco30(Sc,S1):- close_instreams(Sc, S1).
 
@@ -4586,7 +4581,6 @@ peekcode_test31 :-
 setup_pco31(S1,Sc):-
     open('/tmp/tmp.in', write, S, [type(text)]), close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
-    current_input(S1), % TODO:[JF] needed? check others
     get_code(_X).
 
 cleanup_pco31(Sc,S1):- close_instreams(Sc, S1).
@@ -5123,8 +5117,7 @@ getbyte_test12 :-
 
 setup_getbyte12(Sc,S1):-
     open('/tmp/tmp.in', write, S, [type(text)]), close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
-    current_input(S1).
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]).
 
 cleanup_getbyte12(Sc,S1):- close_instreams(Sc, S1).
 
@@ -5141,137 +5134,131 @@ getbyte_test13 :-
 
 setup_getbyte13(Sc,S1):-
     open('/tmp/tmp.in', write, S, [type(binary)]), close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]),
-    current_input(S1).
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]).
 
 cleanup_getbyte13(Sc,S1):- close_instreams(Sc, S1).
 
 % ---------------------------------------------------------------------------
-%! ## 8.13.2 ISOcore#p97
+%! ## 8.13.2 peek_byte/1, peek_byte/2 ISOcore#p97
 
-%% REVIEW:PENDING                                            **Label_4**
-:- test peekbyte_test1(Byte,S2) :
-   true =>
-   (Byte=113) + 
-   (setup(setup_pb1(Sc,S2)),
-    cleanup(cleanup_pb1(Sc,S2)))
-# "[ISO] peek_byte/1: expected(succeed) bug(error)".
+setup_pb(Bytes,Sc,S2):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary, Bytes), close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(binary)]).
 
-peekbyte_test1(Byte,S2) :-
-    peek_byte(Byte),
-    read_no_term(S2, [113, 119, 101, 114]).
-
-setup_pb1(Sc,S2):-
-    open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary, [113, 119, 101, 114]), close(S1),
-    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(text)]).
-
-cleanup_pb1(Sc,S2):- close_instreams(Sc,S2).
-
-%% REVIEW:PENDING                                           **Label_6**
-:- test peekbyte_test2(Byte,S2) :
-   true =>
-   (Byte=113) +
-   (setup(setup_pb2(S2)),
-    cleanup(cleanup_pb2(S2)))
-# "[ISO] peek_byte/2: expected(succeed) bug(error)".
-
-peekbyte_test2(Byte,S2) :-
-    peek_byte(st_i, Byte),
-    read_bytes_to_end(S2, [113, 119, 101, 114]).
+setup_pb_i(Bytes,Sc,S2):-
+    open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary, Bytes), close(S1),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(binary), alias(st_i)]).
 
 setup_pb2(S2):-
     open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary, [113, 119, 101, 114]), close(S1),
     open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]).
 
-cleanup_pb2(S2):- close(S2).       
-
-%% REVIEW:PENDING                                     **Label_6**
-:- test peekbyte_test3(S2) 
-   + (setup(setup_pb3(S2)),
-      cleanup(cleanup_pb3(S2)))
-   # "[ISO] peek_byte/2: expected(succeed) bug(error)".
-
-peekbyte_test3(S2) :-
-    ( peek_byte(st_i, 114) -> fail ; true ),
-    read_bytes_to_end(S2, [113, 119, 101, 114, 116, 121]).
-
 setup_pb3(S2):-
     open_and_write('/tmp/tmp.in', write, S1, [type(binary)], binary, [113, 119, 101, 114, 116, 121]), close(S1),
     open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]).
 
-cleanup_pb3(S2):- close(S2).
-
-%% REVIEW:PENDING                                      **Label_6**
-:- test peekbyte_test4(Byte) :
-   true =>
-   (Byte=(-1)) +
-   (setup(setup_pb4(Sc,S2)),
-    cleanup(cleanup_pb4(S2,Sc))) 
-# "[ISO] peek_byte/2: expected(succeed) bug(error)".
-
-peekbyte_test4(Byte) :-
-    peek_byte(st_i, Byte).
-
 setup_pb4(Sc,S2):-
-    open('/tmp/tmp.in', write, _S1, [type(binary)]),
+    open('/tmp/tmp.in', write, S, [type(binary)]), close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S2, [type(binary), alias(st_i)]).
-
-cleanup_pb4(S2,Sc):- close_instreams(Sc, S2).
-
-%% REVIEW:PENDING                                                     **Label_3**
-%%   [gprolog]: throws exception(error(permission_error(input, stream, user_output),_))
-%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_byte'/2-1))
-:- test peekbyte_test5
-   + exception(error(permission_error(input, stream, user_output), ImplDep))
-# "[ISO] peek_byte/2: expected(error) bug(not_implemented)".
-
-peekbyte_test5 :- peek_byte(user_output, _).
-
-
-:- test peekbyte_test6 + exception(error(instantiation_error, ImplDep))
-# "[ISO-sics] peek_byte/2: expected(error)".
-
-peekbyte_test6 :- peek_byte(_, _).
-
-%% REVIEW:PENDING                                            **Label_6**
-:- test peekbyte_test7
-   + (setup(setup_pb7(Sc,S1)),
-      cleanup(cleanup_pb7(Sc,S1)),
-      exception(error(type_error(in_byte, p), ImplDep)))
-   # "[ISO-sics] peek_byte/1: expected(error) bug(fail)".
-
-peekbyte_test7 :-
-    peek_byte(p).
 
 setup_pb7(Sc,S1):-
     open('/tmp/tmp.in', write, S, [type(binary)]), close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]).
 
-cleanup_pb7(Sc,S1):- close_instreams(Sc, S1).
-
-%% REVIEW:PENDING                                   **Label_6**
-:- test peekbyte_test8
-   + (setup(setup_pb8(Sc,S1)),
-      cleanup(cleanup_pb8(Sc,S1)),
-      exception(error(type_error(in_byte, -2), ImplDep)))
-   # "[ISO-sics] peek_byte/1: expected(error) bug(fail)".
-
-peekbyte_test8 :-
-    peek_byte(-2).
-
 setup_pb8(Sc,S1):-
     open('/tmp/tmp.in', write, S, [type(binary)]), close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]).
 
+setup_pb12(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]), close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]).
+
+setup_pb13(Sc,S1):-
+    open('/tmp/tmp.in', write, S, [type(binary)]), close(S),
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]).
+
+cleanup_pb1(Sc,S2):- close_instreams(Sc,S2).
+cleanup_pb2(S2):- close(S2).       
+cleanup_pb3(S2):- close(S2).
+cleanup_pb4(S2,Sc):- close_instreams(Sc, S2).
+cleanup_pb7(Sc,S1):- close_instreams(Sc, S1).
 cleanup_pb8(Sc,S1):- close_instreams(Sc, S1).
+cleanup_pb12(Sc,S1):- close_instreams(Sc, S1).
+cleanup_pb13(Sc,S1):- close_instreams(Sc, S1).
+
+:- test peekbyte_test1(Byte,S2)
+   : true => (Byte=113)
+   + (setup(setup_pb([113, 119, 101, 114],Sc,S2)),
+      cleanup(cleanup_pb1(Sc,S2)))
+   # "[ISO] peek_byte/1".
+
+peekbyte_test1(Byte,S2) :-
+    peek_byte(Byte),
+    read_bytes_to_end(S2, [113, 119, 101, 114]).
+
+:- test peekbyte_test2(Byte,S2)
+   : true => (Byte=113)
+   + (setup(setup_pb2(S2)),
+      cleanup(cleanup_pb2(S2)))
+   # "[ISO] peek_byte/2".
+
+peekbyte_test2(Byte,S2) :-
+    peek_byte(st_i, Byte),
+    read_bytes_to_end(S2, [113, 119, 101, 114]).
+
+:- test peekbyte_test3(S2) 
+   + (setup(setup_pb3(S2)),
+      cleanup(cleanup_pb3(S2)))
+   # "[ISO] peek_byte/2".
+
+peekbyte_test3(S2) :-
+    ( peek_byte(st_i, 114) -> fail ; true ),
+    read_bytes_to_end(S2, [113, 119, 101, 114, 116, 121]).
+
+:- test peekbyte_test4(Byte)
+   : true => (Byte=(-1))
+   + (setup(setup_pb_i([],Sc,S2)),
+      cleanup(cleanup_pb4(S2,Sc))) 
+   # "[ISO] peek_byte/2".
+
+peekbyte_test4(Byte) :-
+    peek_byte(st_i, Byte).
+
+:- test peekbyte_test5
+   + exception(error(permission_error(input, stream, user_output), ImplDep))
+   # "[ISO] peek_byte/2".
+
+peekbyte_test5 :- peek_byte(user_output, _).
+
+:- test peekbyte_test6
+   + exception(error(instantiation_error, ImplDep))
+   # "[ISO-sics] peek_byte/2".
+
+peekbyte_test6 :- peek_byte(_, _).
+
+:- test peekbyte_test7
+   + (setup(setup_pb7(Sc,S1)),
+      cleanup(cleanup_pb7(Sc,S1)),
+      exception(error(type_error(in_byte, p), ImplDep)))
+   # "[ISO-sics] peek_byte/1".
+
+peekbyte_test7 :-
+    peek_byte(p).
+
+:- test peekbyte_test8
+   + (setup(setup_pb8(Sc,S1)),
+      cleanup(cleanup_pb8(Sc,S1)),
+      exception(error(type_error(in_byte, -2), ImplDep)))
+   # "[ISO-sics] peek_byte/1".
+
+peekbyte_test8 :-
+    peek_byte(-2).
 
 % TODO:[JF] both acceptable in ISO 
 :- test peekbyte_test9
-	+ exception(error(existence_error(stream, foo), ImplDep))
-# "[ISO-sics] peek_byte/2: expected(error)".
-% :- test peekbyte_test9
-% 	+ exception(error(domain_error(stream_or_alias, foo), ImplDep))
-% # "[ISO-sics] peek_byte/2: expected(error)".
+%   + exception(error(domain_error(stream_or_alias, foo), ImplDep))
+   + exception(error(existence_error(stream, foo), ImplDep))
+   # "[ISO-sics] peek_byte/2".
 
 peekbyte_test9 :- peek_byte(foo, _).
 
@@ -5286,13 +5273,10 @@ setup_pb10(S, S1) :-
     open('/tmp/foo', write, S, [type(text)]), close(S),
     open('/tmp/foo', read, S1, [type(binary)]), close(S1).
 
-%% REVIEW:PENDING                                            **Label_3**
-%%   [gprolog]: throws exception(error(permission_error(input, stream, S),_))
-%%   [ciao]: throws exception(error(permission_error(access,stream,user_output),'io_basic:peek_byte'/2-1))
 :- test peekbyte_test11(S, _) 
    + (setup(setup_pb11(S)),
       exception(error(permission_error(input, stream, S), ImplDep)))
-   # "[ISO-sics] peek_byte/2: expected(error) bug(wrong_error)".
+   # "[ISO-sics] peek_byte/2".
 
 peekbyte_test11(S, _) :-
     peek_byte(S, _).
@@ -5300,39 +5284,25 @@ peekbyte_test11(S, _) :-
 setup_pb11(S):-
     current_output(S).
 
-%% REVIEW:PENDING                                  **Label_6**
+% TODO:[JF] peek_byte/1 and peek_byte/2 requires binary streams
 :- test peekbyte_test12
    + (setup(setup_pb12(Sc,S1)),
-      cleanup(cleanup_pb12(Sc,S1)))
-   # "[ISO-sics] peek_byte/1: expected(error) bug(succeed)".
+      cleanup(cleanup_pb12(Sc,S1)),
+      exception(error(permission_error(input, text_stream, S), ImplDep)))
+   # "[ISO-sics] peek_byte/1: bug()".
 
 peekbyte_test12 :-
     peek_byte(_).
 
-setup_pb12(Sc,S1):-
-    open('/tmp/tmp.in', write, S, [type(text)]), close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
-    current_input(S1).
-
-cleanup_pb12(Sc,S1):- close_instreams(Sc, S1).
-
-%% REVIEW:PENDING                                       **Label_6**
 :- test peekbyte_test13
    + (setup(setup_pb13(Sc,S1)),
-    cleanup(cleanup_pb13(Sc,S1)),
-    exception(error(permission_error(input, past_end_of_stream, S1),ImplDep)))
-   # "[ISO-sics] peek_byte/1: expected(error) bug(wrong_error)".
+      cleanup(cleanup_pb13(Sc,S1)),
+      exception(error(permission_error(input, past_end_of_stream, S1),ImplDep)))
+   # "[ISO-sics] peek_byte/1".
 
 peekbyte_test13 :-
     get_byte(_),
     peek_byte(_).
-
-setup_pb13(Sc,S1):-
-    open('/tmp/tmp.in', write, S, [type(binary)]), close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]),
-    current_input(S1).
-
-cleanup_pb13(Sc,S1):- close_instreams(Sc, S1).
 
 % ---------------------------------------------------------------------------
 %! ## 8.13.3 ISOcore#p98
@@ -5429,8 +5399,7 @@ putbyte_test8(S1) :-
 
 setup_ptb8(Sc,S1):-
     open('/tmp/tmp.in', write, S, [type(binary)]), close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]),
-    current_input(S1).
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]).
 
 cleanup_ptb8(Sc,S1):- close_instreams(Sc, S1).
 
@@ -5616,8 +5585,7 @@ read_test7(T, L) :-
     
 setup_read7(Sc,S1):-
     wr_txt_in('foo(bar).'),
-    open_to_read('/tmp/tmp.in', read, Sc, S1,
-                 [type(text), eof_action(error)]).
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]).
 
 cleanup_read7(Sc,S1):- close_instreams(Sc, S1).
 
@@ -5714,8 +5682,7 @@ read_test18 :-
 
 setup_read18(Sc,S1):-
     open('/tmp/tmp.in', write, S, [type(binary)]), close(S),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]),
-    current_input(S1).
+    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary), eof_action(error)]).
 
 cleanup_read18(Sc,S1):- close_instreams(Sc, S1).
 
@@ -5754,7 +5721,7 @@ read_test20(S1) :-
 setup_read20(Sc,S1):-
     open('/tmp/tmp.in', write, S, [type(text)]), close(S),
     open_to_read('/tmp/tmp.in', read, Sc, S1, [type(text), eof_action(error)]),
-    current_input(S1),
+%    current_input(S1),
     get_code(_).
 
 cleanup_read20(Sc,S1):- close_instreams(Sc, S1).
@@ -5845,8 +5812,7 @@ cleanup_read24(Sc,S1):- close_instreams(Sc, S1).
 write_test1(S, S1, Sc1, X) :-
     write_term(S, [1, 2, 3], []),
     write_contents(text, '.', S),
-    open_to_read('/tmp/tmp.out', read, Sc1, S1,
-                 [type(text)]), read(X), X=[1, 2, 3].
+    open_to_read('/tmp/tmp.out', read, Sc1, S1, [type(text)]), read(X), X=[1, 2, 3].
 
 setup_write1(S,Sc):-
     open('/tmp/tmp.out', write, S, [type(text)]),
