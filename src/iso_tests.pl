@@ -1046,22 +1046,26 @@ unify_test11 :- '='(f(X, Y, X), f(a(X), a(Y), Y, 2)).
 unify_test12 :- '='(X, a(X)).
 
 :- test unify_test13
-# "[ISO] =/2: expected(undefined)".
+   + fails % NOTE: Ciao supports rational terms
+   # "[ISO] =/2".
 
 unify_test13 :- '='(f(X, 1), f(a(X), 2)).
 
 :- test unify_test14
-# "[ISO] =/2: expected(undefined)".
+   + fails % NOTE: Ciao supports rational terms
+   # "[ISO] =/2".
 
 unify_test14 :- '='(f(1, X, 1), f(2, a(X), 2)).
 
 :- test unify_test15
-# "[ISO] =/2: expected(undefined)".
+   + fails % NOTE: Ciao supports rational terms
+   # "[ISO] =/2".
 
 unify_test15 :- '='(f(1, X), f(2, a(X))).
 
 :- test unify_test16
-# "[ISO] =/2: expected(undefined)".
+   + fails % NOTE: Ciao supports rational terms
+   # "[ISO] =/2".
 
 unify_test16 :- '='(f(X, Y, X, 1), f(a(X), a(Y), Y, 2)).
 
@@ -1207,7 +1211,8 @@ not_uni_test9(X) :- \=(f(X, 1), f(a(X))).
 not_uni_test10(X, Y) :- '\\='(f(X, Y, X), f(a(X), a(Y), Y, 2)).
 
 :- test not_uni_test11(X) 
-# "[ISO] '\='/2: expected(undefined)".
+   + fails % NOTE: Ciao supports rational terms
+   # "[ISO] '\='/2".
 
 not_uni_test11(X) :- \=(X, a(X)).
 
@@ -1222,7 +1227,8 @@ not_uni_test12(X) :- '\\='(f(X, 1), f(a(X), 2)).
 not_uni_test13(X) :- '\\='(f(1, X, 1), f(2, a(X), 2)).
 
 :- test not_uni_test14(X) 
-# "[ISO] '\='/2: expected(undefined)".
+   + fails % NOTE: Ciao supports rational terms
+   # "[ISO] '\='/2".
 
 not_uni_test14(X) :- \=(f(2, X), f(2, a(X))).
 
@@ -2111,13 +2117,15 @@ insect(bee).
 
 %% REVIEW:PENDING                                           **Label_4**
 :- test clause_test1
-# "[ISO] clause/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO] clause/2: expected(succeed) bug(fail)".
 
 clause_test1 :- clause(cat, true).
 
 %% REVIEW:PENDING                                    **Label_4**
 :- test clause_test2
-# "[ISO] clause/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO] clause/2: expected(succeed) bug(fail)".
 
 clause_test2:- clause(dog, true).
 
@@ -2146,8 +2154,10 @@ clause_test4(C, Body) :- clause(legs(C, 7), Body).
 clause_test5(Result) :- findall([I, T], clause(insect(I), T), Result).
 
 %% REVIEW:PENDING                                    **Label_4**
-:- test clause_test6(Body) + fails
-# "[ISO] clause/2: expected(fail)".
+:- test clause_test6(Body)
+   + (fails,
+      no_exception)
+   # "[ISO] clause/2: expected(fail)".
 
 clause_test6(Body) :- clause(x, Body).
 
@@ -2394,7 +2404,8 @@ retract_test2 :- retract(legs(spider, 6)).
 
 %% REVIEW:PENDING                                                          **Label_4**
 :- test retract_test3(X, T) => (T=bird(X))
-# "[ISO] retract/1: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO] retract/1: expected(succeed) bug(fail)".
 
 retract_test3(X, T) :- retract((legs(X, 2) :-T)).
 
@@ -2432,7 +2443,8 @@ retract_test7(A) :- retract((foo(A) :- A, call(A))).
 
 %% REVIEW:PENDING                                                  **Label_4**
 :- test retract_test8(A, B, C) => (A=call(C), B=call(C))
-# "[ISO] retract/1: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO] retract/1: expected(succeed) bug(fail)".
 
 retract_test8(A, B, C) :- retract((foo(C) :- A -> B)).
 
@@ -3433,8 +3445,10 @@ flush_output_test6_cleanup(S) :- close(S).
 % ---------------------------------------------------------------------------
 %! ## 8.11.8 stream_property/2, at_end_of_stream/0, at_end_of_stream/1 ISOcore#p90
 
+% TODO:[JF] compat check for file_name(_) property!!
 :- test stream_property_test1(L)
-   + (setup(setup_strp1(S1, S2)),
+   + (no_exception,
+      setup(setup_strp1(S1, S2)),
       cleanup(cleanup_strp1(S1,S2)))
    # "[ISO] stream_property/2".
 
@@ -7367,21 +7381,24 @@ numbercodes_test4 :- number_codes(33.0, [0'3|_L]).
 
 numbercodes_test5(A) :- number_codes(A, [0'-, 0'2, 0'5]).
 
-%% REVIEW:PENDING                                                        **Label_4**
+% TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and bin numbers
 :- test numbercodes_test6(A) => (A=3)
-# "[ISO] number_codes/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO] number_codes/2: bug()".
 
 numbercodes_test6(A) :- number_codes(A, [0' , 0'3]).
 
-%% REVIEW:PENDING                                         **Label_4**
+% TODO:[JF] number_chars/2 and number_codes/2 should accept hex numbers
 :- test numbercodes_test7(A) => (A=15)
-# "[ISO] number_codes/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO] number_codes/2: bug()".
 
 numbercodes_test7(A) :- number_codes(A, [0'0, 0'x, 0'f]).
 
-%% REVIEW:PENDING                                       **Label_4**
+% TODO:[JF] number_chars/2 and number_codes/2 should accept char code numbers
 :- test numbercodes_test8(A) => (A=0'a)
-# "[ISO] number_codes/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO] number_codes/2: bug()".
 
 numbercodes_test8(A) :- number_codes(A, [0'0, 0''', 0'a]).
 
@@ -7462,29 +7479,32 @@ numbercodes_test15 :- number_codes(_X, [0'a|_]).
 
 numbercodes_test16 :- number_codes(_X, [0'a, _]).
 
-%% REVIEW:PENDING                                                  **Label_4**
+% TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and bin numbers
 :- test numbercodes_test17(A, S) => (A=273, S=[50, 55, 51])
-# "[ISO-sics] number_codes/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO-sics] number_codes/2: expected(succeed) bug(fail)".
 
 numbercodes_test17(A, S) :-
-	number_chars(A, [' ', '0', 'x', '1', '1', '1']),
-	number_codes(A, S).
+    number_chars(A, [' ', '0', 'x', '1', '1', '1']),
+    number_codes(A, S).
 
-%% REVIEW:PENDING                                        **Label_4**
+% TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and oct numbers
 :- test numbercodes_test18(A, S) => (A=73, S=[55, 51])
-# "[ISO-sics] number_codes/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO-sics] number_codes/2: expected(succeed) bug(fail)".
 
 numbercodes_test18(A, S) :-
-	number_chars(A, [' ', '0', 'o', '1', '1', '1']),
-	number_codes(A, S).
+    number_chars(A, [' ', '0', 'o', '1', '1', '1']),
+    number_codes(A, S).
 
-%% REVIEW:PENDING                                                         **Label_4**
+% TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and bin numbers
 :- test numbercodes_test19(A, S) => (A=7, S=[55])
-# "[ISO-sics] number_codes/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO-sics] number_codes/2: expected(succeed) bug(fail)".
 
 numbercodes_test19(A, S) :-
-	number_chars(A, [' ', '0', 'b', '1', '1', '1']),
-	number_codes(A, S).
+    number_chars(A, [' ', '0', 'b', '1', '1', '1']),
+    number_codes(A, S).
 
 %% REVIEW:PENDING                          **It's correct in GNU**                             **Label_2**
 %%   [gprolog]: throws FOO
@@ -7602,7 +7622,8 @@ setup_currentflag5(X,Y):- (X=unknown, Y=warning, set_prolog_flag(X, Y)).
 
 %% REVIEW:PENDING                                               **Label_4**
 :- test currentflag_test6
-# "[ISO-eddbali] current_prolog_flag/2: expected(succeed) bug(fail)".
+   + not_fails
+   # "[ISO-eddbali] current_prolog_flag/2: expected(succeed) bug(fail)".
 
 currentflag_test6 :- current_prolog_flag(debug, off).
 
