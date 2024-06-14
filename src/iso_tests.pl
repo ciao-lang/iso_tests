@@ -4,8 +4,8 @@
 :- doc(author, "The Ciao Development Team").
 :- doc(author, "Lorea Galech (first version)").
 :- doc(author, "R@'{e}my Haemmerl@'{e}").
-:- doc(author, "Jose F. Morales").
 :- doc(author, "Jos@'{e} Luis Bueno").
+:- doc(author, "Jose F. Morales (rewrite)").
 
 :- doc(module, "This module contains a collection of test assertions
 for checking compliance of Ciao with the ISO Prolog standard using the
@@ -27,10 +27,7 @@ For some tests the description also includes some notes about the
 expected behavior:
 
  - (nothing): the test assertion fully describes the expected behaviour
- - `expected(undefined)`: The expected result for this test is undefined.
- - `expected(impldep)`: The expected result is implementation-dependent.
- - `expected(succeed)`: This test is expected to succeed in Ciao.
- - `expected(fail)`: This test is expected to fail in Ciao.
+ - `expected(...)`: TODO (to be reviewed)
 
 and the current status in Ciao:
 
@@ -109,20 +106,23 @@ bird(_) :- fail.
 :- load_test_module(iso_tests(iso_tests_common)).
 :- use_module(iso_tests_common). % TODO: review this module
 
-read_bytes_to_end(X) :- current_input(S), read_bytes_to_end(S, X).
+% ---------------------------------------------------------------------------
+%! # Auxiliary predicates for IO
 
-% Common for IO
+% NOTE: default is type(text), eof_action(error)
+
+read_bytes_to_end(X) :- current_input(S), read_bytes_to_end(S, X).
 
 :- discontiguous text_def/2.
 
-write_contents(text, What, S) :-
+write_data(txt(What), S) :-
     ( nonvar(What), What = def(What0), text_def(What0, Text0) -> Text = Text0
     ; Text = What
     ),
     ( atom(Text) -> write(S, Text)
     ; write_list(Text, S)
     ).
-write_contents(binary, Bytes, S) :-
+write_data(bin(Bytes), S) :-
     put_byte_list(Bytes, S).
 
 write_list([],          _) :- !.
@@ -149,10 +149,6 @@ close_outstreams(Sc, Sn) :-
     set_output(Sc),
     close(Sn).
 
-open_and_write(File, Mode, S, Ops, Type, What) :-
-    open(File, Mode, S, Ops),
-    write_contents(Type, What, S).
-
 open_to_read(File, Mode, Sc, Sn, Ops) :-
     open(File, Mode, Sn, Ops),
     current_input(Sc),
@@ -171,56 +167,65 @@ curr_in(S) :- current_input(S).
 % Obtain a closed input stream (for tests)
 closed_instream(S) :-
     F = '/tmp/tmp.in',
-    wr_txt_f(F, ''), % make sure the file exists
+    wr_f(F, txt('')), % make sure the file exists
     open(F, read, S, []), close(S).
 
-% NOTE: default is type(text), eof_action(error)
-wr_txt_out_s(S, Txt) :-
-    open_and_write('/tmp/tmp.out', write, S, [], text, Txt).
+wr_f_s(F, What, Opts, S) :-
+    ( What = txt(_) -> Opts2 = Opts
+    ; What = bin(_) -> Opts2 = [type(binary)|Opts]
+    ; fail
+    ),
+    open(F, write, S, Opts2),
+    write_data(What, S).
 
-wr_txt_out_s_a(S, Alias, Txt) :-
-    open_and_write('/tmp/tmp.out', write, S, [alias(Alias)], text, Txt).
-
-wr_txt_f(F, Txt) :-
-    open_and_write(F, write, S, [], text, Txt),
+wr_f(F, What) :-
+    wr_f_s(F, What, [], S),
     close(S).
 
-wr_bin_f(F, Bytes) :-
-    open_and_write(F, write, S, [type(binary)], binary, Bytes),
-    close(S).
-
-chk_txt_f(F, Txt) :-
+chk_out(F, txt(Txt)) :- !,
     open(F, read, S, []), read_string_to_end(S, Txt0), close(S),
     Txt = Txt0.
-
-chk_bin_f(F, Bytes) :-
-    open(F, read, S, []), read_bytes_to_end(S, Bytes0), close(S),
+chk_out(F, bin(Bytes)) :- !,
+    open(F, read, S, [type(binary)]), read_bytes_to_end(S, Bytes0), close(S),
     Bytes = Bytes0.
 
 txt_in(Txt,prev(Sc,S1)) :-
-    wr_txt_f('/tmp/tmp.in', Txt),
+    wr_f('/tmp/tmp.in', txt(Txt)),
     open_to_read('/tmp/tmp.in', read, Sc, S1, []).
 
 txt_in_i(Txt,prev(S1)) :-
-    wr_txt_f('/tmp/tmp.in', Txt),
+    wr_f('/tmp/tmp.in', txt(Txt)),
     open('/tmp/tmp.in', read, S1, [alias(st_i)]).
 
 txt_in_s(Txt,S1,prev(S1)) :-
-    wr_txt_f('/tmp/tmp.in', Txt),
+    wr_f('/tmp/tmp.in', txt(Txt)),
     open('/tmp/tmp.in', read, S1).
+
+txt_in_s_e(Txt,S1,prev(S1)) :-
+    wr_f('/tmp/tmp.in', txt(Txt)),
+    open('/tmp/tmp.in', read, S1, [eof_action(eof_code)]).
 
 txt_out_s(S, prev(S)) :-
     open('/tmp/tmp.out', write, S).
 
-txt_out_o(prev(S1)) :-
+txt_out_a(prev(S1)) :-
     open('/tmp/tmp.out', write, S1, [alias(st_o)]).
 
 bin_in(Bytes,prev(Sc,S2)):-
-    wr_bin_f('/tmp/tmp.in', Bytes),
+    wr_f('/tmp/tmp.in', bin(Bytes)),
+    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(binary)]).
+
+% write binary, read as text
+bintxt_in_s(Bytes,S,prev(S)) :-
+    wr_f('/tmp/tmp.in', bin(Bytes)),
+    open('/tmp/tmp.in', read, S).
+
+bin_in_s(Bytes,S2,prev(Sc,S2)):-
+    wr_f('/tmp/tmp.in', bin(Bytes)),
     open_to_read('/tmp/tmp.in', read, Sc, S2, [type(binary)]).
 
 bin_in_i(Bytes,prev(S2)):-
-    wr_bin_f('/tmp/tmp.in', Bytes),
+    wr_f('/tmp/tmp.in', bin(Bytes)),
     open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]).
 
 % Undo (close streams, etc)
@@ -282,49 +287,31 @@ unset_char_conversions([]).
 unset_char_conversions([A-_|ABs]) :- char_conversion(A,A), unset_char_conversions(ABs).
 
 % TODO:[JF] factorize
-:- meta_predicate with_txt_out_s(?, ?, goal, ?).
-with_txt_out_s(Txt, S, G, OutTxt) :-
-    wr_txt_out_s(S, Txt),
+:- meta_predicate with_out_s(?, ?, goal, ?).
+with_out_s(What, S, G, OutWhat) :-
+    wr_f_s('/tmp/tmp.out', What, [], S),
     once_port_reify(G, Port),
     close(S),
     port_call(Port),
-    chk_txt_f('/tmp/tmp.out', OutTxt).
+    chk_out('/tmp/tmp.out', OutWhat).
 
-:- meta_predicate with_txt_out(?, goal, ?).
-with_txt_out(Txt, G, OutTxt) :-
-    wr_txt_out_s(S, Txt),
+:- meta_predicate with_out(?, goal, ?).
+with_out(What, G, OutWhat) :-
+    wr_f_s('/tmp/tmp.out', What, [], S),
     current_output(Sc),
     set_output(S),
     once_port_reify(G, Port),
     close_outstreams(Sc, S),
     port_call(Port),
-    chk_txt_f('/tmp/tmp.out', OutTxt).
+    chk_out('/tmp/tmp.out', OutWhat).
 
-:- meta_predicate with_txt_out_a(?, goal, ?).
-with_txt_out_a(Txt, G, OutTxt) :-
-    wr_txt_out_s_a(S, st_o, Txt),
+:- meta_predicate with_out_a(?, goal, ?).
+with_out_a(What, G, OutWhat) :-
+    wr_f_s('/tmp/tmp.out', What, [alias(st_o)], S),
     once_port_reify(G, Port),
     close(S),
     port_call(Port),
-    chk_txt_f('/tmp/tmp.out', OutTxt).
-
-:- meta_predicate with_bin_out(?, goal, ?).
-with_bin_out(Bin, G, OutBin) :-
-    open_and_write('/tmp/tmp.out', write, S, [type(binary)], binary, Bin),
-    current_output(Sc),
-    set_output(S),
-    once_port_reify(G, Port),
-    close_outstreams(Sc, S),
-    port_call(Port),
-    chk_bin_f('/tmp/tmp.out', OutBin).
-
-:- meta_predicate with_bin_out_s(?, ?, goal, ?).
-with_bin_out_s(Bin, S, G, OutBin) :-
-    open_and_write('/tmp/tmp.out', write, S, [type(binary)], binary, Bin),
-    once_port_reify(G, Port),
-    close(S),
-    port_call(Port),
-    chk_bin_f('/tmp/tmp.out', OutBin).
+    chk_out('/tmp/tmp.out', OutWhat).
 
 % ===========================================================================
 %! # 6.3 Term syntax
@@ -351,21 +338,21 @@ term_test2 :- read(_).
 
 :- test term_test3
    + (setup(txt_in('f(,,a).', Prev)), cleanup(und(Prev)),
-      exception(error(syntax_error(ImplDepAtom), ImplDep)))
+      exception(error(syntax_error(ImplDepAtom), _)))
    # "[ISO] syntax: arguments".
 
 term_test3 :- read(_).
 
 :- test term_test4
    + (setup(txt_in('[a,,|v].', Prev)), cleanup(und(Prev)),
-      exception(error(syntax_error(ImplDepAtom), ImplDep)))
+      exception(error(syntax_error(ImplDepAtom), _)))
    # "[ISO] syntax: arguments".
 
 term_test4 :- read(_).
 
 :- test term_test5
    + (setup(txt_in('[a,b|,]', Prev)), cleanup(und(Prev)),
-      exception(error(syntax_error(ImplDepAtom), ImplDep)))
+      exception(error(syntax_error(ImplDepAtom), _)))
    # "[ISO] syntax: arguments".
 
 term_test5 :- read(_).
@@ -396,7 +383,7 @@ term_test8 :- read(_).
 
 :- test opnotation_test1
    + (setup(txt_in('fx fx 1.', Prev)), cleanup(und(Prev)),
-      exception(error(syntax_error(ImplDepAtom), ImplDep)))
+      exception(error(syntax_error(ImplDepAtom), _)))
    # "[ISO] syntax: operators".
 
 opnotation_test1 :- with_def_ops(read(_)).
@@ -410,7 +397,7 @@ opnotation_test2 :- with_def_ops(read(_)).
 
 :- test opnotation_test3
    + (setup(txt_in('1 xf xf.', Prev)), cleanup(und(Prev)),
-      exception(error(syntax_error(ImplDepAtom), ImplDep)))
+      exception(error(syntax_error(ImplDepAtom), _)))
    # "[ISO] syntax: operators".
 
 opnotation_test3 :- with_def_ops(read(_)).
@@ -424,7 +411,7 @@ opnotation_test4 :- with_def_ops(read(_)).
 
 :- test opnotation_test5
    + (setup(txt_in('1 xfx 2 xfx 3.', Prev)), cleanup(und(Prev)),
-      exception(error(syntax_error(ImplDepAtom), ImplDep)))
+      exception(error(syntax_error(ImplDepAtom), _)))
    # "[ISO] syntax: operators".
 
 opnotation_test5 :- with_def_ops(read(_)).
@@ -438,7 +425,7 @@ opnotation_test6 :- with_def_ops(read(_)).
 
 :- test opnotation_test7
     + (setup(txt_in('1 xfx 2 xfx 3.', Prev)), cleanup(und(Prev)),
-       exception(error(syntax_error(ImplDepAtom), ImplDep)))
+       exception(error(syntax_error(ImplDepAtom), _)))
    # "[ISO] syntax: operators".
 
 opnotation_test7 :- with_def_ops(read(_)).
@@ -450,42 +437,42 @@ opnotation_test7 :- with_def_ops(read(_)).
 
 opnotation_test8 :- with_def_ops(read(_)).
 
-:- test opnotation_test9(T, T1) : true => (T=T1)
+:- test opnotation_test9(T, T1) => (T=T1)
    + (not_fails,
       setup(txt_in('fy fy 1. fy (fy 1).', Prev)), cleanup(und(Prev)))
    # "[ISO] syntax: operators".
 
 opnotation_test9(T, T1) :- with_def_ops((read(T), read(T1))).
 
-:- test opnotation_test10(T, T1) : true => (T=T1)
+:- test opnotation_test10(T, T1) => (T=T1)
    + (not_fails,
       setup(txt_in('1 xfy 2 xfy 3. 1 xfy (2 xfy 3).', Prev)), cleanup(und(Prev)))
    # "[ISO] syntax: operators".
 
 opnotation_test10(T, T1) :- with_def_ops((read(T), read(T1))).
 
-:- test opnotation_test11(T, T1) : true => (T=T1)
+:- test opnotation_test11(T, T1) => (T=T1)
    + (not_fails,
       setup(txt_in('1 xfy 2 yfx 3. 1 xfy (2 yfx 3).', Prev)), cleanup(und(Prev)))
    # "[ISO] syntax: operators".
 
 opnotation_test11(T, T1) :- with_def_ops((read(T), read(T1))).
 
-:- test opnotation_test12(T, T1) : true => (T=T1)
+:- test opnotation_test12(T, T1) => (T=T1)
    + (not_fails,
       setup(txt_in('fy 2 yf. fy (2 yf).', Prev)), cleanup(und(Prev)))
    # "[ISO] syntax: operators".
 
 opnotation_test12(T, T1) :- with_def_ops((read(T), read(T1))).
 
-:- test opnotation_test13(T, T1) : true => (T=T1)
+:- test opnotation_test13(T, T1) => (T=T1)
    + (not_fails,
       setup(txt_in('1 yf yf. (1 yf) yf.', Prev)), cleanup(und(Prev)))
    # "[ISO] syntax: operators".
 
 opnotation_test13(T, T1) :- with_def_ops((read(T), read(T1))).
 
-:- test opnotation_test14(T, T1) : true => (T=T1)
+:- test opnotation_test14(T, T1) => (T=T1)
    + (not_fails,
       setup(txt_in('1 yfx 2 yfx 3. (1 yfx 2) yfx 3.', Prev)), cleanup(und(Prev)))
    # "[ISO] syntax: operators".
@@ -495,21 +482,21 @@ opnotation_test14(T, T1) :- with_def_ops((read(T), read(T1))).
 % ---------------------------------------------------------------------------
 %! ## 6.3.5 list notation ISOcore#p19
 
-:- test list_test1(T) : true => (T=[a])
+:- test list_test1(T) => (T=[a])
    + (not_fails,
       setup(txt_in('.(a,[]).', Prev)), cleanup(und(Prev)))
    # "[ISO] syntax: list notation".
 
 list_test1(T) :- read(T).
 
-:- test list_test2(T) : true => (T=[a, b])
+:- test list_test2(T) => (T=[a, b])
    + (not_fails,
       setup(txt_in('.(a, .(b,[])).', Prev)), cleanup(und(Prev)))
    # "[ISO] syntax: list notation".
 
 list_test2(T) :- read(T).
 
-:- test list_test3(T) : true => (T=[a|b])
+:- test list_test3(T) => (T=[a|b])
    + (not_fails,
       setup(txt_in('.(a,b).', Prev)), cleanup(und(Prev)))
    # "[ISO] syntax: list notation".
@@ -519,14 +506,14 @@ list_test3(T) :- read(T).
 % ---------------------------------------------------------------------------
 %! ## 6.3.6 curly bracketed term ISOcore#p20
 
-:- test curly_test1(T) : true => (T={a})
+:- test curly_test1(T) => (T={a})
    + (not_fails,
       setup(txt_in("'{}'(a).", Prev)), cleanup(und(Prev)))
    # "[ISO] syntax: @{@}/1 notation".
 
 curly_test1(T) :- read(T).
 
-:- test curly_test2(T) : true => (T={a, b})
+:- test curly_test2(T) => (T={a, b})
    + (not_fails,
       setup(txt_in("'{}'(','(a,b)).", Prev)), cleanup(und(Prev)))
    # "[ISO] syntax: @{@}/1 notation".
@@ -689,7 +676,7 @@ call_test3(X) :- call((fail, X)).
 :- test call_test4 + fails # "[ISO] call/1".
 call_test4 :- call((fail, call(1))).
 
-:- test call_test5 + exception(error(instantiation_error, ImplDep)) # "[ISO] call/1".
+:- test call_test5 + exception(error(instantiation_error, _)) # "[ISO] call/1".
 call_test5 :- call(bb(_)).
 
 bb(X) :-
@@ -698,7 +685,7 @@ bb(X) :-
 
 :- test call_test6
    + ( user_output("3"),
-       exception(error(type_error(callable, 3), ImplDep)) )
+       exception(error(type_error(callable, 3), _)) )
    # "[ISO] call/1".
 
 call_test6 :- call(bb(3)).
@@ -720,31 +707,31 @@ aa(2).
 call_test8(Result) :- findall([X, Z], (call((Z= !, aa(X), Z))), Result).
 
 :- test call_test9(X)
-   + (user_output("3"), exception(error(instantiation_error, ImplDep)))
+   + (user_output("3"), exception(error(instantiation_error, _)))
    # "[ISO] call/1".
 
 call_test9(X) :- call((write(3), X)).
 
 :- test call_test10
    + (user_output("3"),
-      exception(error(type_error(callable, 1), ImplDep)))
+      exception(error(type_error(callable, 1), _)))
    # "[ISO] call/1".
 
 call_test10 :- call((write(3), call(1))).
 
-:- test call_test11 + exception(error(instantiation_error, ImplDep))
+:- test call_test11 + exception(error(instantiation_error, _))
    # "[ISO] call/1".
 
 call_test11 :- call(_).
 
-:- test call_test12 + exception(error(type_error(callable, 1), ImplDep))
+:- test call_test12 + exception(error(type_error(callable, 1), _))
    # "[ISO] call/1".
 
 call_test12 :- call(1).
 
 % TODO:[JF] complain about non-callable when the term is translated to a goal
 :- test call_test13
-   + exception(error(type_error(callable, (fail, 1)), ImplDep))
+   + exception(error(type_error(callable, (fail, 1)), _))
    # "[ISO] call/1: bug()".
 
 call_test13 :- call((fail, 1)).
@@ -752,21 +739,21 @@ call_test13 :- call((fail, 1)).
 % TODO:[JF] complain about non-callable when the term is translated to a goal,
 %   do not write anything to output!
 :- test call_test14
-   + exception(error(type_error(callable, (write(3), 1)), ImplDep))
+   + exception(error(type_error(callable, (write(3), 1)), _))
    # "[ISO] call/1: bug()".
 
 call_test14 :- call((write(3), 1)).
 
 % TODO:[JF] it should complain about non-callable when the term is translated to a goal,
 %   and report the whole goal
-:- test call_test15 + exception(error(type_error(callable, (1;true)), ImplDep))
+:- test call_test15 + exception(error(type_error(callable, (1;true)), _))
 # "[ISO] call/1: bug()".
 
 call_test15 :- call((1;true)).
 
 % TODO:[JF] it should complain about non-callable when the term is translated to a goal,
 %   instead it executes the first branch
-:- test call_test16 + exception(error(type_error(callable, (true;1)), ImplDep))
+:- test call_test16 + exception(error(type_error(callable, (true;1)), _))
    # "[ISO-ciao] call/1: bug()".
 
 call_test16 :- call((true;1)).
@@ -1002,7 +989,7 @@ catch_test2(Z) :- catch(bar(3), Z, true).
 catch_test3 :- catch(true, _, 3).
 
 % TODO:[JF] this ISO tests seems to be wrong (according to all Prolog systems and Logtalk)
-% :- test catch_test4 + exception(error(system_error, ImplDep))
+% :- test catch_test4 + exception(error(system_error, _))
 % # "[ISO] catch/3: expected(error) bug(wrong_error)".
 % 
 % catch_test4 :- catch(true, _C, write(demoen)), throw(bla).
@@ -1575,51 +1562,48 @@ functor_test10 :- functor([_|_], '.', 2).
 functor_test11 :- functor([], [], 0).
 
 :- test functor_test12(X, Y)
-    + exception(error(instantiation_error, ImplDep))
+    + exception(error(instantiation_error, _))
    # "[ISO] functor/3: bug()".
 
 functor_test12(X, Y) :- functor(X, Y, 3).
 
 :- test functor_test13(X, N)
-    + exception(error(instantiation_error, ImplDep))
+    + exception(error(instantiation_error, _))
    # "[ISO] functor/3: bug()".
 
 functor_test13(X, N) :- functor(X, foo, N).
 
 :- test functor_test14(X)
-    + exception(error(type_error(integer, a), ImplDep))
+    + exception(error(type_error(integer, a), _))
    # "[ISO] functor/3: bug()".
 
 functor_test14(X) :- functor(X, foo, a).
 
 :- test functor_test15(X)
-    + exception(error(type_error(atom, 1.5), ImplDep))
+    + exception(error(type_error(atom, 1.5), _))
    # "[ISO] functor/3: bug()".
 
 functor_test15(X) :- functor(X, 1.5, 1).
 
 :- test functor_test16(X)
-    + exception(error(type_error(atomic, foo(a)), ImplDep))
+    + exception(error(type_error(atomic, foo(a)), _))
    # "[ISO] functor/3: bug()".
 
 functor_test16(X) :- functor(X, foo(a), 1).
 
-:- test functor_test17(T, X)
-   + (setup(setup_max_arity_plus_1(X)),
-      exception(error(representation_error(max_arity), ImplDep)))
+:- test functor_test17(T)
+   + exception(error(representation_error(max_arity), _))
    # "[ISO] functor/3: bug()".
 
-functor_test17(T, X) :- functor(T, foo, X).
+functor_test17(T) :-
+    current_prolog_flag(max_arity, A), A1 is A + 1,
+    functor(T, foo, A1).
 
-setup_max_arity_plus_1(X) :-
-    current_prolog_flag(max_arity, A), X is A + 1.
-
-:- test functor_test18(F, Minus_1) :
-    (Minus_1 is (0 -1))
-    + exception(error(domain_error(not_less_than_zero, -1), ImplDep))
+:- test functor_test18(F)
+   + exception(error(domain_error(not_less_than_zero, -1), _))
    # "[ISO] functor/3: bug()".
 
-functor_test18(F, Minus_1) :- functor(F, foo, Minus_1).
+functor_test18(T) :- functor(T, foo, -1).
 
 % ---------------------------------------------------------------------------
 %! ## 8.5.2 arg/3 ISOcore#p72
@@ -1645,23 +1629,23 @@ arg_test6 :- arg(0, foo(a, b), foo).
 :- test arg_test7(N) + fails # "[ISO] arg/3".
 arg_test7(N) :- arg(3, foo(3, 4), N).
 
-:- test arg_test8(X) + exception(error(instantiation_error, ImplDep))
+:- test arg_test8(X) + exception(error(instantiation_error, _))
    # "[ISO] arg/3: bug()".
 
 arg_test8(X) :- arg(X, foo(a, b), a).
 
-:- test arg_test9(X) + exception(error(instantiation_error, ImplDep))
+:- test arg_test9(X) + exception(error(instantiation_error, _))
    # "[ISO] arg/3: bug()".
 
 arg_test9(X) :- arg(1, X, a).
 
 :- test arg_test10(A)
-    + exception(error(type_error(compound, atom), ImplDep))
+    + exception(error(type_error(compound, atom), _))
    # "[ISO] arg/3: bug()".
 
 arg_test10(A) :- arg(0, atom, A).
 
-:- test arg_test11(A) + exception(error(type_error(compound, 3), ImplDep))
+:- test arg_test11(A) + exception(error(type_error(compound, 3), _))
    # "[ISO] arg/3: bug()".
 
 arg_test11(A) :- arg(0, 3, A).
@@ -1671,13 +1655,13 @@ arg_test11(A) :- arg(0, 3, A).
 arg_test12(X) :- arg(1, foo(X), u(X)).
 
 :- test arg_test13
-   + exception(error(domain_error(not_less_than_zero, -3), ImplDep))
+   + exception(error(domain_error(not_less_than_zero, -3), _))
    # "[ISO-eddbali] arg/3: bug()".
 
 arg_test13 :- arg(-3, foo(a, b), _).
 
 :- test arg_test14(X)
-    + exception(error(type_error(integer, a), ImplDep))
+    + exception(error(type_error(integer, a), _))
    # "[ISO-eddbali] arg/3: bug()".
 
 arg_test14(X) :- arg(a, foo(a, b), X).
@@ -1687,7 +1671,7 @@ arg_test14(X) :- arg(a, foo(a, b), X).
 
 arg_test15(X, Y) :- arg(2, foo(a, f(X, b), c), f(a, Y)).
 
-:- test arg_test16 + exception(error(type_error(compound, 3), ImplDep))
+:- test arg_test16 + exception(error(type_error(compound, 3), _))
    # "[ISO-sics] arg/3: bug()".
 
 arg_test16 :- arg(1, 3, _).
@@ -1725,42 +1709,42 @@ univ_test5 :- '=..'(1, [1]).
 
 univ_test6 :- '=..'(foo(a, b), [foo, b, a]).
 
-:- test univ_test7(X, Y) + exception(error(instantiation_error, ImplDep))
+:- test univ_test7(X, Y) + exception(error(instantiation_error, _))
    # "[ISO] '=..'/2".
 
 univ_test7(X, Y) :- '=..'(X, Y).
 
-:- test univ_test8(X, Y) + exception(error(instantiation_error, ImplDep))
+:- test univ_test8(X, Y) + exception(error(instantiation_error, _))
    # "[ISO] '=..'/2".
 
 univ_test8(X, Y) :- '=..'(X, [foo, a|Y]).
 
-:- test univ_test9(X) + exception(error(type_error(list, [foo|bar]), ImplDep))
+:- test univ_test9(X) + exception(error(type_error(list, [foo|bar]), _))
    # "[ISO] '=..'/2".
 
 univ_test9(X) :- '=..'(X, [foo|bar]).
 
-:- test univ_test10(X, Foo) + exception(error(instantiation_error, ImplDep))
+:- test univ_test10(X, Foo) + exception(error(instantiation_error, _))
    # "[ISO] '=..'/2".
 
 univ_test10(X, Foo) :- '=..'(X, [Foo, bar]).
 
-:- test univ_test11(X) + exception(error(type_error(atom, 3), ImplDep))
+:- test univ_test11(X) + exception(error(type_error(atom, 3), _))
    # "[ISO] '=..'/2".
 
 univ_test11(X) :- '=..'(X, [3, 1]).
 
-:- test univ_test12(X) + exception(error(type_error(atom, 1.1), ImplDep))
+:- test univ_test12(X) + exception(error(type_error(atom, 1.1), _))
    # "[ISO] '=..'/2".
 
 univ_test12(X) :- '=..'(X, [1.1, foo]).
 
-:- test univ_test13(X) + exception(error(type_error(atom, a(b)), ImplDep))
+:- test univ_test13(X) + exception(error(type_error(atom, a(b)), _))
    # "[ISO] '=..'/2".
 
 univ_test13(X) :- '=..'(X, [a(b), 1]).
 
-:- test univ_test14(X) + exception(error(type_error(list, 4), ImplDep))
+:- test univ_test14(X) + exception(error(type_error(list, 4), _))
    # "[ISO] '=..'/2".
 
 univ_test14(X) :- '=..'(X, 4).
@@ -1770,28 +1754,25 @@ univ_test14(X) :- '=..'(X, 4).
 
 univ_test15(X) :- '=..'(f(X), [f, u(X)]).
 
-:- test univ_test16(X) + exception(error(type_error(atomic, f(a)), ImplDep))
+:- test univ_test16(X) + exception(error(type_error(atomic, f(a)), _))
    # "[ISO-sics] '=..'/2".
 
 univ_test16(X) :- '=..'(X, [f(a)]).
 
 :- test univ_test17(X)
-    + exception(error(domain_error(non_empty_list, []), ImplDep))
+    + exception(error(domain_error(non_empty_list, []), _))
    # "[ISO-sics] '=..'/2".
 
 univ_test17(X) :- '=..'(X, []).
 
-:- test univ_test18(X, L)
-   + (setup(setup_univ_test18(L)),
-      exception(error(representation_error(max_arity), ImplDep)))
+:- test univ_test18(X)
+   + exception(error(representation_error(max_arity), _))
    # "[ISO-sics] '=..'/2".
 
-univ_test18(X, L) :- '=..'(X, [f|L]).
-
-setup_univ_test18(L) :-
-    current_prolog_flag(max_arity, MAX),
-    N is (MAX+1),
-    my_list_of(N, 1, L).
+univ_test18(X) :-
+    current_prolog_flag(max_arity, A), A1 is A + 1,
+    my_list_of(A1, 1, L),
+    X =.. [f|L].
 
 my_list_of(0, _, []).
 my_list_of(N, A, [A|L]) :-
@@ -1876,7 +1857,7 @@ is_test4 :- 3 is 3.0.
 
 is_test5 :- foo is 77.
 
-:- test is_test6(N) + exception(error(instantiation_error, ImplDep))
+:- test is_test6(N) + exception(error(instantiation_error, _))
    # "[ISO] arith is/2".
 
 is_test6(N) :- 77 is N.
@@ -1976,37 +1957,37 @@ arithcomp_test17 :- '>='(3*2, 7 -1).
 arithcomp_test18 :- '=<'(3*2, 7 -1).
 
 :- test arithcomp_test19(X)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith '=:='/2".
 
 arithcomp_test19(X) :- '=:='(X, 5).
 
 :- test arithcomp_test20(X)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith =\\=/2".
 
 arithcomp_test20(X) :- X =\= 5.
 
 :- test arithcomp_test21(X)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith '<'/2".
 
 arithcomp_test21(X) :- '<'(X, 5).
 
 :- test arithcomp_test22(X)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith '>'/2".
 
 arithcomp_test22(X) :- '>'(X, 5).
 
 :- test arithcomp_test23(X)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith '>='/2".
 
 arithcomp_test23(X) :- '>='(X, 5).
 
 :- test arithcomp_test24(X)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith '=<'/2".
 
 arithcomp_test24(X) :- '=<'(X, 5).
@@ -2082,7 +2063,7 @@ clause_test6(Body) :- clause(x, Body).
 %% REVIEW:PENDING                                                     **Label_2**
 %%   [gprolog]: throws exception(error(instantation_error, _))
 %%   [ciao]: no throws
-:- test clause_test7(B) + exception(error(instantation_error, ImplDep))
+:- test clause_test7(B) + exception(error(instantation_error, _))
 # "[ISO] clause/2: expected(error) bug(fail)".
 
 clause_test7(B) :- clause(_, B).
@@ -2090,7 +2071,7 @@ clause_test7(B) :- clause(_, B).
 %% REVIEW:PENDING                                                 **Label_2**
 %%   [gprolog]: throws exception(error(type_error(callable, 4), _))
 %%   [ciao]: no throws
-:- test clause_test8(X) + exception(error(type_error(callable, 4), ImplDep))
+:- test clause_test8(X) + exception(error(type_error(callable, 4), _))
 # "[ISO] clause/2: expected(error) bug(fail)".
 
 clause_test8(X) :- clause(4, X).
@@ -2109,7 +2090,7 @@ clause_test9(N, Body) :- clause(elk(N), Body).
 %%   [gprolog]: throws  exception(error(permission_error(access, private_procedure, atom/1),_))
 %%   [ciao]: throw exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),clause/2))
 :- test clause_test10(Body)
-   + exception(error(permission_error(access, private_procedure, atom/1), ImplDep))
+   + exception(error(permission_error(access, private_procedure, atom/1), _))
    # "[ISO] clause/2: expected(error) bug(wrong_error)".
 
 clause_test10(Body) :- clause(atom(_), Body).
@@ -2123,7 +2104,7 @@ clause_test11 :- clause(legs(A, 6), insect(f(A))).
 %%   [gprolog]: throws exception(error(type_error(callable, 5), _))
 %%   [ciao]: throw exception(error(permission_error(modify,static_procedure,'iso_tests:f'/1),clause/2))
 :- test clause_test12
-   + exception(error(type_error(callable, 5), ImplDep))
+   + exception(error(type_error(callable, 5), _))
    # "[ISO-eddbali] clause/2: expected(error) bug(fail)".
 
 clause_test12 :- clause(f(_), 5).
@@ -2155,7 +2136,7 @@ currentpredicate_test3(Arity) :- current_predicate(elk/Arity).
 currentpredicate_test4(A) :- current_predicate(foo/A).
 
 :- test currentpredicate_test5(Result)
-	=> (find_on_list([elk], Result), find_on_list([insect], Result))
+	=> (sublist([elk], Result), sublist([insect], Result))
 # "[ISO] current_predicate/2: expected(succeed)".
 
 currentpredicate_test5(Result) :-
@@ -2165,7 +2146,7 @@ currentpredicate_test5(Result) :-
 %%   [gprolog]: throws exception(error(type_error(predicate_indicator, 4),_))
 %%   [ciao]: no throw 
 :- test currentpredicate_test6
-	+ exception(error(type_error(predicate_indicator, 4), ImplDep))
+	+ exception(error(type_error(predicate_indicator, 4), _))
 # "[ISO] current_predicate/2: expected(error) bug(fail)".
 
 currentpredicate_test6 :- current_predicate(4).
@@ -2174,7 +2155,7 @@ currentpredicate_test6 :- current_predicate(4).
 %%   [gprolog]: throw exception(error(type_error(predicate_indicator, 0/dog), _))
 %%   [ciao]: no throw 
 :- test currentpredicate_test7(X) : (X=dog)
-   + exception(error(type_error(predicate_indicator, 0/dog), ImplDep))
+   + exception(error(type_error(predicate_indicator, 0/dog), _))
    # "[ISO-eddbali] current_predicate/2: expected(error) bug(fail)".
 
 currentpredicate_test7(X) :- current_predicate(X).
@@ -2183,13 +2164,13 @@ currentpredicate_test7(X) :- current_predicate(X).
 %%   [gprolog]: throws exception: error(type_error(atom,0),current_predicate/1)
 %%   [ciao]: no throw 
 :- test currentpredicate_test8(X) : (X=0/dog)
-   + exception(error(type_error(predicate_indicator, 0/dog), ImplDep))
+   + exception(error(type_error(predicate_indicator, 0/dog), _))
    # "[ISO-eddbali] current_predicate/2: expected(error) bug(fail)".
 
 currentpredicate_test8(X) :- current_predicate(X).
 
 :- test currentpredicate_test9(X, Result)
-   => (find_on_list([cat/0, dog/0, elk/1, insect/1, legs/2], Result))
+   => (sublist([cat/0, dog/0, elk/1, insect/1, legs/2], Result))
    # "[ISO-eddbali] current_predicate/2: expected(succeed)".
 
 currentpredicate_test9(X, Result) :- findall(X, current_predicate(X), Result).
@@ -2216,7 +2197,7 @@ asserta_test3 :- asserta((foo(A) :- A, call(A))).
 %% REVIEW:PENDING                                                         **Label_3**
 %%   [gprolog]: throws exception(error(instantiation_error,_))
 %%   [ciao]: throws exception(error(type_error(clause,_),asserta/1-1)) 
-:- test asserta_test4 + exception(error(instantiation_error, ImplDep))
+:- test asserta_test4 + exception(error(instantiation_error, _))
 # "[ISO] asserta/2: expected(error) bug(wrong_error)".
 
 asserta_test4 :- asserta(_).
@@ -2224,7 +2205,7 @@ asserta_test4 :- asserta(_).
 %% REVIEW:PENDING                                                        **Label_3**
 %%   [gprolog]: exception(error(type_error(callable, 4), _))
 %%   [ciao]: throws exception(error(type_error(clause,4),asserta/1-1))
-:- test asserta_test5 + exception(error(type_error(callable, 4), ImplDep))
+:- test asserta_test5 + exception(error(type_error(callable, 4), _))
 # "[ISO] asserta/2: expected(error) bug(wrong_error)".
 
 asserta_test5 :- asserta(4).
@@ -2232,7 +2213,7 @@ asserta_test5 :- asserta(4).
 %% REVIEW:PENDING                                                      **Label_3**
 %%   [gprolog]: throws exception(error(type_error(callable, 4), _))
 %%   [ciao]: throws exception(error(type_error(clause,('iso_tests:foo':-4)),asserta/1-1))
-:- test asserta_test6 + exception(error(type_error(callable, 4), ImplDep))
+:- test asserta_test6 + exception(error(type_error(callable, 4), _))
 # "[ISO] asserta/2: expected(error) bug(wrong_error)".
 
 asserta_test6 :- asserta((foo :- 4)).
@@ -2273,7 +2254,7 @@ assertz_test3 :- assertz((foo(X) :- X -> call(X))).
 %% REVIEW:PENDING                                                    **Label_3**
 %%   [gprolog]: throws exception(error(instantiation_error,_))
 %%   [ciao]: throws exception(error(type_error(clause,_),assertz/1-1))
-:- test assertz_test4 + exception(error(instantiation_error, ImplDep))
+:- test assertz_test4 + exception(error(instantiation_error, _))
 # "[ISO] assertz/2: expected(error) bug(wrong_error)".
 
 assertz_test4 :- assertz(_).
@@ -2281,7 +2262,7 @@ assertz_test4 :- assertz(_).
 %% REVIEW:PENDING                                                    **Label_3**
 %%   [gprolog]: throws exception(error(type_error(callable, 4), _))
 %%   [ciao]: throws exception(error(type_error(clause,4),assertz/1-1))
-:- test assertz_test5 + exception(error(type_error(callable, 4), ImplDep))
+:- test assertz_test5 + exception(error(type_error(callable, 4), _))
 # "[ISO] assertz/2: expected(error) bug(wrong_error)".
 
 assertz_test5 :- assertz(4).
@@ -2289,7 +2270,7 @@ assertz_test5 :- assertz(4).
 %% REVIEW:PENDING                                                    **Label_3**
 %%   [gprolog]: throws exception(error(type_error(callable, 4), _))
 %%   [ciao]: throws exception(error(type_error(clause,('iso_tests:foo':-4)),assertz/1-1))
-:- test assertz_test6 + exception(error(type_error(callable, 4), ImplDep))
+:- test assertz_test6 + exception(error(type_error(callable, 4), _))
 # "[ISO] assertz/2: expected(error) bug(wrong_error)".
 
 assertz_test6 :- assertz((foo :- 4)).
@@ -2369,7 +2350,7 @@ retract_test8(A, B, C) :- retract((foo(C) :- A -> B)).
 %% REVIEW:PENDING                                                  **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
-:- test retract_test9(X, Y) + exception(error(instantiation_error, ImplDep))
+:- test retract_test9(X, Y) + exception(error(instantiation_error, _))
 # "[ISO] retract/1: expected(error) bug(fail)".
 
 retract_test9(X, Y) :- retract((X :- in_eec(Y))).
@@ -2378,7 +2359,7 @@ retract_test9(X, Y) :- retract((X :- in_eec(Y))).
 %%   [gprolog]: throws exception(error(type_error(callable, 4), _))
 %%   [ciao]: no throws
 :- test retract_test10(X)
-	+ exception(error(type_error(callable, 4), ImplDep))
+	+ exception(error(type_error(callable, 4), _))
 # "[ISO] retract/1: expected(error) bug(fail)".
 
 retract_test10(X) :- retract((4 :- X)).
@@ -2405,7 +2386,7 @@ abolish_test1 :- abolish(foo/2).
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
 :- test abolish_test2
-	+ exception(error(instantiation_error, ImplDep))
+	+ exception(error(instantiation_error, _))
 # "[ISO] abolish/1: expected(error) bug(fail)".
 
 abolish_test2 :- abolish(foo/_).
@@ -2414,7 +2395,7 @@ abolish_test2 :- abolish(foo/_).
 %%   [gprolog]: throws exception(error(type_error(predicate_indicator, foo),_))
 %%   [ciao]: no throws
 :- test abolish_test3
-	+ exception(error(type_error(predicate_indicator, foo), ImplDep))
+	+ exception(error(type_error(predicate_indicator, foo), _))
 # "[ISO] abolish/1: expected(error) bug(fail)".
 
 abolish_test3 :- abolish(foo).
@@ -2423,14 +2404,14 @@ abolish_test3 :- abolish(foo).
 %%   [gprolog]: throws exception(error(type_error(predicate_indicator, foo(_)),_))
 %%   [ciao]: no throws
 :- test abolish_test4
-	+ exception(error(type_error(predicate_indicator, foo(_)), ImplDep))
+	+ exception(error(type_error(predicate_indicator, foo(_)), _))
 # "[ISO] abolish/1: expected(error) bug(fail)".
 
 abolish_test4 :- abolish(foo(_)).
 
 % :- test abolish_test5(X) : 
 %        (X=abolish/1) 
-% 	+ exception(error(permission_error(modify,static_procedure,abolish/1),ImplDep))
+% 	+ exception(error(permission_error(modify,static_procedure,abolish/1), _))
 % # "[ISO] abolish/1: expected(error) bug(succeed)".
 %
 % abolish_test5(X) :- abolish(X).
@@ -2456,7 +2437,7 @@ abolish_test7(Result) :-
 %% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
-:- test abolish_test8 + exception(error(instantiation_error, ImplDep))
+:- test abolish_test8 + exception(error(instantiation_error, _))
 # "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
 
 abolish_test8 :- abolish(foo/_).
@@ -2465,8 +2446,7 @@ abolish_test8 :- abolish(foo/_).
 %%   [gprolog]: no throws
 %%   [ciao]: no throws
 :- test abolish_test9
-	+ exception(error(permission_error(modify, static_procedure, bar/1),
-		ImplDep))
+   + exception(error(permission_error(modify, static_procedure, bar/1), _))
 # "[ISO-eddbali] abolish/1: expected(error) bug(succeed)".
 
 abolish_test9 :- abolish(bar/1).
@@ -2475,7 +2455,7 @@ abolish_test9 :- abolish(bar/1).
 %%   [gprolog]: throws exception(error(type_error(integer, a), _))
 %%   [ciao]: no throws
 :- test abolish_test10
-	+ exception(error(type_error(integer, a), ImplDep))
+	+ exception(error(type_error(integer, a), _))
 # "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
 
 abolish_test10 :- abolish(foo/a).
@@ -2484,7 +2464,7 @@ abolish_test10 :- abolish(foo/a).
 %%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -1),_))
 %%   [ciao]: no throws
 :- test abolish_test11
-	+ exception(error(domain_error(not_less_than_zero, -1), ImplDep))
+	+ exception(error(domain_error(not_less_than_zero, -1), _))
 # "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
 
 abolish_test11 :- abolish(foo /(-1)).
@@ -2492,17 +2472,18 @@ abolish_test11 :- abolish(foo /(-1)).
 %% REVIEW:PENDING                                                 **Label_2**
 %%   [gprolog]: throws exception(error(representation_error(max_arity), _))
 %%   [ciao]: no throws
-:- test abolish_test12(X)
-   + (setup(setup_max_arity_plus_1(X)),
-      exception(error(representation_error(max_arity), ImplDep)))
+:- test abolish_test12
+   + exception(error(representation_error(max_arity), _))
 # "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
 
-abolish_test12(X) :- abolish(foo/X).
+abolish_test12 :-
+    current_prolog_flag(max_arity, A), A1 is A + 1,
+    abolish(foo/A1).
 
 %% REVIEW:PENDING                                                   **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 5), _))
 %%   [ciao]: no throws
-:- test abolish_test13 + exception(error(type_error(atom, 5), ImplDep))
+:- test abolish_test13 + exception(error(type_error(atom, 5), _))
 # "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
 
 abolish_test13 :- abolish(5/a).
@@ -2511,7 +2492,7 @@ abolish_test13 :- abolish(5/a).
 %%   [gprolog]: throws exception(error(type_error(predicate_indicator, insect), _))
 %%   [ciao]: no throws
 :- test abolish_test14            
-	+ exception(error(type_error(predicate_indicator, insect), ImplDep))
+	+ exception(error(type_error(predicate_indicator, insect), _))
 # "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
 
 abolish_test14 :- abolish(insect).
@@ -2555,13 +2536,13 @@ findall_test5 :- findall(X, (X=2;X=1), [1, 2]).
 findall_test6(X, Y) :- findall(X, (X=1;X=2), [X, Y]).
 
 :- test findall_test7(X, Goal, Result)
-	+ exception(error(instantiation_error, ImplDep))
+	+ exception(error(instantiation_error, _))
 # "[ISO] findall/3: expected(error)".
 
 findall_test7(X, Goal, Result) :- findall(X, Goal, Result).
 
 :- test findall_test8(X, Result)
-	+ exception(error(type_error(callable, 4), ImplDep))
+	+ exception(error(type_error(callable, 4), _))
 # "[ISO] findall/3: expected(error)".
 
 findall_test8(X, Result) :- findall(X, 4, Result).
@@ -2573,7 +2554,7 @@ findall_test8(X, Result) :- findall(X, 4, Result).
 % TODO:[JF] typecheck list in findall/3 (only in iso compat)
 
 :- test findall_test9
-	+ exception(error(type_error(list, [A|1]), ImplDep))
+	+ exception(error(type_error(list, [A|1]), _))
 # "[ISO-sics] findall/3: expected(error) bug(fail)".
 
 findall_test9 :- findall(X, (X=1), [_|1]).
@@ -2668,13 +2649,13 @@ bagof_test11(Result, Y) :- bagof(X, a(X, Y), Result).
 bagof_test12(Result, Y) :- findall([L, Y], bagof(X, b(X, Y), L), Result).
 
 :- test bagof_test13(Result, X, Y, Z)
-	+ exception(error(instantiation_error, ImplDep))
+	+ exception(error(instantiation_error, _))
 # "[ISO] bagof/3: expected(error)".
 
 bagof_test13(Result, X, Y, Z) :- bagof(X, Y^Z, Result).
 
 :- test bagof_test14(Result, X)
-	+ exception(error(type_error(callable, 1), ImplDep))
+	+ exception(error(type_error(callable, 1), _))
 # "[ISO] bagof/3: expected(error)".
 
 bagof_test14(Result, X) :- bagof(X, 1, Result).
@@ -2721,8 +2702,8 @@ setof_test3(Result) :- setof(X, (X=2;X=1), Result).
 
 setof_test4(Result) :- setof(X, (X=2;X=2), Result).
 
-:- test setof_test5(Result, Y, Z) => (Result=[Y, Z] ;S=[Z, Y])
-# "[ISO] setof/3: expected(impldep)".
+:- test setof_test5(Result, Y, Z) => (Result=[Y, Z];Result=[Z, Y])
+   # "[ISO] setof/3".
 
 setof_test5(Result, Y, Z) :- setof(X, (X=Y;X=Z), Result).
 
@@ -2780,8 +2761,8 @@ setof_test12_(Y, Z, S) :-
 setof_test13(Result, Y) :- setof(X, a(X, Y), Result).
 
 :- test setof_test14(Y, Z, Result)
-	=> (Result=[f(Y, b), f(Z, c)] ;L=[f(Z, c), f(Y, b)])
-# "[ISO] setof/3: expected(impldep)".
+   => (Result=[f(Y, b), f(Z, c)];Result=[f(Z, c), f(Y, b)])
+   # "[ISO] setof/3".
 
 setof_test14(Y, Z, Result) :- setof(X, member_(X, [f(Y, b), f(Z, c)]), Result).
 
@@ -2852,13 +2833,13 @@ setof_test24(Y, Result) :- setof(X-Z, bagof(Y, d(X, Y), Z), Result).
 setof_test25(Result) :- setof(f(X, Y), X=Y, Result).
 
 :- test setof_test26(Result)
-	+ exception(error(type_error(callable, 4), ImplDep))
+	+ exception(error(type_error(callable, 4), _))
 # "[ISO-eddbali] setof/3: expected(error)".
 
 setof_test26(Result) :- setof(X, X^(true;4), Result).
 
 :- test setof_test27(Result)
-	+ exception(error(type_error(callable, 1), ImplDep))
+	+ exception(error(type_error(callable, 1), _))
 # "[ISO-sics] setof/3: expected(error)".
 
 setof_test27(Result) :- setof(_X, Y^Y^1, Result).
@@ -2872,7 +2853,7 @@ setof_test28(A) :- setof(X, X=1, [1|A]).
 %%   [gprolog]: throws exception(error(type_error(list, [A|1]), _))
 %%   [ciao]: no throws
 :- test setof_test29
-	+ exception(error(type_error(list, [A|1]), ImplDep))
+	+ exception(error(type_error(list, [A|1]), _))
 # "[ISO-sics] setof/3: expected(error) bug(fail)".
 
 setof_test29 :- setof(X, X=1, [_|1]).
@@ -2892,7 +2873,7 @@ setof_test29 :- setof(X, X=1, [_|1]).
 currentinput_test1(S) :- current_input(S).
 
 :- test currentinput_test2
-   + exception(error(domain_error(stream, foo), ImplDep))
+   + exception(error(domain_error(stream, foo), _))
    # "[ISO-sics] current_input/1".
 
 currentinput_test2 :- current_input(foo).
@@ -2904,13 +2885,11 @@ currentinput_test2 :- current_input(foo).
 
 currentinput_test3(S) :- current_input(S).
 
-currentinput_test3_setup(S) :- current_output(S).
-
 % TODO:[JF] check behaviour of other Prologs (gprolog, ciao, scryer: no exception;
 %   swipl: existence error, trealla: domain error)
 :- test currentinput_test4(S2) 
    + (setup(closed_instream(S2)),
-      exception(error(domain_error(stream, S2), ImplDep)))
+      exception(error(domain_error(stream, S2), _)))
    # "[ISO-sics] current_input/1: bug()".
 
 currentinput_test4(S2) :- current_input(S2).
@@ -2930,7 +2909,7 @@ currentinput_test5(S) :- current_input(S).
 currentoutput_test1(S) :- current_output(S).
 
 :- test currentoutput_test2
-   + exception(error(domain_error(stream, foo), ImplDep))
+   + exception(error(domain_error(stream, foo), _))
    # "[ISO-sics] current_output/1".
 
 currentoutput_test2 :- current_output(foo).
@@ -2946,7 +2925,7 @@ currentoutput_test3(S) :- current_output(S).
 %   swipl: existence error, trealla: domain error)
 :- test currentoutput_test4(S)
    + (setup(closed_outstream(S)),
-      exception(error(domain_error(stream, S), ImplDep)))
+      exception(error(domain_error(stream, S), _)))
    # "[ISO-sics] current_output/1: bug()".
 
 currentoutput_test4(S) :- current_output(S).
@@ -2968,29 +2947,29 @@ currentoutput_test5(S) :- current_output(S).
 setinput_test1(S) :- set_input(S).
 
 :- test setinput_test2
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] set_input/1".
 
 setinput_test2 :- set_input(_).
 
 % TODO:[JF] both acceptable in ISO % TODO: unittest do not allow alternative here, fix
 :- test setinput_test3
-   % + exception(error(domain_error(stream_or_alias, foo), ImplDep))
-   + exception(error(existence_error(stream, foo), ImplDep))
+   % + exception(error(domain_error(stream_or_alias, foo), _))
+   + exception(error(existence_error(stream, foo), _))
    # "[ISO-sics] set_input/1".
 
 setinput_test3 :- set_input(foo).
 
 :- test setinput_test4(S1)
    + (setup(closed_instream(S1)),
-      exception(error(existence_error(stream, S1), ImplDep)))
+      exception(error(existence_error(stream, S1), _)))
    # "[ISO-sics] set_input/1".
 
 setinput_test4(S1) :- set_input(S1).
 
 :- test setinput_test5(S)
    + (setup(curr_out(S)),
-      exception(error(permission_error(input, stream, S), ImplDep)))
+      exception(error(permission_error(input, stream, S), _)))
    # "[ISO-sics] set_input/1".
 
 setinput_test5(S) :- set_input(S).
@@ -3009,29 +2988,29 @@ setinput_test5(S) :- set_input(S).
 setoutput_test1(S) :- set_output(S).
 
 :- test setoutput_test2
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] set_output/1".
 
 setoutput_test2 :- set_output(_).
 
 % TODO:[JF] both acceptable in ISO % TODO: unittest do not allow alternative here, fix
 :- test setoutput_test3
-   + exception(error(existence_error(stream, foo), ImplDep))
-   % + exception(error(domain_error(stream_or_alias, foo), ImplDep))
+   + exception(error(existence_error(stream, foo), _))
+   % + exception(error(domain_error(stream_or_alias, foo), _))
    # "[ISO-sics] set_output/1".
 
 setoutput_test3 :- set_output(foo).
 
 :- test setoutput_test4(S)
    + (setup(closed_outstream(S)),
-      exception(error(existence_error(stream, S_or_a), ImplDep)))
+      exception(error(existence_error(stream, S_or_a), _)))
    # "[ISO-sics] set_output/1".
 
 setoutput_test4(S) :- set_output(S).
 
 :- test setoutput_test5(S)
    + (setup(curr_in(S)),
-      exception(error(permission_error(output, stream, S), ImplDep)))
+      exception(error(permission_error(output, stream, S), _)))
    # "[ISO-sics] set_output/1".
 
 setoutput_test5(S) :- set_output(S).
@@ -3043,7 +3022,7 @@ setoutput_test5(S) :- set_output(S).
    # "[ISO] open/4".
 
 open_test1 :-
-    wr_txt_f('/tmp/roger_data', ''),
+    wr_f('/tmp/roger_data', txt('')),
     open('/tmp/roger_data', read, Stream, [type(binary)]),
     ( at_end_of_stream(Stream) -> OK = yes ; OK = no ),
     close(Stream),
@@ -3064,43 +3043,43 @@ open_test2 :-
    # "[ISO] open/4".
 
 open_test3 :-
-    wr_txt_f('/tmp/dave', 'foo.'),
+    wr_f('/tmp/dave', txt('foo.')),
     open('/tmp/dave', read, Stream, [type(text)]),
     ( read(Stream, foo), at_end_of_stream(Stream) -> OK = yes ; OK = no ),
     close(Stream),
     OK = yes.
 
-:- test open_test4 + exception(error(instantiation_error, ImplDep))
+:- test open_test4 + exception(error(instantiation_error, _))
    # "[ISO-sics] open/3".
 
 open_test4 :- open(_, read, _).
 
 :- test open_test5
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] open/3".
 
 open_test5 :- open('/tmp/f', _, _).
 
 :- test open_test6
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] open/4".
 
 open_test6 :- open('/tmp/f', write, _, _).
 
 :- test open_test7
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] open/4".
 
 open_test7 :- open('/tmp/f', write, _, [type(text)|_]).
 
 :- test open_test8
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] open/4".
 
 open_test8 :- open('/tmp/f', write, _, [type(text), _]).
 
 :- test open_test9
-   + exception(error(type_error(atom,1), ImplDep))
+   + exception(error(type_error(atom,1), _))
    # "[ISO-sics] open/3".
 
 open_test9 :- open('/tmp/f', 1, _).
@@ -3112,38 +3091,38 @@ open_test9 :- open('/tmp/f', 1, _).
 open_test10 :- open('/tmp/f', write, _, type(text)).
 
 :- test open_test11
-   + exception(error(uninstantiation_error(bar), ImplDep))
+   + exception(error(uninstantiation_error(bar), _))
    # "[ISO-sics] open/3".
 
 open_test11 :- open('/tmp/f', write, bar).
 
 :- test open_test12
-   + exception(error(domain_error(source_sink, foo(1, 2)), ImplDep))
+   + exception(error(domain_error(source_sink, foo(1, 2)), _))
    # "[ISO-sics] open/3".
 
 open_test12 :- open(foo(1, 2), write, _).
 
 :- test open_test13
-   + exception(error(domain_error(io_mode, red), ImplDep))
+   + exception(error(domain_error(io_mode, red), _))
    # "[ISO-sics] open/3".
 
 open_test13 :- open('/tmp/foo', red, _).
 
 :- test open_test14
-   + exception(error(domain_error(stream_option, bar), ImplDep))
+   + exception(error(domain_error(stream_option, bar), _))
    # "[ISO-sics] open/4".
 
 open_test14 :- open('/tmp/foo', write, _, [bar]).
 
 :- test open_test15
-   + exception(error(existence_error(source_sink, Source_sink), ImplDep))
+   + exception(error(existence_error(source_sink, Source_sink), _))
    # "[ISO-sics] open/3".
 
 open_test15 :- open('nonexistent', read, _).
 
 :- test open_test16
    + (setup(setup_open16(S)), cleanup(cleanup_open16(S)),
-      exception(error(permission_error(open, source_sink, alias(a)), ImplDep)))
+      exception(error(permission_error(open, source_sink, alias(a)), _)))
    # "[ISO-sics] open/4".
 
 open_test16 :- open('/tmp/bar', write, _, [alias(a)]).
@@ -3157,7 +3136,7 @@ cleanup_open16(S) :- close(S).
 %   exception while opening this device.
 
 :- test open_test17
-   + exception(error(permission_error(open, source_sink, reposition(true)), ImplDep))
+   + exception(error(permission_error(open, source_sink, reposition(true)), _))
    # "[ISO-sics] open/4: bug()".
 
 open_test17 :- open('/dev/tty', read, _, [reposition(true)]).
@@ -3176,57 +3155,57 @@ open_test17 :- open('/dev/tty', read, _, [reposition(true)]).
 close_test1(S) :- open('/tmp/foo', write, S), close(S).
 
 :- test close_test2
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] close/1".
 
 close_test2 :- close(_).
 
 :- test close_test3(Sc)
    + (setup(curr_in(Sc)),
-      exception(error(instantiation_error, ImplDep)))
+      exception(error(instantiation_error, _)))
    # "[ISO-sics] close/2".
 
 close_test3(Sc) :- close(Sc, _).
 
 :- test close_test4(Sc)
    + (setup(curr_in(Sc)),
-      exception(error(instantiation_error, ImplDep)))
+      exception(error(instantiation_error, _)))
    # "[ISO-sics] close/2".
 
 close_test4(Sc) :- close(Sc, [force(true)|_]).
 
 :- test close_test5(Sc)
    + (setup(curr_in(Sc)),
-      exception(error(instantiation_error, ImplDep)))
+      exception(error(instantiation_error, _)))
    # "[ISO-sics] close/2".
 
 close_test5(Sc) :- close(Sc, [force(true), _]).
 
 :- test close_test6(Sc)
    + (setup(curr_in(Sc)),
-      exception(error(type_error(list, foo), ImplDep)))
+      exception(error(type_error(list, foo), _)))
    # "[ISO-sics] close/2".
 
 close_test6(Sc) :- close(Sc, foo).
 
 :- test close_test7(Sc)
    + (setup(curr_in(Sc)),
-      exception(error(domain_error(close_option, foo), ImplDep)))
+      exception(error(domain_error(close_option, foo), _)))
    # "[ISO-sics] close/2".
 
 close_test7(Sc) :- close(Sc, [foo]).
 
 % TODO:[JF] both exceptions acceptable in ISO 
 :- test close_test8
-   + exception(error(existence_error(stream, foo), ImplDep))
-   % + exception(error(domain_error(stream_or_alias, foo), ImplDep))
+   + exception(error(existence_error(stream, foo), _))
+   % + exception(error(domain_error(stream_or_alias, foo), _))
    # "[ISO-sics] close/1".
 
 close_test8 :- close(foo).
 
 :- test close_test9(S)
    + (setup(closed_outstream(S)),
-      exception(error(existence_error(stream, S), ImplDep)))
+      exception(error(existence_error(stream, S), _)))
    # "[ISO-sics] close/1".
 
 close_test9(S) :- close(S).
@@ -3250,39 +3229,39 @@ close_test10(Sc) :- close(Sc, [force(true)]).
 flush_output_test1(S) :-
     write(S, 'foo'),
     flush_output(S),
-    chk_txt_f('/tmp/tmp.out', "foo").
+    chk_out('/tmp/tmp.out', txt("foo")).
 
 % TODO:[JF] both acceptable in ISO 
 :- test flush_output_test2
-   + exception(error(existence_error(stream, foo), ImplDep))
-   % + exception(error(domain_error(stream_or_alias, foo), ImplDep))
+   + exception(error(existence_error(stream, foo), _))
+   % + exception(error(domain_error(stream_or_alias, foo), _))
    # "[ISO-sics] flush_output/1".
 
 flush_output_test2 :- flush_output(foo).
 
 :- test flush_output_test3
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] flush_output/1".
 
 flush_output_test3 :- flush_output(_).
 
 :- test flush_output_test4(S)
    + (setup(closed_outstream(S)),
-      exception(error(existence_error(stream, S), ImplDep)))
+      exception(error(existence_error(stream, S), _)))
    # "[ISO-sics] flush_output/1".
 
 flush_output_test4(S) :- flush_output(S).
 
 :- test flush_output_test5(S)
    + (setup(txt_in_s('', S, Prev)), cleanup(und(Prev)),
-      exception(error(permission_error(output, stream, S), ImplDep)))
+      exception(error(permission_error(output, stream, S), _)))
    # "[ISO-sics] flush_output/1".
 
 flush_output_test5(S) :- flush_output(S).
 
 % TODO:[JF] fixed, the orig test was different!
 :- test flush_output_test6
-   + (setup(txt_out_o(Prev)), cleanup(und(Prev)),
+   + (setup(txt_out_a(Prev)), cleanup(und(Prev)),
       not_fails)
    # "[ISO-sics] flush_output/1".
 
@@ -3299,7 +3278,7 @@ flush_output_test6 :- flush_output(st_o).
    # "[ISO] stream_property/2".
 
 stream_property_test1 :-
-    wr_txt_f('/tmp/file1.pl', ''),
+    wr_f('/tmp/file1.pl', txt('')),
     open('/tmp/file1.pl', read, S1, []),
     open('/tmp/file2.pl', write, S2, []),
     findall(F, stream_property(_, file_name(F)), L),
@@ -3319,16 +3298,16 @@ stream_property_test2 :-
     current_output(Cout),
     findall(S, stream_property(S, output), L),
     close(S1),
-    find_on_list([S1, Cout], L).
+    sublist([S1, Cout], L).
 
 :- test stream_property_test3
-   + exception(error(domain_error(stream, foo), ImplDep))
+   + exception(error(domain_error(stream, foo), _))
    # "[ISO-sics] stream_property/2".
 
 stream_property_test3 :- stream_property(foo, _Property).
 
 :- test stream_property_test4
-   + exception(error(domain_error(stream_property, foo), ImplDep))
+   + exception(error(domain_error(stream_property, foo), _))
    # "[ISO-sics] stream_property/2".
 
 stream_property_test4 :- stream_property(_S, foo).
@@ -3339,7 +3318,7 @@ stream_property_test4 :- stream_property(_S, foo).
 stream_property_test5 :-
     current_input(S),
     findall(Property, stream_property(S, Property), Ps),
-    find_on_list([input, alias(user_input), eof_action(reset),
+    sublist([input, alias(user_input), eof_action(reset),
                   mode(read), reposition(false), type(text)], Ps).
 
 :- test stream_property_test6 + not_fails
@@ -3348,7 +3327,7 @@ stream_property_test5 :-
 stream_property_test6 :-
     current_output(S),
     findall(Property, stream_property(S, Property), Ps),
-    find_on_list([output, alias(user_output), eof_action(reset),
+    sublist([output, alias(user_output), eof_action(reset),
                   mode(append), reposition(false), type(text)], Ps).
 
 % TODO:[JF] This test supposedly checks that there is no open binary
@@ -3360,22 +3339,22 @@ stream_property_test6 :-
 % stream_property_test7 :- stream_property(_S, type(binary)).
 
 :- test at_end_of_stream_test1
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] at_end_of_stream/1".
 
 at_end_of_stream_test1 :- at_end_of_stream(_S).
 
 % TODO:[JF] both acceptable in ISO 
 :- test at_end_of_stream_test2
-%   + exception(error(domain_error(stream_or_alias, foo), ImplDep))
-   + exception(error(existence_error(stream, foo), ImplDep))
+%   + exception(error(domain_error(stream_or_alias, foo), _))
+   + exception(error(existence_error(stream, foo), _))
    # "[ISO-sics] at_end_of_stream/1".
 
 at_end_of_stream_test2 :- at_end_of_stream(foo).
 
 :- test at_end_of_stream_test3(S)
    + (setup(closed_outstream(S)),
-      exception(error(existence_error(stream, S), ImplDep)))
+      exception(error(existence_error(stream, S), _)))
    # "[ISO-sics] at_end_of_stream/1".
 
 at_end_of_stream_test3(S) :- at_end_of_stream(S).
@@ -3420,7 +3399,7 @@ at_end_of_stream_test7 :-
 
 % TODO:[JF] implement position/1 property in streams and reposition(true) in open/4
 :- test set_stream_position_test1
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] set_stream_position/2: bug()".
 
 set_stream_position_test1 :-
@@ -3431,7 +3410,7 @@ set_stream_position_test1 :-
 
 :- test set_stream_position_test2(S)
    + (setup(curr_in(S)),
-      exception(error(instantiation_error, ImplDep)))
+      exception(error(instantiation_error, _)))
    # "[ISO-sics] set_stream_position/2".
 
 set_stream_position_test2(S) :- set_stream_position(S, _Pos).
@@ -3439,8 +3418,8 @@ set_stream_position_test2(S) :- set_stream_position(S, _Pos).
 % TODO:[JF] implement position/1 property in streams and reposition(true) in open/4
 % TODO:[JF] both errors acceptable in ISO 
 :- test set_stream_position_test3
-%   + exception(error(domain_error(stream_or_alias, foo), ImplDep))
-   + exception(error(existence_error(stream, foo), ImplDep))
+%   + exception(error(domain_error(stream_or_alias, foo), _))
+   + exception(error(existence_error(stream, foo), _))
    # "[ISO-sics] set_stream_position/2: bug()".
 
 set_stream_position_test3 :-
@@ -3451,7 +3430,7 @@ set_stream_position_test3 :-
 
 % TODO:[JF] implement position/1 property in streams and reposition(true) in open/4
 :- test set_stream_position_test4(S) 
-   + exception(error(existence_error(stream, S), ImplDep))
+   + exception(error(existence_error(stream, S), _))
    # "[ISO-sics] set_stream_position/2: bug()".
 
 set_stream_position_test4(S) :-
@@ -3462,7 +3441,7 @@ set_stream_position_test4(S) :-
 
 :- test set_stream_position_test5(S)
    + (setup(curr_in(S)),
-      exception(error(domain_error(stream_position, foo), ImplDep)))
+      exception(error(domain_error(stream_position, foo), _)))
    # "[ISO-sics] set_stream_position/2".
 
 set_stream_position_test5(S) :- set_stream_position(S, foo).
@@ -3470,7 +3449,7 @@ set_stream_position_test5(S) :- set_stream_position(S, foo).
 % TODO:[JF] implement position/1 property in streams and reposition(true) in open/4
 % TODO:[JF] implement set_stream_position/2
 :- test set_stream_position_test6(S, Pos) 
-   + exception(error(permission_error(reposition, stream, S), ImplDep))
+   + exception(error(permission_error(reposition, stream, S), _))
    # "[ISO-sics] set_stream_position/2: bug()".
 
 set_stream_position_test6(S, Pos) :-
@@ -3488,905 +3467,572 @@ set_stream_position_test6(S, Pos) :-
 :- test getchar_test1(Char, X) => ( Char = 'q', X = 'werty' )
    + (setup(txt_in('qwerty.', Prev)), cleanup(und(Prev)))
    # "[ISO] get_char/1".
-
 getchar_test1(Char, X) :- get_char(Char), read(X).
 
 :- test getcode_test2(Code, X) => ( Code = 0'q, X = 'werty' )
    + (setup(txt_in('qwerty.', Prev)), cleanup(und(Prev)))
    # "[ISO] get_code/1".
-
 getcode_test2(Code, X) :- get_code(Code), read(X).
 
 :- test getchar_test3(Char, X) => ( Char = q, X = 'werty' )
    + (setup(txt_in_i('qwerty.', Prev)), cleanup(und(Prev)))
    # "[ISO] get_char/2".
-
 getchar_test3(Char, X) :- get_char(st_i, Char), read(st_i, X).
 
 :- test getcode_test4(Code, X) => ( Code = 0'q, X = 'werty' )
    + (setup(txt_in_i('qwerty.', Prev)), cleanup(und(Prev)))
    # "[ISO] get_code/2".
-
 getcode_test4(Code, X) :- get_code(st_i, Code), read(st_i, X).
 
 :- test getchar_test5(Char, X) => ( Char = '''', X = "qwerty'" )
    + (setup(txt_in_i("'qwerty'", Prev)), cleanup(und(Prev)))
    # "[ISO] get_char/2".
-
 getchar_test5(Char, X) :- get_char(st_i, Char), read_string_to_end(st_i, X).
 
-:- test getcode_test6(X,Code) : true => (Code= 0'', X = "qwerty'")
+:- test getcode_test6(Code, X) => ( Code= 0'', X = "qwerty'" )
    + (setup(txt_in_i("'qwerty'", Prev)), cleanup(und(Prev)))
    # "[ISO] get_code/2".
-
-getcode_test6(X,Code) :-
-    get_code(st_i, Code),
-    read_string_to_end(st_i, X).
+getcode_test6(Code, X) :- get_code(st_i, Code), read_string_to_end(st_i, X).
     
-:- test getchar_test7(X) : true => (X='werty')
+:- test getchar_test7(X) => ( X='werty' )
    + (setup(txt_in_i('qwerty.', Prev)), cleanup(und(Prev)))
    # "[ISO] get_char/2".
+getchar_test7(X) :- \+ get_char(st_i, p), read(st_i, X).
 
-getchar_test7(X) :-
-    ( get_char(st_i, p) -> fail ; true),
-    read(st_i, X).
-
-:- test getcode_test8(X) : true => (X = 'werty')
+:- test getcode_test8(X) => ( X='werty' )
    + (setup(txt_in_i('qwerty.', Prev)), cleanup(und(Prev)))
    # "[ISO] get_code/2".
+getcode_test8(X) :- \+ get_code(st_i, 0'p), read(st_i,X).
 
-getcode_test8(X) :-
-    ( get_code(st_i, 0'p) -> fail ; true ),
-    read(st_i,X).
-
-:- test getcode_test10(Code) : true => (Code=(-1))
-   + (setup(setup_gco10(S2)), cleanup(und(prev(S2))))
+:- test getchar_test9(Char) => ( Char=end_of_file )
+   + (setup(txt_in_i('', Prev)), cleanup(und(Prev)))
+   # "[ISO] get_char/2".
+getchar_test9(Char) :- get_char(st_i, Char).
+    %{past}
+    %stream_property(st_w, end_of_stream(past)),
+  
+:- test getcode_test10(Code) => ( Code=(-1) )
+   + (setup(txt_in_i('', Prev)), cleanup(und(Prev)))
    # "[ISO] get_code/2".
-
-getcode_test10(Code) :-
-    get_code(st_i, Code).
+getcode_test10(Code) :- get_code(st_i, Code).
     %{past}
     %stream_property(st_x, end_of_stream(past)),
 
-setup_gco10(S2):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open('/tmp/tmp.in', read, S2, [alias(st_i)]).
-
-:- test getchar_test9(Char) : true => ( Char=(end_of_file) )
-   + (setup(setup_gch9(S2)), cleanup(und(prev(S2))))
-   # "[ISO] get_char/2".
-
-getchar_test9(Char) :-
-    get_char(st_i, Char).
-    %{past}
-    %stream_property(st_w, end_of_stream(past)),
-
-setup_gch9(S2):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open('/tmp/tmp.in', read, S2, [alias(st_i)]).
-  
 :- test getchar_test11
-   + exception(error(permission_error(input, stream, user_output), ImplDep))
+   + exception(error(permission_error(input, stream, user_output), _))
    # "[ISO] get_char/1".
-
-getchar_test11 :-
-    get_char(user_output, _X).
+getchar_test11 :- get_char(user_output, _X).
 
 :- test getcode_test12
-   + exception(error(permission_error(input, stream, user_output), ImplDep))
+   + exception(error(permission_error(input, stream, user_output), _))
    # "[ISO] get_code/1".
-
 getcode_test12 :- get_code(user_output, _X).
 
-:- test getchar_test13 + exception(error(instantiation_error, ImplDep))
+:- test getchar_test13 + exception(error(instantiation_error, _))
    # "[ISO-sics] get_char/2".
-
 getchar_test13 :- get_char(_, _).
 
-:- test getchar_test14 + exception(error(type_error(in_character, 1), ImplDep))
+:- test getchar_test14 + exception(error(type_error(in_character, 1), _))
    # "[ISO-sics] get_char/1".
-
 getchar_test14 :- get_char(1).
 
-:- test getchar_test15 + exception(error(type_error(in_character, 1), ImplDep))
+:- test getchar_test15 + exception(error(type_error(in_character, 1), _))
    # "[ISO-sics] get_char/2".
-
 getchar_test15 :- get_char(user_input, 1).
 
 % TODO:[JF] both acceptable in ISO 
 :- test getchar_test16
-   + exception(error(existence_error(stream, foo), ImplDep))
-%   + exception(error(domain_error(stream_or_alias, foo), ImplDep))
+   + exception(error(existence_error(stream, foo), _))
+%   + exception(error(domain_error(stream_or_alias, foo), _))
    # "[ISO-sics] get_char/2".
-
 getchar_test16 :- get_char(foo, _).
 
 :- test getchar_test17(S) 
-   + (setup(setup_gch17(S)),
-      exception(error(existence_error(stream, S), ImplDep)))
+   + (setup(closed_outstream(S)),
+      exception(error(existence_error(stream, S), _)))
    # "[ISO-sics] get_char/2".
 getchar_test17(S) :- get_char(S, _).
 
-setup_gch17(S) :-
-    closed_outstream(S).
-
 :- test getchar_test18(S, _)
-   + (setup(setup_gch18(S)),
-      exception(error(permission_error(input, stream, S), ImplDep)))
+   + (setup(curr_out(S)),
+      exception(error(permission_error(input, stream, S), _)))
    # "[ISO-sics] get_char/1".
-
 getchar_test18(S, _) :- get_char(S, _).
 
-setup_gch18(S) :- current_output(S).
-
-% TODO:[JF] why is it disabled?
-%% REVIEW:PENDING                           **Label_6**
-%%:- test getchar_test19
-%%   + (setup(setup_gch19(S,Sc,S1)),
-%%      cleanup(und(prev(Sc,S1))),
-%%	exception(error(permission_error(input, binary_stream, S1), ImplDep)))
-%%# "[ISO-sics] get_char/1: expected(error) bug(wrong_error)".
-%%
-%%getchar_test19 :- get_char(_).
-%%
-%%setup_gch19(S,Sc,S1):- wr_txt_f('/tmp/tmp.in', ''),
-%%    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary)]).
+:- test getchar_test19
+   + (setup(bin_in([], Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, binary_stream, _), _)))
+   # "[ISO-sics] get_char/1".
+getchar_test19 :- get_char(_).
 
 :- test getchar_test20
-   + (setup(setup_gch20(Sc,S1)), cleanup(und(prev(Sc,S1))),
-      exception(error(permission_error(input, past_end_of_stream, S1), ImplDep)))
+   + (setup(txt_in('', Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, past_end_of_stream, S1), _)))
    # "[ISO-sics] get_char/1".
-
 getchar_test20 :-
+    catch(get_char(_), _, fail), % no exception here
     get_char(_).
 
-setup_gch20(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, []),
-    get_char(_X).
-
-%% REVIEW:PENDING                               **Label_6**
-:- test getchar_test21(S1, Char1, Char2) : true => (Char1 = end_of_file, Char2 = end_of_file)
-   + (setup(setup_gch21(S1)), cleanup(und(prev(S1))))
+:- test getchar_test21(S, Char1, Char2) => ( Char1 = end_of_file, Char2 = end_of_file )
+   + (setup(txt_in_s_e('', S, Prev)), cleanup(und(Prev)))
    # "[ISO-sics] get_char/2".
-
 getchar_test21(S1, Char1, Char2) :-
     get_char(S1, Char1),
     get_char(S1, Char2).
 
-setup_gch21(S1):-
-    wr_txt_f('/tmp/t', ''),
-    open('/tmp/t', read, S1, [eof_action(eof_code)]).
-
-:- test getchar_test22(S1) 
-   + (setup(setup_gch22(S1)), cleanup(und(prev(S1))),
-      exception(error(representation_error(character), ImplDep)))
+:- test getchar_test22(S) 
+   + (setup(bintxt_in_s([0], S, Prev)), cleanup(und(Prev)),
+      exception(error(representation_error(character), _)))
    # "[ISO-sics] get_char/2".
-
-getchar_test22(S1) :-
-    get_char(S1, _).
-
-setup_gch22(S1) :-
-    wr_bin_f('/tmp/t', [0]),
-    open('/tmp/t', read, S1).
+getchar_test22(S) :- get_char(S, _).
 
 :- test getcode_test23
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] get_code/2".
-
 getcode_test23 :- get_code(_, _).
 
 :- test getcode_test24
-   + exception(error(type_error(integer, p), ImplDep))
+   + exception(error(type_error(integer, p), _))
    # "[ISO-sics] get_code/1".
-
 getcode_test24 :- get_code(p).
 
 :- test getcode_test25
-   + exception(error(type_error(integer, p), ImplDep))
+   + exception(error(type_error(integer, p), _))
    # "[ISO-sics] get_code/2".
-
 getcode_test25 :- get_code(user_input, p).
 
 :- test getcode_test26
-   + exception(error(representation_error(in_character_code), ImplDep))
+   + exception(error(representation_error(in_character_code), _))
    # "[ISO-sics] get_code/1".
-
 getcode_test26 :- get_code(-2).
 
 % TODO:[JF] both acceptable in ISO 
 :- test getcode_test27
-   + exception(error(existence_error(stream, foo), ImplDep))
-%   + exception(error(domain_error(stream_or_alias, foo), ImplDep))
+   + exception(error(existence_error(stream, foo), _))
+%   + exception(error(domain_error(stream_or_alias, foo), _))
    # "[ISO-sics] get_code/2".
-
 getcode_test27 :- get_code(foo, _).
 
 :- test getcode_test28(S1) 
-   + (setup(setup_gco28(S1)),
-      exception(error(existence_error(stream, S1), ImplDep)))
+   + (setup(closed_instream(S1)),
+      exception(error(existence_error(stream, S1), _)))
    # "[ISO-sics] get_code/2".
-
-getcode_test28(S1) :-
-    get_code(S1, _).
-
-setup_gco28(S1):-
-    closed_instream(S1).
+getcode_test28(S1) :- get_code(S1, _).
 
 :- test getcode_test29(S) 
-   + (setup(setup_gco29(S)),
-      exception(error(permission_error(input, stream, S), ImplDep)))
+   + (setup(curr_out(S)),
+      exception(error(permission_error(input, stream, S), _)))
    # "[ISO-sics] get_code/1".
-
-getcode_test29(S) :-
-    get_code(S, _).
-
-setup_gco29(S):-
-    current_output(S).
+getcode_test29(S) :- get_code(S, _).
 
 :- test getcode_test30
-   + (setup(setup_gco30(Sc,S1)), cleanup(und(prev(Sc,S1))),
-      exception(error(permission_error(input, binary_stream, S1), ImplDep)))
+   + (setup(bin_in([], Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, binary_stream, S1), _)))
    # "[ISO-sics] get_code/1".
-
-getcode_test30 :-
-    get_code(_).
-
-setup_gco30(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary)]).
+getcode_test30 :- get_code(_).
 
 :- test getcode_test31
-   + (setup(setup_gco31(Sc,S1)), cleanup(und(prev(Sc,S1))),
-      exception(error(permission_error(input, past_end_of_stream, S1), ImplDep)))
+   + (setup(txt_in('', Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, past_end_of_stream, S1), _)))
    # "[ISO-sics] get_code/1".
+getcode_test31 :- catch(get_code(_), _, fail), get_code(_).
 
-getcode_test31 :-
-    get_code(_).
-
-setup_gco31(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, []),
-    get_code(_X).
-
-:- test getcode_test32(S1, Code1, Code2) : true => (Code1=(-1), Code2=(-1))
-   + (setup(setup_gco32(S1)), cleanup(und(prev(S1))))
+:- test getcode_test32(S, Code1, Code2) => (Code1=(-1), Code2=(-1))
+   + (setup(txt_in_s_e('', S, Prev)), cleanup(und(Prev)))
    # "[ISO-sics] get_code/2".
-
-getcode_test32(S1, Code1, Code2) :-
-    get_code(S1, Code1),
-    get_code(S1, Code2).
-
-setup_gco32(S1):-
-    wr_txt_f('/tmp/t', ''),
-    open('/tmp/t', read, S1, [eof_action(eof_code)]).
+getcode_test32(S, Code1, Code2) :- get_code(S, Code1), get_code(S, Code2).
 
 % TODO:[JF] note that other prologs seem to admit 0 in in_character_code
-:- test getcode_test33(S1) 
-   + (setup(setup_gco33(S1)), cleanup(und(prev(S1))),
-      exception(error(representation_error(character), ImplDep)))
+:- test getcode_test33(S) 
+   + (setup(bintxt_in_s([0], S, Prev)), cleanup(und(Prev)),
+      exception(error(representation_error(character), _)))
    # "[ISO-sics] get_code/2".
-
-getcode_test33(S1) :-
-    get_code(S1, _).
-
-setup_gco33(S1):-
-    wr_bin_f('/tmp/t', [0]),
-    open('/tmp/t', read, S1).
+getcode_test33(S) :- get_code(S, _).
 
 % ---------------------------------------------------------------------------
 %! ## 8.12.2 peek_char/1, peek_char/2, peek_code/1, peek_code/2 ISOcore#p93
 
-:- test peekchar_test1(Char, X) : true => ( Char='q', X='qwerty' )
-   + (setup(setup_pc1(S2,Sc)), cleanup(und(prev(Sc,S2))))
+:- test peekchar_test1(Char, X) => ( Char='q', X='qwerty' )
+   + (setup(txt_in('qwerty.', Prev)), cleanup(und(Prev)))
    # "[ISO] peek_char/1".
+peekchar_test1(Char, X) :- peek_char(Char), read(X).
 
-peekchar_test1(Char, X) :-
-    peek_char(Char),
-    read(X).
-
-setup_pc1(S2,Sc):-
-    wr_txt_f('/tmp/tmp.in', 'qwerty.'),
-    open_to_read('/tmp/tmp.in', read, Sc, S2, []).
-
-:- test peekcode_test2(Code, X) : true => ( Code=0'q, X='qwerty' )
-   + (setup(setup_pco2(S2,Sc)), cleanup(und(prev(Sc,S2))))
+:- test peekcode_test2(Code, X) => ( Code=0'q, X='qwerty' )
+   + (setup(txt_in('qwerty.', Prev)), cleanup(und(Prev)))
    # "[ISO] peek_code/1".
+peekcode_test2(Code, X) :- peek_code(Code), read(X).
 
-peekcode_test2(Code, X) :-
-    peek_code(Code),
-    read(X).
-
-setup_pco2(S2,Sc):-
-    wr_txt_f('/tmp/tmp.in', 'qwerty.'),
-    open_to_read('/tmp/tmp.in', read, Sc, S2, []).
-
-:- test peekchar_test3(Char, X) : true => ( Char='q', X='qwerty' )
-   + (setup(setup_pc3(S2,Sc)), cleanup(und(prev(Sc,S2))))
+:- test peekchar_test3(Char, X) => ( Char='q', X='qwerty' )
+   + (setup(txt_in_i('qwerty.', Prev)), cleanup(und(Prev)))
    # "[ISO] peek_char/2".
+peekchar_test3(Char, X) :- peek_char(st_i, Char), read(st_i, X).
 
-peekchar_test3(Char, X) :-
-    peek_char(st_i, Char),
-    read(X).
-
-setup_pc3(S2,Sc):-
-    wr_txt_f('/tmp/tmp.in', 'qwerty.'),
-    open_to_read('/tmp/tmp.in', read, Sc, S2, [alias(st_i)]).
-
-:- test peekcode_test4(Code, X) : true => ( Code=0'q, X='qwerty' )
-   + (setup(setup_pco4(S2,Sc)), cleanup(und(prev(Sc,S2))))
+:- test peekcode_test4(Code, X) => ( Code=0'q, X='qwerty' )
+   + (setup(txt_in_i('qwerty.', Prev)), cleanup(und(Prev)))
    # "[ISO] peek_code/2".
+peekcode_test4(Code, X) :- peek_code(st_i, Code), read(st_i, X).
 
-peekcode_test4(Code, X) :-
-    peek_code(st_i, Code),
-    read(X).
-
-setup_pco4(S2,Sc):-
-    wr_txt_f('/tmp/tmp.in', 'qwerty.'),
-    open_to_read('/tmp/tmp.in', read, Sc, S2, [alias(st_i)]).
-
-:- test peekchar_test5(X,Char) : true => ( Char='''', X='qwerty' )
-   + (setup(setup_pc5(S2,Sc)), cleanup(und(prev(Sc,S2))))
+:- test peekchar_test5(Char, X) => ( Char='''', X='qwerty' )
+   + (setup(txt_in_i("'qwerty'.", Prev)), cleanup(und(Prev)))
    # "[ISO] peek_char/2".
+peekchar_test5(Char,X) :- peek_char(st_i, Char), read(st_i, X).
 
-peekchar_test5(X,Char) :-
-    peek_char(st_i, Char),
-    read(X).
-
-setup_pc5(S2,Sc):-
-    wr_txt_f('/tmp/tmp.in', "'qwerty'."),
-    open_to_read('/tmp/tmp.in', read, Sc, S2, [alias(st_i)]).
-
-:- test peekcode_test6(Code, X) : true => ( Code=0'\', X='qwerty' )
-   + (setup(setup_pco6(S2,Sc)), cleanup(und(prev(Sc,S2))))
+:- test peekcode_test6(Code, X) => ( Code=0'\', X='qwerty' )
+   + (setup(txt_in_i("'qwerty'.", Prev)), cleanup(und(Prev)))
    # "[ISO] peek_code/2".
+peekcode_test6(Code, X) :- peek_code(st_i, Code), read(st_i, X).
 
-peekcode_test6(Code, X) :-
-    peek_code(st_i, Code),
-    read(X).
-
-setup_pco6(S2,Sc):-
-    wr_txt_f('/tmp/tmp.in', "'qwerty'."),
-    open_to_read('/tmp/tmp.in', read, Sc, S2, [alias(st_i)]).
-
-:- test peekchar_test7(X) : true => (X='qwerty')
-   + (setup(setup_pc7(S2,Sc)), cleanup(und(prev(Sc,S2))))
+:- test peekchar_test7(X) => ( X='qwerty' )
+   + (setup(txt_in_i('qwerty.', Prev)), cleanup(und(Prev)))
    # "[ISO] peek_char/2".
+peekchar_test7(X) :- \+ peek_char(st_i, p), read(st_i, X).
 
-peekchar_test7(X) :-    
-    ( peek_char(st_i, p) -> fail ; true ),
-    read(X).
-
-setup_pc7(S2,Sc):- 
-    wr_txt_f('/tmp/tmp.in', 'qwerty.'),
-    open_to_read('/tmp/tmp.in', read, Sc, S2, [alias(st_i)]).
-
-:- test peekcode_test8(X) : true => (X = 'qwerty')
-   + (setup(setup_pco8(S2,Sc)), cleanup(und(prev(Sc,S2))))
+:- test peekcode_test8(X) => ( X='qwerty' )
+   + (setup(txt_in_i('qwerty.', Prev)), cleanup(und(Prev)))
    # "[ISO] peek_code/2".
+peekcode_test8(X) :- \+ peek_code(st_i, 0'p), read(st_i, X).
 
-peekcode_test8(X) :- 
-    ( peek_code(st_i, 0'p) -> fail ; true ),
-    read(X).
-
-setup_pco8(S2,Sc):-
-    wr_txt_f('/tmp/tmp.in', 'qwerty.'),
-    open_to_read('/tmp/tmp.in', read, Sc, S2, [alias(st_i)]).
-
-:- test peekchar_test9(Char) : true => ( Char=(end_of_file) )
-   + (setup(setup_pc9(Sc,S2)), cleanup(und(prev(Sc,S2))))
+:- test peekchar_test9(Char) => ( Char=(end_of_file) )
+   + (setup(txt_in_i('', Prev)), cleanup(und(Prev)))
    # "[ISO] peek_char/2".
+peekchar_test9(Char) :- peek_char(st_i, Char).
 
-peekchar_test9(Char) :-
-    peek_char(st_i, Char).
-    
-setup_pc9(Sc,S2):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S2, [alias(st_i)]).
-
-:- test peekcode_test10(Code) : true => ( Code=(-1) )
-   + (setup(setup_pco10(S2,Sc)), cleanup(und(prev(Sc,S2))))
+:- test peekcode_test10(Code) => ( Code=(-1) )
+   + (setup(txt_in_i('', Prev)), cleanup(und(Prev)))
    # "[ISO] peek_code/2".
-
-peekcode_test10(Code) :-
-    peek_code(st_i, Code).
-
-setup_pco10(S2,Sc):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S2, [alias(st_i)]).
+peekcode_test10(Code) :- peek_code(st_i, Code).
 
 :- test peekchar_test11 
-   + (setup(setup_pc11(S2,P)),
-      exception(error(permission_error(input, past_end_of_stream, S), ImplDep)))
+   + (setup(txt_in_i('', Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, past_end_of_stream, S), _)))
    # "[ISO] peek_char/2".
-
 peekchar_test11 :-
-    peek_char(s, _).
-
-setup_pc11(S2,P):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open('/tmp/tmp.in', read, S2, [alias(s)]),
-    get_code(s, P).
+    catch(get_code(st_i, _), _, fail), % (exception no relevant here)
+    peek_char(st_i, _).
 
 :- test peekchar_test12
-   + exception(error(permission_error(input, stream, user_output), ImplDep))
+   + exception(error(permission_error(input, stream, user_output), _))
    # "[ISO] peek_char/2".
-
 peekchar_test12 :- peek_char(user_output, _).
 
 :- test peekcode_test13
-   + exception(error(permission_error(input, stream, user_output), ImplDep))
+   + exception(error(permission_error(input, stream, user_output), _))
    # "[ISO] peek_char/2".
-
 peekcode_test13 :- peek_code(user_output, _).
 
 :- test peekchar_test14
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] peek_char/2".
-
 peekchar_test14 :- peek_char(_, _).
 
 :- test peekchar_test15
-   + exception(error(type_error(in_character, 1), ImplDep))
+   + exception(error(type_error(in_character, 1), _))
    # "[ISO-sics] peek_char/1".
-
 peekchar_test15 :- peek_char(1).
 
 :- test peekchar_test16
-   + exception(error(type_error(in_character, 1), ImplDep))
+   + exception(error(type_error(in_character, 1), _))
    # "[ISO-sics] peek_char/2".
-
 peekchar_test16 :- peek_char(user_input, 1).
 
 % TODO:[JF] both acceptable in ISO 
 :- test peekchar_test17
-   + exception(error(existence_error(stream, foo), ImplDep))
+   + exception(error(existence_error(stream, foo), _))
    # "[ISO-sics] peek_char/2".
-
 peekchar_test17 :- peek_char(foo, _).
 
 :- test peekchar_test18(S1) 
-   + (setup(setup_pc18(S1)),
-      exception(error(existence_error(stream, S1), ImplDep)))
+   + (setup(closed_instream(S1)),
+      exception(error(existence_error(stream, S1), _)))
    # "[ISO-sics] peek_char/2".
+peekchar_test18(S1) :- peek_char(S1, _).
 
-peekchar_test18(S1) :-
-    peek_char(S1, _).
-
-setup_pc18(S1):-
-    closed_instream(S1).
-
-:- test peekchar_test19(S) : (current_output(S))
-   + exception(error(permission_error(input, stream, S), ImplDep))
+:- test peekchar_test19(S)
+   + (setup(curr_out(S)),
+      exception(error(permission_error(input, stream, S), _)))
    # "[ISO-sics] peek_char/2".
-
 peekchar_test19(S) :- peek_char(S, _).
 
 :- test peekchar_test20
-   + (setup(setup_pc20(S1)), cleanup(cleanup_pc20(S1)),
-      exception(error(permission_error(input, binary_stream, S1), ImplDep)))
+   + (setup(bin_in_i([], Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, binary_stream, S1), _)))
    # "[ISO-sics] peek_char/2".
-
 peekchar_test20 :- peek_char(st_i, _).
 
-setup_pc20(S1) :-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open('/tmp/tmp.in', read, S1, [type(binary), alias(st_i)]).
-
-cleanup_pc20(S1) :- close(S1).
-
-:- test peekchar_test21(S1, Char1, Char2) : true => (Char1=end_of_file, Char2=end_of_file)
-   + (setup(setup_pc21(S1)), cleanup(cleanup_pc21(S1))) 
+:- test peekchar_test21(S, Char1, Char2) => (Char1=end_of_file, Char2=end_of_file)
+   + (setup(txt_in_s('', S, Prev)), cleanup(und(Prev)))
    # "[ISO-sics] peek_char/2".
 
-peekchar_test21(S1, Char1, Char2) :-
-    peek_char(S1, Char1),
-    peek_char(S1, Char1),
-    get_char(S1, Char2).
+peekchar_test21(S, Char1, Char2) :-
+    peek_char(S, Char1),
+    peek_char(S, Char1),
+    get_char(S, Char2).
 
-setup_pc21(S1):-
-    wr_txt_f('/tmp/t', ''),
-    open('/tmp/t', read, S1).
-
-cleanup_pc21(S1):- close(S1).
-
-:- test peekchar_test22(S1) 
-   + (setup(setup_pc22(S1)),
-      exception(error(representation_error(character), ImplDep)))
+:- test peekchar_test22(S) 
+   + (setup(bintxt_in_s([0], S, Prev)), cleanup(und(Prev)),
+      exception(error(representation_error(character), _)))
    # "[ISO-sics] peek_char/2".
-
-peekchar_test22(S1) :-
-    peek_char(S1, _).
-
-setup_pc22(S1):-
-    wr_bin_f('/tmp/t', [0]),
-    open('/tmp/t', read, S1).
+peekchar_test22(S) :- peek_char(S, _).
 
 :- test peekcode_test23
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] peek_code/2".
-
 peekcode_test23 :- peek_code(_, _).
 
 :- test peekcode_test24
-   + exception(error(type_error(integer, p), ImplDep))
+   + exception(error(type_error(integer, p), _))
    # "[ISO-sics] peek_code/1".
-
 peekcode_test24 :- peek_code(p).
 
 :- test peekcode_test25
-   + exception(error(type_error(integer, p), ImplDep))
+   + exception(error(type_error(integer, p), _))
    # "[ISO-sics] peek_code/2".
-
 peekcode_test25 :- peek_code(user_input, p).
 
 :- test peekcode_test26
-   + exception(error(representation_error(in_character_code), ImplDep))
+   + exception(error(representation_error(in_character_code), _))
    # "[ISO-sics] peek_code/1".
-
 peekcode_test26 :- peek_code(-2).
 
 % TODO:[JF] both acceptable in ISO 
 :- test peekcode_test27
-   + exception(error(existence_error(stream, foo), ImplDep))
-%   + exception(error(domain_error(stream_or_alias, foo), ImplDep))
+   + exception(error(existence_error(stream, foo), _))
+%   + exception(error(domain_error(stream_or_alias, foo), _))
    # "[ISO-sics] peek_code/2".
-
 peekcode_test27 :- peek_code(foo, _).
 
 :- test peekcode_test28(S1) 
-   + (setup(setup_pco28(S1)),
-      exception(error(existence_error(stream, S1), ImplDep)))
+   + (setup(closed_instream(S1)),
+      exception(error(existence_error(stream, S1), _)))
    # "[ISO-sics] peek_code/2".
-
-peekcode_test28(S1) :-
-    peek_code(S1, _).
-
-setup_pco28(S1) :-
-    closed_instream(S1).
+peekcode_test28(S1) :- peek_code(S1, _).
 
 :- test peekcode_test29(S) : true
-   + (setup(setup_pco29(S)),
-      exception(error(permission_error(input, stream, S), ImplDep)))
+   + (setup(curr_out(S)),
+      exception(error(permission_error(input, stream, S), _)))
    # "[ISO-sics] peek_code/2".
+peekcode_test29(S) :- peek_code(S, _).
 
-peekcode_test29(S) :-
-    peek_code(S, _).
-
-setup_pco29(S) :-
-    current_output(S).
-
-:- test peekcode_test30(S1) 
-   + (setup(setup_pco30(S1,Sc)), cleanup(und(prev(Sc,S1))),
-      exception(error(permission_error(input, binary_stream, S1), ImplDep)))
+:- test peekcode_test30(S) 
+   + (setup(bin_in_s([], S, Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, binary_stream, S), _)))
    # "[ISO-sics] peek_code/2".
-
-peekcode_test30(S1) :-
-    peek_code(S1, _).
-
-setup_pco30(S1,Sc):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary)]).
+peekcode_test30(S) :- peek_code(S, _).
 
 :- test peekcode_test31
-   + (setup(setup_pco31(S1, Sc)), cleanup(und(prev(Sc, S1))),
-      exception(error(permission_error(input, past_end_of_stream, S1), ImplDep)))
+   + (setup(txt_in('', Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, past_end_of_stream, S1), _)))
    # "[ISO-sics] peek_code/1".
-
 peekcode_test31 :-
+    catch(get_code(_X), _, fail), % ignore errors here
     peek_code(_).
 
-setup_pco31(S1,Sc):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, []),
-    get_code(_X).
-
-:- test peekcode_test32(Code1, Code2) : true => ( Code1=(-1), Code2=(-1) )
-   + (setup(setup_pco32(Sc,S1)), cleanup(und(prev(Sc,S1))))
+:- test peekcode_test32(Code1, Code2) => ( Code1=(-1), Code2=(-1) )
+   + (setup(txt_in('', Prev)), cleanup(und(Prev)))
    # "[ISO-sics] peek_code/1".
-
-peekcode_test32(Code1, Code2) :-
-    peek_code(Code1),
-    peek_code(Code2).
-
-setup_pco32(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, []).
+peekcode_test32(Code1, Code2) :- peek_code(Code1), peek_code(Code2).
 
 % TODO:[JF] note that other prologs seem to admit 0 in in_character_code
-:- test peekcode_test33(S1) 
-   + (setup(setup_pco33(S1)), cleanup(cleanup_pco33(S1)),
-      exception(error(representation_error(character), ImplDep)))
+:- test peekcode_test33(S) 
+   + (setup(bintxt_in_s([0], S, Prev)), cleanup(und(Prev)),
+      exception(error(representation_error(character), _)))
    # "[ISO-sics] peek_code/2".
-
-peekcode_test33(S1) :-
-    peek_code(S1, _).
-
-setup_pco33(S1):-
-    wr_bin_f('/tmp/t', [0]),
-    open('/tmp/t', read, S1).
-
-cleanup_pco33(S1) :- close(S1).
+peekcode_test33(S) :- peek_code(S, _).
 
 % ---------------------------------------------------------------------------
 %! ## 8.12.3 put_char/1, put_char/2, put_code/1, put_code/2 ISOcore#p94
 
 :- test putchar_test1 + not_fails # "[ISO] put_char/1".
-putchar_test1 :- with_txt_out('qwer', put_char(t), "qwert").
+putchar_test1 :- with_out(txt('qwer'), put_char(t), txt("qwert")).
 
 :- test putchar_test2 + not_fails # "[ISO] put_char/2".
-putchar_test2 :- with_txt_out_a('qwer', put_char(st_o, 'A'), "qwerA").
+putchar_test2 :- with_out_a(txt('qwer'), put_char(st_o, 'A'), txt("qwerA")).
 
 :- test putcode_test3 + not_fails # "[ISO] put_code/1".
-putcode_test3 :- with_txt_out('qwer', put_code(0't), "qwert").
+putcode_test3 :- with_out(txt('qwer'), put_code(0't), txt("qwert")).
 
 :- test putcode_test4 + not_fails # "[ISO] put_code/2".
-putcode_test4 :- with_txt_out_a('qwer', put_code(st_o, 0't), "qwert").
+putcode_test4 :- with_out_a(txt('qwer'), put_code(st_o, 0't), txt("qwert")).
 
 :- test putchar_test5 + not_fails # "[ISO] put_char/1".
-putchar_test5 :- with_txt_out('qwer', (nl, put_char(a)), "qwer\na").
+putchar_test5 :- with_out(txt('qwer'), (nl, put_char(a)), txt("qwer\na")).
 
 :- test putchar_test6 + not_fails # "[ISO] put_char/2".
-putchar_test6 :- with_txt_out_a('qwer', (nl(st_o), put_char(st_o, a)), "qwer\na").
+putchar_test6 :- with_out_a(txt('qwer'), (nl(st_o), put_char(st_o, a)), txt("qwer\na")).
 
 :- test putchar_test7
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] put_char/2".
-putchar_test7 :- with_txt_out_a('', put_char(st_o, _), "").
+putchar_test7 :- with_out_a(txt(''), put_char(st_o, _), txt("")).
 
 :- test putchar_test8
-   + exception(error(type_error(character, ty), ImplDep))
+   + exception(error(type_error(character, ty), _))
    # "[ISO] put_char/2".
-putchar_test8 :- with_txt_out_a('', put_char(st_o, 'ty'), "").
+putchar_test8 :- with_out_a(txt(''), put_char(st_o, 'ty'), txt("")).
 
 :- test putcode_test9
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] put_code/2".
-putcode_test9 :- with_txt_out_a('', put_code(st_o, _), "").
+putcode_test9 :- with_out_a(txt(''), put_code(st_o, _), txt("")).
 
 :- test putcode_test10
-   + exception(error(type_error(integer, ty), ImplDep))
+   + exception(error(type_error(integer, ty), _))
    # "[ISO] put_code/2".
-putcode_test10 :- with_txt_out_a('', put_code(st_o, 'ty'), "").
+putcode_test10 :- with_out_a(txt(''), put_code(st_o, 'ty'), txt("")).
 
-:- test nl_test11 + exception(error(instantiation_error, ImplDep))
+:- test nl_test11 + exception(error(instantiation_error, _))
    # "[ISO] nl/1".
-
 nl_test11 :- nl(_).
 
 :- test nl_test12
-   + exception(error(permission_error(output, stream, user_input), ImplDep))
+   + exception(error(permission_error(output, stream, user_input), _))
    # "[ISO] nl/1".
-
 nl_test12 :- nl(user_input).
 
-:- test putchar_test13 + exception(error(instantiation_error, ImplDep))
+:- test putchar_test13 + exception(error(instantiation_error, _))
    # "[ISO-sics] put_char/2".
-
 putchar_test13 :- put_char(_, t).
 
-:- test putchar_test14 + exception(error(instantiation_error, ImplDep))
+:- test putchar_test14 + exception(error(instantiation_error, _))
    # "[ISO-sics] put_char/2".
-
 putchar_test14 :- put_char(_).
 
 :- test putchar_test15(S) 
    + (setup(closed_outstream(S)),
-      exception(error(existence_error(stream, S), ImplDep)))
+      exception(error(existence_error(stream, S), _)))
    # "[ISO-sics] put_char/2".
-
 putchar_test15(S) :- put_char(S, a).
 
 :- test putchar_test16(S) 
    + (setup(curr_in(S)),
-      exception(error(permission_error(output, stream, S), ImplDep)))
+      exception(error(permission_error(output, stream, S), _)))
    # "[ISO-sics] put_char/2".
-
 putchar_test16(S) :- put_char(S, a).
 
 :- test putchar_test17 
-   + exception(error(permission_error(output, binary_stream, S), ImplDep))
+   + exception(error(permission_error(output, binary_stream, S), _))
    # "[ISO-sics] put_char/1".
-
-putchar_test17 :- with_bin_out([], put_char(a), []).
+putchar_test17 :- with_out(bin([]), put_char(a), bin([])).
 
 :- test putcode_test18
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] put_code/2".
-
 putcode_test18 :- put_code(_, 0't).
 
-:- test putcode_test19 + exception(error(instantiation_error, ImplDep))
+:- test putcode_test19 + exception(error(instantiation_error, _))
    # "[ISO-sics] put_code/2".
-
 putcode_test19 :- put_code(_).
 
 :- test putcode_test20(S) 
    + (setup(closed_outstream(S)),
-      exception(error(existence_error(stream, S), ImplDep)))
+      exception(error(existence_error(stream, S), _)))
    # "[ISO-sics] put_code/2".
-
 putcode_test20(S) :- put_code(S, 0'a).
 
 :- test putcode_test21(S) 
    + (setup(curr_in(S)),
-      exception(error(permission_error(output, stream, S), ImplDep)))
+      exception(error(permission_error(output, stream, S), _)))
    # "[ISO-sics] put_code/2".
-
 putcode_test21(S) :- put_code(S, 0'a).
 
 :- test putcode_test22
-   + exception(error(permission_error(output, binary_stream, _), ImplDep))
+   + exception(error(permission_error(output, binary_stream, _), _))
    # "[ISO-sics] put_code/2".
-
-putcode_test22 :- with_bin_out_s([], S, put_code(S, 0'a), []).
-
-cleanup_putco22(S) :- close(S).
+putcode_test22 :- with_out_s(bin([]), S, put_code(S, 0'a), bin([])).
 
 :- test putcode_test23
-   + exception(error(representation_error(character_code), ImplDep))
+   + exception(error(representation_error(character_code), _))
    # "[ISO-sics] put_code/1".
-
 putcode_test23 :- put_code(-1).
 
 % TODO:[JF] both acceptable in ISO 
 :- test putcode_test24
-   % + exception(error(domain_error(stream_or_alias, foo), ImplDep))
-   + exception(error(existence_error(stream, foo), ImplDep))
+   % + exception(error(domain_error(stream_or_alias, foo), _))
+   + exception(error(existence_error(stream, foo), _))
    # "[ISO-sics] put_code/2".
-
 putcode_test24 :- put_code(foo, -1).
 
 % ===========================================================================
 %! # 8.13 Byte input/output
 %! ## 8.13.1 get_byte/1, get_byte/2 ISOcore#p96
 
-:- test getbyte_test1(Byte,S2) : true => (Byte=113)
-   + (setup(setup_getbyte1(Sc,S2)), cleanup(und(prev(Sc,S2))))
+:- test getbyte_test1(Byte, X) => ( Byte=113, X=[119, 101, 114] )
+   + (setup(bin_in([113, 119, 101, 114], Prev)), cleanup(und(Prev)))
    # "[ISO] get_byte/1".
+getbyte_test1(Byte, X) :- get_byte(Byte), read_bytes_to_end(X).
 
-getbyte_test1(Byte,S2) :-
-    get_byte(Byte),
-    read_bytes_to_end(S2, [119, 101, 114]).
+:- test getbyte_test2(Byte, X) => ( Byte=113, X=[119, 101, 114] )
+   + (setup(bin_in_i([113, 119, 101, 114], Prev)), cleanup(und(Prev)))
+   # "[ISO] get_byte/1".
+getbyte_test2(Byte, X) :- get_byte(st_i, Byte), read_bytes_to_end(st_i, X).
 
-setup_getbyte1(Sc,S2):-
-    wr_bin_f('/tmp/tmp.in', [113, 119, 101, 114]),
-    open_to_read('/tmp/tmp.in', read, Sc, S2, [type(binary)]).
-
-:- test getbyte_test2(Byte,S2) : true => (Byte=113)
-   + (no_exception,
-      setup(setup_getbyte2(S2)), cleanup(cleanup_getbyte2(S2)))
+:- test getbyte_test3(X) => ( X=[119, 101, 114, 116, 121] )
+   + (setup(bin_in_i([113, 119, 101, 114, 116, 121], Prev)), cleanup(und(Prev)))
    # "[ISO] get_byte/2".
+getbyte_test3(X) :- \+ get_byte(st_i, 114), read_bytes_to_end(st_i, X).
 
-getbyte_test2(Byte,S2) :-
-    get_byte(st_i, Byte),
-    read_bytes_to_end(S2, [119, 101, 114]).
-
-setup_getbyte2(S2):-
-    wr_bin_f('/tmp/tmp.in', [113, 119, 101, 114]),
-    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]).
-
-cleanup_getbyte2(S2):- close(S2).
-
-:- test getbyte_test3(S2) 
-   + (setup(setup_getbyte3(S2)), cleanup(cleanup_getbyte3(S2))) 
+:- test getbyte_test4(Byte) => (Byte=(-1))
+   + (setup(bin_in_i([], Prev)), cleanup(und(Prev)))
    # "[ISO] get_byte/2".
-
-getbyte_test3(S2) :-
-    ( get_byte(st_i, 114) -> fail ; true),
-    read_bytes_to_end(S2, [119, 101, 114, 116, 121]).
-
-setup_getbyte3(S2):-
-    wr_bin_f('/tmp/tmp.in', [113, 119, 101, 114, 116, 121]),
-    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]).
-
-cleanup_getbyte3(S2):- close(S2).
-
-:- test getbyte_test4(Byte) : true => (Byte=(-1))
-   + (setup(setup_getbyte4(S2)), cleanup(cleanup_getbyte4(S2))) 
-   # "[ISO] get_byte/2".
-
-getbyte_test4(Byte) :-
-    get_byte(st_i, Byte).
+getbyte_test4(Byte) :- get_byte(st_i, Byte).
     %{past}
     % stream_property(S2, end_of_stream(past)),
 
-setup_getbyte4(S2):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open('/tmp/tmp.in', read, S2, [type(binary), alias(st_i)]).
-
-cleanup_getbyte4(S2):- close(S2).
-
 :- test getbyte_test5
-   + exception(error(permission_error(input, stream, user_output), ImplDep))
+   + exception(error(permission_error(input, stream, user_output), _))
    # "[ISO] get_byte/2".
-
 getbyte_test5 :- get_byte(user_output, _).
 
 :- test getbyte_test6
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] get_byte/2".
-
 getbyte_test6 :- get_byte(_, _).
 
 :- test getbyte_test7 
-   + (setup(setup_getbyte7(Sc,S1)), cleanup(und(prev(Sc,S1))),
-      exception(error(type_error(in_byte, p),ImplDep)))
+   + (setup(bin_in([], Prev)), cleanup(und(Prev)),
+      exception(error(type_error(in_byte, p), _)))
    # "[ISO-sics] get_byte/1".
-
-getbyte_test7 :-
-    get_byte(p).
-
-setup_getbyte7(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary)]).
+getbyte_test7 :- get_byte(p).
 
 :- test getbyte_test8
-   + (setup(setup_getbyte8(Sc,S1)), cleanup(und(prev(Sc,S1))),
-      exception(error(type_error(in_byte, -2),ImplDep)))
+   + (setup(bin_in([], Prev)), cleanup(und(Prev)),
+      exception(error(type_error(in_byte, -2), _)))
    # "[ISO-sics] get_byte/1".
-
-getbyte_test8 :-
-    get_byte(-2).
-
-setup_getbyte8(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary)]).
+getbyte_test8 :- get_byte(-2).
 
 % TODO:[JF] both acceptable in ISO 
 :- test getbyte_test9
-   % + exception(error(domain_error(stream_or_alias, foo), ImplDep))
-   + exception(error(existence_error(stream, foo), ImplDep))
+   % + exception(error(domain_error(stream_or_alias, foo), _))
+   + exception(error(existence_error(stream, foo), _))
    # "[ISO-sics] get_byte/2".
-
 getbyte_test9 :- get_byte(foo, _).
 
-:- test getbyte_test10(S1) 
-   + (setup(setup_getbyte10(S1)),
-      exception(error(existence_error(stream, S1), ImplDep)))
+:- test getbyte_test10(S) 
+   + (setup(closed_instream(S)),
+      exception(error(existence_error(stream, S), _)))
    # "[ISO-sics] get_byte/2".
-
-getbyte_test10(S1) :-
-    get_byte(S1, _).
-
-setup_getbyte10(S1):-
-    closed_instream(S1).
+getbyte_test10(S) :- get_byte(S, _).
 
 :- test getbyte_test11(S) 
-   + (setup(setup_getbyte11(S)),
-      exception(error(permission_error(input, stream, S), ImplDep)))
+   + (setup(curr_out(S)),
+      exception(error(permission_error(input, stream, S), _)))
    # "[ISO-sics] get_byte/2".
 
-getbyte_test11(S) :-
-    get_byte(S, _).
-
-setup_getbyte11(S):-
-    current_output(S).
+getbyte_test11(S) :- get_byte(S, _).
 
 :- test getbyte_test12
-   + (setup(setup_getbyte12(Sc,S1)), cleanup(und(prev(Sc,S1))),
-      exception(error(permission_error(input, text_stream, S1), ImplDep)))
+   + (setup(txt_in('', Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, text_stream, S1), _)))
    # "[ISO-sics] get_byte/1".
 
-getbyte_test12 :-
-    get_byte(_).
-
-setup_getbyte12(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, []).
+getbyte_test12 :- get_byte(_).
 
 :- test getbyte_test13
-   + (setup(setup_getbyte13(Sc,S1)), cleanup(und(prev(Sc,S1))),
-      exception(error(permission_error(input, past_end_of_stream, S1), ImplDep)))
+   + (setup(bin_in([], Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, past_end_of_stream, S1), _)))
    # "[ISO-sics] get_byte/1".
 
-getbyte_test13 :-
-    get_byte(_),
-    get_byte(_).
-
-setup_getbyte13(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary)]).
+getbyte_test13 :- get_byte(_), get_byte(_).
 
 % ---------------------------------------------------------------------------
 %! ## 8.13.2 peek_byte/1, peek_byte/2 ISOcore#p97
@@ -4394,233 +4040,144 @@ setup_getbyte13(Sc,S1):-
 :- test peekbyte_test1(Byte, X) => ( Byte=113, X=[113, 119, 101, 114] )
    + (setup(bin_in([113, 119, 101, 114], Prev)), cleanup(und(Prev)))
    # "[ISO] peek_byte/1".
-
 peekbyte_test1(Byte, X) :- peek_byte(Byte), read_bytes_to_end(X).
 
-:- test peekbyte_test2(Byte) : true => (Byte=113)
+:- test peekbyte_test2(Byte, X) => ( Byte=113, X=[113, 119, 101, 114] )
    + (setup(bin_in_i([113, 119, 101, 114], Prev)), cleanup(und(Prev)))
    # "[ISO] peek_byte/2".
+peekbyte_test2(Byte, X) :- peek_byte(st_i, Byte), read_bytes_to_end(st_i, X).
 
-peekbyte_test2(Byte) :-
-    peek_byte(st_i, Byte),
-    read_bytes_to_end(st_i, [113, 119, 101, 114]).
-
-:- test peekbyte_test3
+:- test peekbyte_test3(X) => ( X=[113, 119, 101, 114, 116, 121] )
    + (setup(bin_in_i([113, 119, 101, 114, 116, 121], Prev)), cleanup(und(Prev)))
    # "[ISO] peek_byte/2".
+peekbyte_test3(X) :- \+ peek_byte(st_i, 114), read_bytes_to_end(st_i, X).
 
-peekbyte_test3 :-
-    ( peek_byte(st_i, 114) -> fail ; true ),
-    read_bytes_to_end(st_i, [113, 119, 101, 114, 116, 121]).
-
-:- test peekbyte_test4(Byte) : true => (Byte=(-1))
+:- test peekbyte_test4(Byte) => (Byte=(-1))
    + (setup(bin_in_i([],Prev)), cleanup(und(Prev)))
    # "[ISO] peek_byte/2".
-
-peekbyte_test4(Byte) :-
-    peek_byte(st_i, Byte).
+peekbyte_test4(Byte) :- peek_byte(st_i, Byte).
 
 :- test peekbyte_test5
-   + exception(error(permission_error(input, stream, user_output), ImplDep))
+   + exception(error(permission_error(input, stream, user_output), _))
    # "[ISO] peek_byte/2".
-
 peekbyte_test5 :- peek_byte(user_output, _).
 
 :- test peekbyte_test6
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] peek_byte/2".
-
 peekbyte_test6 :- peek_byte(_, _).
 
 :- test peekbyte_test7
    + (setup(bin_in([], Prev)), cleanup(und(Prev)),
-      exception(error(type_error(in_byte, p), ImplDep)))
+      exception(error(type_error(in_byte, p), _)))
    # "[ISO-sics] peek_byte/1".
-
 peekbyte_test7 :- peek_byte(p).
 
 :- test peekbyte_test8
    + (setup(bin_in([], Prev)), cleanup(und(Prev)),
-      exception(error(type_error(in_byte, -2), ImplDep)))
+      exception(error(type_error(in_byte, -2), _)))
    # "[ISO-sics] peek_byte/1".
-
 peekbyte_test8 :- peek_byte(-2).
 
 % TODO:[JF] both acceptable in ISO 
 :- test peekbyte_test9
-%   + exception(error(domain_error(stream_or_alias, foo), ImplDep))
-   + exception(error(existence_error(stream, foo), ImplDep))
+%   + exception(error(domain_error(stream_or_alias, foo), _))
+   + exception(error(existence_error(stream, foo), _))
    # "[ISO-sics] peek_byte/2".
-
 peekbyte_test9 :- peek_byte(foo, _).
 
 :- test peekbyte_test10(S1) 
-   + (setup(setup_pb10(S1)),
-      exception(error(existence_error(stream, S1), ImplDep)))
+   + (setup(closed_instream(S1)),
+      exception(error(existence_error(stream, S1), _)))
    # "[ISO-sics] peek_byte/2".
-
-peekbyte_test10(S1) :-
-    peek_byte(S1, _).
-
-setup_pb10(S1) :-
-    closed_instream(S1).
+peekbyte_test10(S1) :- peek_byte(S1, _).
 
 :- test peekbyte_test11(S, _) 
-   + (setup(setup_pb11(S)),
-      exception(error(permission_error(input, stream, S), ImplDep)))
+   + (setup(curr_out(S)),
+      exception(error(permission_error(input, stream, S), _)))
    # "[ISO-sics] peek_byte/2".
-
-peekbyte_test11(S, _) :-
-    peek_byte(S, _).
-
-setup_pb11(S):-
-    current_output(S).
+peekbyte_test11(S, _) :- peek_byte(S, _).
 
 :- test peekbyte_test12
    + (setup(txt_in('',Prev)), cleanup(und(Prev)),
-      exception(error(permission_error(input, text_stream, S), ImplDep)))
+      exception(error(permission_error(input, text_stream, S), _)))
    # "[ISO-sics] peek_byte/1".
-
 peekbyte_test12 :- peek_byte(_).
 
 :- test peekbyte_test13
    + (setup(bin_in([],Prev)), cleanup(und(Prev)),
-      exception(error(permission_error(input, past_end_of_stream, S1),ImplDep)))
+      exception(error(permission_error(input, past_end_of_stream, S1), _)))
    # "[ISO-sics] peek_byte/1".
-
-peekbyte_test13 :-
-    get_byte(_),
-    peek_byte(_).
+peekbyte_test13 :- get_byte(_), peek_byte(_).
 
 % ---------------------------------------------------------------------------
 %! ## 8.13.3 put_byte/1, put_byte/2 ISOcore#p98
 
-:- test putbyte_test1
-   + (setup(setup_ptb1(S,Sc)), cleanup(cleanup_ptb1(S,Sc)))
-   # "[ISO] put_byte/1".
+:- test putbyte_test1 + not_fails # "[ISO] put_byte/1".
+putbyte_test1 :- with_out(bin([113, 119, 101, 114]), put_byte(116), bin([113, 119, 101, 114, 116])).
 
-putbyte_test1 :-
-    put_byte(116).
-
-setup_ptb1(S,Sc):-
-    open_and_write('/tmp/tmp.out', write, S, [type(binary)], binary, [113, 119, 101, 114]),
-    current_output(Sc),
-    set_output(S).
-
-cleanup_ptb1(S,Sc):-
-    close_outstreams(Sc, S),
-    chk_bin_f('/tmp/tmp.out', [113, 119, 101, 114, 116]).
-
-:- test putbyte_test2
-   + (setup(setup_ptb2(S)), cleanup(cleanup_ptb2(S)))
-   # "[ISO] put_byte/2".
-
-putbyte_test2 :-
-    put_byte(st_i, 84).
-
-setup_ptb2(S):-
-    open_and_write('/tmp/tmp.out', write, S, [type(binary), alias(st_i)], binary, [113, 119, 101, 114]).
-
-cleanup_ptb2(S) :-
-    close(S),
-    % TODO:[JF] this check should not be done in cleanup
-    chk_bin_f('/tmp/tmp.out', [113, 119, 101, 114, 84]).
+:- test putbyte_test2 + not_fails # "[ISO] put_byte/1".
+putbyte_test2 :- with_out_a(bin([113, 119, 101, 114]), put_byte(st_o, 84), bin([113, 119, 101, 114, 84])).
 
 :- test putbyte_test3
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] put_byte/2".
-
 putbyte_test3 :- put_byte(my_file, _).
 
 :- test putbyte_test4
-   + exception(error(type_error(byte, ty), ImplDep))
+   + exception(error(type_error(byte, ty), _))
    # "[ISO] put_byte/2".
-
 putbyte_test4 :- put_byte(user_output, 'ty').
 
 :- test putbyte_test5
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] put_byte/2".
-
 putbyte_test5 :- put_byte(_, 118).
 
 :- test putbyte_test6
-   + (setup(setup_ptb6(S, Sc)),
-      exception(error(instantiation_error, ImplDep)))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] put_byte/2".
-
-putbyte_test6 :- put_byte(_).
-
-setup_ptb6(S, Sc):-
-    open('/tmp/tmp.out', write, S, [type(binary)]),
-    current_output(Sc),
-    set_output(S).
+putbyte_test6 :- with_out(bin([]), put_byte(_), bin([])).
 
 :- test putbyte_test7(S) 
-   + (setup(setup_ptb7(S)),
-      exception(error(existence_error(stream, S), ImplDep)))
+   + (setup(closed_outstream(S)),
+      exception(error(existence_error(stream, S), _)))
    # "[ISO-sics] put_byte/2".
+putbyte_test7(S) :- put_byte(S, 77).
 
-putbyte_test7(S) :-
-    put_byte(S, 77).
-
-setup_ptb7(S):-
-    closed_outstream(S).
-
-:- test putbyte_test8(S1) 
-   + (setup(setup_ptb8(Sc,S1)), cleanup(und(prev(Sc,S1))),
-      exception(error(permission_error(output, stream, S1), ImplDep)))
+:- test putbyte_test8(S) 
+   + (setup(bin_in_s([], S, Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(output, stream, S), _)))
    # "[ISO-sics] put_byte/2".
-
-putbyte_test8(S1) :-
-    put_byte(S1, 99).
-
-setup_ptb8(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary)]).
+putbyte_test8(S) :- put_byte(S, 99).
 
 % TODO: this should be fixed when integrating into the engine (stream type = text in user_output)
 :- test putbyte_test9 
-   + (setup(setup_ptb9(S)),
-      exception(error(permission_error(output, text_stream, S), ImplDep)))
+   + (setup(curr_out(S)),
+      exception(error(permission_error(output, text_stream, S), _)))
    # "[ISO-sics] put_byte/1".
-
-putbyte_test9 :-
-    put_byte(99).
-
-setup_ptb9(S):-
-    current_output(S).
+putbyte_test9 :- put_byte(99).
 
 :- test putbyte_test10 
-   + (setup(setup_ptb10(S)),
-      exception(error(type_error(byte, -1), ImplDep)))
+   + exception(error(type_error(byte, -1), _))
    # "[ISO-sics] put_byte/2".
-
-putbyte_test10 :-
-    put_byte(-1).
-
-setup_ptb10(S):-
-    open('/tmp/tmp.out', write, S, [type(binary)]),
-    set_output(S).
+putbyte_test10 :- with_out(bin([]), put_byte(-1), bin([])).
 
 :- test putbyte_test11
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] put_byte/2".
-
 putbyte_test11 :- put_byte(_, 1).
 
 % TODO:[JF] both acceptable in ISO 
 :- test putbyte_test12
-   % + exception(error(domain_error(stream_or_alias, foo), ImplDep))
-   + exception(error(existence_error(stream, foo), ImplDep))
+   % + exception(error(domain_error(stream_or_alias, foo), _))
+   + exception(error(existence_error(stream, foo), _))
    # "[ISO-sics] put_byte/2".
-
 putbyte_test12 :- put_byte(foo, 1).
 
 :- test putbyte_test13
-   + exception(error(type_error(byte, ty), ImplDep))
+   + exception(error(type_error(byte, ty), _))
    # "[ISO-sics] put_byte/2".
-
 putbyte_test13 :- put_byte(user_output, 'ty').
 
 % ===========================================================================
@@ -4637,203 +4194,131 @@ text_def(min_int(M), [Atm, '.']) :-
     number_codes(M, L),
     atom_codes(Atm, L).
 
-:- test read_test1(Y,X) : true => (X='term1',Y='term2') +
-   (setup(setup_read1(Sc,S1)), cleanup(und(prev(Sc,S1))))
+:- test read_test1(X,Y) => (X='term1',Y='term2')
+   + (setup(txt_in('term1. term2.', Prev)), cleanup(und(Prev)))
    # "[ISO] read/1".
+read_test1(X,Y) :- read(X), read(Y).
 
-read_test1(Y,X) :-
-    read(X),
-    read(Y).
-
-setup_read1(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', 'term1. term2.'),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, []).
-
-:- test read_test2(Y,X) : true => (X='term2')
-   + (setup(setup_read2(S1)), cleanup(cleanup_read2(S1)))
+:- test read_test2(X,Y) => (X='term2')
+   + (setup(txt_in_i('term1. term2.', Prev)), cleanup(und(Prev)))
    # "[ISO] read/2".
+read_test2(X,Y) :- read(st_i, Y), read(st_i, X).
 
-read_test2(Y,X) :-
-    read(st_i, Y),
-    read(st_i, X).
-
-setup_read2(S1):-
-    wr_txt_f('/tmp/tmp.in', 'term1. term2.'),
-    open('/tmp/tmp.in', read, S1, [alias(st_i)]).
-
-cleanup_read2(S1):- close(S1). 
-
-:- test read_test3(T, VL, VN, VS, Y) : true =>
-   (T=foo(X1+X2, X1+X3),
-    VL=[X1, X2, X3],
-    VN=['A'=X1, 'Roger'=X2],
-    VS=['Roger'=X2],
-    Y='term2') +
-   (setup(setup_read3(S1)), cleanup(cleanup_read3(S1)))
+:- test read_test3(T, VL, VN, VS, Y)
+   : true =>
+   ( T=foo(X1+X2, X1+X3),
+     VL=[X1, X2, X3],
+     VN=['A'=X1, 'Roger'=X2],
+     VS=['Roger'=X2],
+     Y='term2' )
+   + (setup(txt_in_i('foo(A+Roger,A+_). term2.', Prev)), cleanup(und(Prev)))
    # "[ISO] read_term/3".
-
 read_test3(T, VL, VN, VS, Y) :-
    read_term(st_i, T, [variables(VL), variable_names(VN), singletons(VS)]),
    read(st_i,Y).
-   
-setup_read3(S1):-
-    wr_txt_f('/tmp/tmp.in', 'foo(A+Roger,A+_). term2.'),
-    open('/tmp/tmp.in', read, S1, [alias(st_i)]).
 
-cleanup_read3(S1):- close(S1).
-
-:- test read_test4(Y) : true => (Y='term2') +
-   (setup(txt_in('3.1. term2.',Prev)), cleanup(und(Prev)))
+:- test read_test4(Y) => ( Y='term2' )
+   + (setup(txt_in('3.1. term2.',Prev)), cleanup(und(Prev)))
    # "[ISO] read/1".
-
 read_test4(Y) :-
     ( read(4.1) -> fail ; true ),
     read(Y).
 
-:- test read_test5(X, Y) : true => (Y='term2') +
-   (setup(setup_read5(Sc,S1)),
-    cleanup(und(prev(Sc,S1))),
-    exception(error(syntax_error(S), ImplDep)))
+:- test read_test5(X, Y) => (Y='term2') +
+   (setup(txt_in('foo 123. term2.', Prev)), cleanup(und(Prev)),
+    exception(error(syntax_error(S), _)))
    # "[ISO] read/1".
-
-read_test5(X, Y) :-
-    read(X),
-    read(Y).
-
-setup_read5(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', 'foo 123. term2.'),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, []).
+read_test5(X, Y) :- read(X), read(Y).
 
 :- test read_test6(X) 
    + (setup(txt_in('3.1',Prev)), cleanup(und(Prev)),
-      exception(error(syntax_error(S), ImplDep)))
+      exception(error(syntax_error(S), _)))
    # "[ISO] read/1".
-
-read_test6(X) :-
-    read(X).
+read_test6(X) :- read(X).
     %{past}
     %stream_property(S, end_of_stream(past)),
 
-:- test read_test7(T, L) : true => (T=foo(bar), L=[])
+:- test read_test7(T, L) => (T=foo(bar), L=[])
    + (setup(txt_in('foo(bar).',Prev)), cleanup(und(Prev)))
    # "[ISO-sics] read_term/2".
-
 read_test7(T, L) :-
     read_term(T, [singletons(L)]).
 
 :- test read_test8
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] read/2".
-
 read_test8 :- read(_, _).
 
 :- test read_test9
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] read_term/3".
-
 read_test9 :- read_term(user_input, _, _).
 
 :- test read_test10
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] read_term/3".
-
 read_test10 :- read_term(user_input, _, [variables(_)|_]).
 
 :- test read_test11
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] read_term/3".
-
 read_test11 :- read_term(user_input, _, [variables(_), _]).
 
 % TODO:[JF] both acceptable in ISO 
 :- test read_test12
-   % + exception(error(domain_error(stream_or_alias, foo), ImplDep))
-   + exception(error(existence_error(stream, foo), ImplDep))
+   % + exception(error(domain_error(stream_or_alias, foo), _))
+   + exception(error(existence_error(stream, foo), _))
 # "[ISO-sics] read/2".
-
 read_test12 :- read(foo, _).
 
 :- test read_test13
-   + exception(error(type_error(list, bar), ImplDep))
+   + exception(error(type_error(list, bar), _))
    # "[ISO-sics] read_term/3".
-
 read_test13 :- read_term(user_input, _, bar).
 
 :- test read_test14
-   + exception(error(domain_error(read_option, bar), ImplDep))
+   + exception(error(domain_error(read_option, bar), _))
    # "[ISO-sics] read_term/3".
-
 read_test14 :- read_term(user_input, _, [bar]).
 
 :- test read_test15
-   + exception(error(permission_error(input, stream, user_output), ImplDep))
+   + exception(error(permission_error(input, stream, user_output), _))
    # "[ISO-sics] read_term/3".
-
 read_test15 :- read_term(user_output, _, []).
 
-:- test read_test16(T) : true => (T=end_of_file)
-   + (setup(setup_read16(Sc,S1)), cleanup(und(prev(Sc,S1))))
+:- test read_test16(T) => ( T=end_of_file )
+   + (setup(txt_in('', Prev)), cleanup(und(Prev)))
    # "[ISO-sics] read/1".
-
-read_test16(T) :-
-    read(T).
-
-setup_read16(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, []).
+read_test16(T) :- read(T).
 
 :- test read_test17(S1) 
-   + (setup(setup_read17(S1)),
-      exception(error(existence_error(stream, S1), ImplDep)))
+   + (setup(closed_instream(S1)),
+      exception(error(existence_error(stream, S1), _)))
    # "[ISO-sics] read_term/3".
-
-read_test17(S1) :-
-    read_term(S1, _, []).
-
-setup_read17(S1):-
-    closed_instream(S1).
+read_test17(S1) :- read_term(S1, _, []).
 
 :- test read_test18
-   + (setup(setup_read18(Sc,S1)), cleanup(und(prev(Sc,S1))),
-      exception(error(permission_error(input, binary_stream, S1), ImplDep)))
+   + (setup(bin_in([], Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, binary_stream, _), _)))
    # "[ISO-sics] read_term/2".
-
-read_test18 :-
-    read_term(_, []).
-
-setup_read18(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary)]).
+read_test18 :- read_term(_, []).
 
 :- test read_test19
-   + (setup(setup_read19(Sc,S1)), cleanup(und(prev(Sc,S1))),
-      exception(error(permission_error(input, binary_stream, S1), ImplDep)))
+   + (setup(bin_in([], Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, binary_stream, _), _)))
    # "[ISO-sics] read/1".
-
-read_test19 :-
-    read(_).
-
-setup_read19(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, [type(binary)]),
-    current_input(S1).
+read_test19 :- read(_).
 
 % TODO:[JF] can current_input/1 return a stream alias like user_input?
 %   it does in some prolog systems, not in gprolog
-
-:- test read_test20(S1) 
-   + (setup(setup_read20(Sc,S1)), cleanup(und(prev(Sc,S1))),
-      exception(error(permission_error(input, past_end_of_stream, S1), ImplDep)))
+:- test read_test20(S) 
+   + (setup(txt_in_s('', S, Prev)), cleanup(und(Prev)),
+      exception(error(permission_error(input, past_end_of_stream, S), _)))
    # "[ISO-sics] read_term/3".
 
-read_test20(S1) :-
-    read_term(S1, _, []).
-
-setup_read20(Sc,S1):-
-    wr_txt_f('/tmp/tmp.in', ''),
-    open_to_read('/tmp/tmp.in', read, Sc, S1, []),
-%    current_input(S1),
-    get_code(_).
+read_test20(S) :-
+    catch(get_code(S, _), _, fail), % (ignore errors here)
+    read_term(S, _, []).
 
 % NOTE: it exceeds max arity in Ciao
 text_def(txt21, [
@@ -4850,29 +4335,24 @@ text_def(txt21, [
 
 :- test read_test21 
    + (setup(txt_in(def(txt21),Prev)), cleanup(und(Prev)),
-      exception(error(representation_error(max_arity), ImplDep)))
+      exception(error(representation_error(max_arity), _)))
    # "[ISO-sics] read_term/2".
-
-read_test21 :-
-    read_term(_, []).
+read_test21 :- read_term(_, []).
 
 :- test read_test22
    + (setup(txt_in("'a.",Prev)), cleanup(und(Prev)),
-      exception(error(syntax_error(S), ImplDep)))
+      exception(error(syntax_error(S), _)))
    # "[ISO-sics] read_term/2".
-
 read_test22 :- read_term(_, []).
 
-:- test read_test23(T) : true => (T=M)
+:- test read_test23(T) => (T=M)
    + (setup(txt_in(def(max_int(M)),Prev)), cleanup(und(Prev)))
    # "[ISO-sics] read/1".
-
 read_test23(T) :- read(T).
 
-:- test read_test24(T) : true => (T=M)
+:- test read_test24(T) => (T=M)
    + (setup(txt_in(def(min_int(M)),Prev)), cleanup(und(Prev)))
    # "[ISO-sics] read/1".
-
 read_test24(T) :- read(T).
 
 % ---------------------------------------------------------------------------
@@ -4911,7 +4391,7 @@ setup_write2(S,Sc):-
 
 cleanup_write2(Sc,S):-
     close_outstreams(Sc, S),
-    chk_txt_f('/tmp/tmp.out', "'.'(1,'.'(2,'.'(3,[])))").
+    chk_out('/tmp/tmp.out', txt("'.'(1,'.'(2,'.'(3,[])))")).
 
 :- test write_test3(S) 
    + (setup(setup_write3(S,Sc)), cleanup(cleanup_write3(Sc,S)))
@@ -4928,7 +4408,7 @@ setup_write3(S,Sc):-
 cleanup_write3(Sc,S) :-
     close_outstreams(Sc, S),
     % TODO:[JF] this check should not be done in cleanup
-    chk_txt_f('/tmp/tmp.out', "1<2").
+    chk_out('/tmp/tmp.out', txt("1<2")).
 
 :- test write_test4(S) 
    + (setup(setup_write4(S,Sc)), cleanup(cleanup_write4(Sc,S)))
@@ -4945,7 +4425,7 @@ setup_write4(S,Sc):-
 cleanup_write4(Sc,S) :-
     close_outstreams(Sc, S),
     % TODO:[JF] this check should not be done in cleanup
-    chk_txt_f('/tmp/tmp.out', "'1<2'").
+    chk_out('/tmp/tmp.out', txt("'1<2'")).
 
 :- test write_test5
    + (setup(setup_write5(S,Sc)), cleanup(cleanup_write5(S,Sc)))
@@ -4962,7 +4442,7 @@ setup_write5(S,Sc):-
 cleanup_write5(S,Sc):-
     close_outstreams(Sc, S),
     % TODO:[JF] this check should not be done in cleanup
-    chk_txt_f('/tmp/tmp.out', "A").
+    chk_out('/tmp/tmp.out', txt("A")).
 
 :- test write_test6(S) 
    + (setup(setup_write6(S,Sc)), cleanup(cleanup_write6(Sc,S)))
@@ -4979,7 +4459,7 @@ setup_write6(S,Sc):-
 cleanup_write6(Sc,S):-
     close_outstreams(Sc, S),
     % TODO:[JF] this check should not be done in cleanup
-    chk_txt_f('/tmp/tmp.out', "$VAR(1)").
+    chk_out('/tmp/tmp.out', txt("$VAR(1)")).
 
 :- test write_test7(S) 
    + (setup(setup_write7(S,Sc)), cleanup(cleanup_write7(S,Sc)))
@@ -4996,100 +4476,80 @@ setup_write7(S,Sc):-
 cleanup_write7(S,Sc):-
     close_outstreams(Sc, S),
     % TODO:[JF] this check should not be done in cleanup
-    chk_txt_f('/tmp/tmp.out', "Z1").
+    chk_out('/tmp/tmp.out', txt("Z1")).
 
-:- test write_test8 + exception(error(instantiation_error, ImplDep))
+:- test write_test8 + exception(error(instantiation_error, _))
    # "[ISO-sics] write/2".
 write_test8 :- write(_, foo).
 
-:- test write_test9 + exception(error(instantiation_error, ImplDep))
+:- test write_test9 + exception(error(instantiation_error, _))
    # "[ISO-sics] write_term/2".
 write_test9 :- write_term(foo, _).
 
-:- test write_test10 + exception(error(instantiation_error,ImplDep))
+:- test write_test10 + exception(error(instantiation_error, _))
    # "[ISO-sics] write_term/2".
 write_test10 :- write_term(user_output,foo,_).
 
 :- test write_test11
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] write_term/2".
 write_test11 :- write_term(foo, [quoted(true)|_]).
 
-:- test write_test12 + exception(error(instantiation_error,ImplDep))
+:- test write_test12
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] write_term/2".
 write_test12 :- write_term(user_output,foo,[quoted(true)|_]).
 
 :- test write_test13
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] write_term/2".
 write_test13 :- write_term(foo, [quoted(true), _]).
 
-:- test write_test14 + exception(error(instantiation_error,ImplDep))
+:- test write_test14
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] write_term/2".
 write_test14 :- write_term(user_output,foo,[quoted(true),_]).
 
-:- test write_test15 + exception(error(type_error(list,2),ImplDep))
+:- test write_test15
+   + exception(error(type_error(list,2), _))
    # "[ISO-sics] write_term/2".
 write_test15 :- write_term(user_output,1,2).
 
 % TODO:[JF] type error list foo is common but not strictly conforming?
 :- test write_test16
-   + exception(error(type_error(list,foo), ImplDep))
-   % + exception(error(type_error(list, [quoted(true)|foo]), ImplDep))
+   + exception(error(type_error(list,foo), _))
+   % + exception(error(type_error(list, [quoted(true)|foo]), _))
    # "[ISO-sics] write_term/2".
-
 write_test16 :- write_term(1, [quoted(true)|foo]).
 
 % TODO:[JF] both acceptable in ISO 
 :- test write_test17
-   % + exception(error(domain_error(stream_or_alias, foo), ImplDep))
-   + exception(error(existence_error(stream, foo), ImplDep))
+   % + exception(error(domain_error(stream_or_alias, foo), _))
+   + exception(error(existence_error(stream, foo), _))
 # "[ISO-sics] write_term/2".
-
 write_test17 :- write(foo, 1).
 
 :- test write_test18
-   + exception(error(domain_error(write_option, foo), ImplDep))
+   + exception(error(domain_error(write_option, foo), _))
    # "[ISO-sics] write_term/2".
-
 write_test18 :- write_term(1, [quoted(true), foo]).
 
 :- test write_test19(S) 
-   + (setup(setup_write19(S)),
-      exception(error(existence_error(stream, S), ImplDep)))
+   + (setup(closed_outstream(S)),
+      exception(error(existence_error(stream, S), _)))
    # "[ISO-sics] write/2".
-
-write_test19(S) :-
-    write(S, a).
-
-setup_write19(S):- closed_outstream(S).
+write_test19(S) :- write(S, a).
 
 :- test write_test20(S) 
-   + (setup(setup_write20(S)),
-      exception(error(permission_error(output, stream, S), ImplDep)))
+   + (setup(curr_in(S)),
+      exception(error(permission_error(output, stream, S), _)))
    # "[ISO-sics] write/2".
-
-write_test20(S) :-
-    write(S, a).
-
-setup_write20(S):-
-    current_input(S).
+write_test20(S) :- write(S, a).
 
 :- test write_test21
-   + (setup(setup_write21(S,Sc)), cleanup(cleanup_write21(S)),
-      exception(error(permission_error(output, binary_stream, S), ImplDep)))
+   + exception(error(permission_error(output, binary_stream, S), _))
    # "[ISO-sics] write/1".
-
-write_test21 :-
-    write(a).
-
-setup_write21(S,Sc):-
-    open('/tmp/tmp.out', write, S, [type(binary)]),
-    current_output(Sc),
-    set_output(S),
-    current_output(S).
-
-cleanup_write21(S):- close(S).
+write_test21 :- with_out(bin([]), write(a), bin([])).
 
 % ---------------------------------------------------------------------------
 %! ## 8.14.3 ISOcore#p102
@@ -5116,35 +4576,35 @@ op_test2 :- op(0, yfx, ++).
 %% REVIEW:PENDING                                     **Label_3**
 %%   [gprolog]: throws exception(error(type_error(integer, max), _))
 %%   [ciao]: throws  exception(error(domain_error(operator_priority,max),op/3-1))
-:- test op_test3 + exception(error(type_error(integer, max), ImplDep))
+:- test op_test3 + exception(error(type_error(integer, max), _))
    # "[ISO] op/3: expected(error) bug(wrong_error)".
 
 op_test3 :- op(max, xfy, ++).
 
 :- test op_test4
-   + exception(error(domain_error(operator_priority, -30), ImplDep))
+   + exception(error(domain_error(operator_priority, -30), _))
    # "[ISO] op/3: expected(error)".
 
 op_test4 :- op(-30, xfy, ++).
 
 :- test op_test5
-   + exception(error(domain_error(operator_priority, 1201), ImplDep))
+   + exception(error(domain_error(operator_priority, 1201), _))
    # "[ISO] op/3: expected(error)".
 
 op_test5 :- op(1201, xfy, ++).
 
-:- test op_test6 + exception(error(instantiation_error, ImplDep))
+:- test op_test6 + exception(error(instantiation_error, _))
    # "[ISO] op/3: expected(error)".
 
 op_test6 :- op(30, _Xfy, ++).
 
 :- test op_test7
-   + exception(error(domain_error(operator_specifier, yfy), ImplDep))
+   + exception(error(domain_error(operator_specifier, yfy), _))
    # "[ISO] op/3: expected(error)".
 
 op_test7 :- op(30, yfy, ++).
 
-:- test op_test8 + exception(error(type_error(list, 0), ImplDep))
+:- test op_test8 + exception(error(type_error(list, 0), _))
    # "[ISO] op/3: expected(error)".
 
 op_test8 :- op(30, xfy, 0).
@@ -5166,12 +4626,12 @@ op_test9(_) :- op(30, xfy, ++), op(40, xfx, ++).
 %%   [gprolog]: throws exception(error(permission_error(create, operator, ++), _))
 %%   [ciao]: no throws
 %:- test op_test10
-%	+ exception(error(permission_error(create, operator, ++), ImplDep))
+%	+ exception(error(permission_error(create, operator, ++), _))
 %# "[ISO] op/3: expected(error) bug(succeed)".
 %
 %op_test10 :- iso_incomplete:op(30, xfy, ++), iso_incomplete:op(50, yf, ++).
 
-:- test op_test11 + exception(error(instantiation_error, ImplDep))
+:- test op_test11 + exception(error(instantiation_error, _))
    # "[ISO-sics] op/3: expected(error)".
 
 op_test11 :- op(_, xfx, ++).
@@ -5179,7 +4639,7 @@ op_test11 :- op(_, xfx, ++).
 %% REVIEW:PENDING                                   **Label_3**
 %%   [gprolog]: throws exception(error(instantiation_error,_))
 %%   [ciao]: throws exception(error(permission_error(modify,operator,','),op/3))
-:- test op_test12 + exception(error(instantiation_error, ImplDep))
+:- test op_test12 + exception(error(instantiation_error, _))
    # "[ISO-sics] op/3: expected(error) bug(succeed)".
 
 op_test12 :- op(100, xfx, _).
@@ -5187,19 +4647,19 @@ op_test12 :- op(100, xfx, _).
 %% REVIEW:PENDING                                              **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error,_))
 %%   [ciao]: no throws
-:- test op_test13 + exception(error(instantiation_error, ImplDep))
+:- test op_test13 + exception(error(instantiation_error, _))
    # "[ISO-sics] op/3: expected(error) bug(succeed)".
 
 op_test13 :- op(100, xfx, [a|_]).
 
-:- test op_test14 + exception(error(instantiation_error, ImplDep))
+:- test op_test14 + exception(error(instantiation_error, _))
    # "[ISO-sics] op/3: expected(error)".
 
 op_test14 :- op(100, xfx, [a, _]).
 
 % TODO:[JF] fixed
 :- test op_test15
-   + exception(error(type_error(atom, 200), ImplDep))
+   + exception(error(type_error(atom, 200), _))
    # "[ISO-sics] op/3: expected(error)".
 % :- test op_test15
 % 	+ exception(error(domain_error(operator_specifier, Op_specifier),
@@ -5209,7 +4669,7 @@ op_test14 :- op(100, xfx, [a, _]).
 op_test15 :- op(100, 200, [a]).
 
 :- test op_test16
-   + exception(error(type_error(atom, f(1)), ImplDep))
+   + exception(error(type_error(atom, f(1)), _))
    # "[ISO-sics] op/3: expected(error)".
 % :- test op_test16
 % 	+ exception(error(domain_error(operator_specifier, Op_specifier),
@@ -5218,13 +4678,13 @@ op_test15 :- op(100, 200, [a]).
 
 op_test16 :- op(100, f(1), [a]).
 
-:- test op_test17 + exception(error(type_error(atom, a+b), ImplDep))
+:- test op_test17 + exception(error(type_error(atom, a+b), _))
    # "[ISO-sics] op/3: expected(error)".
 
 op_test17 :- op(100, xfx, [a, a+b]).
 
 :- test op_test18
-   + exception(error(permission_error(modify, operator, ','), ImplDep))
+   + exception(error(permission_error(modify, operator, ','), _))
    # "[ISO-sics] op/3: expected(error) bug(succeed)".
 
 op_test18 :- op(100, xfx, ',').
@@ -5233,7 +4693,7 @@ op_test18 :- op(100, xfx, ',').
 %%   [gprolog]: throws exception(error(permission_error(modify, operator, ','), _))
 %%   [ciao]: no throws
 :- test op_test19
-   + exception(error(permission_error(modify, operator, ','), ImplDep))
+   + exception(error(permission_error(modify, operator, ','), _))
    # "[ISO-sics] op/3: expected(error) bug(succeed)".
 
 op_test19 :- op(100, xfx, [a, ',']).
@@ -5244,7 +4704,7 @@ op_test19 :- op(100, xfx, [a, ',']).
 %%   [gprolog]: Result = [[1050,*->],[740,#==>],[1000,','],[600,:],[1100,;],[200,^],[1105,'|'],[740,#\==>],[730,##],[1050,->],[750,#\<=>],[750,#<=>]]
 %%   [ciao]: Result = [[1100,;],[1050,->],[200,^],[30,++]]
 :- test current_op_test1(Result)
-   => ( find_on_list([[1100, ';'], [1050, '->'], [1000, ','], [200, '^']], Result) )
+   => ( sublist([[1100, ';'], [1050, '->'], [1000, ','], [200, '^']], Result) )
 # "[ISO] current_op/3: expected(succeed) bug(fail)".
 
 current_op_test1(Result) :- findall([P, OP], current_op(P, xfy, OP), Result).
@@ -5253,16 +4713,16 @@ current_op_test1(Result) :- findall([P, OP], current_op(P, xfy, OP), Result).
 %%   [gprolog]: throws exception(error(domain_error(operator_priority, 1201),_))
 %%   [ciao]: no throws
 :- test current_op_test2
-	+ exception(error(domain_error(operator_priority, 1201), ImplDep))
+	+ exception(error(domain_error(operator_priority, 1201), _))
 # "[ISO-sics] current_op/3: expected(error) bug(fail)".
 
 current_op_test2 :- current_op(1201, _, _).
 
 %% REVIEW:PENDING                                                    **Label_2**
-%%   [gprolog]: throws exception(error(domain_error(operator_specifier, yfy), ImplDep))
+%%   [gprolog]: throws exception(error(domain_error(operator_specifier, yfy), _))
 %%   [ciao]: no throws
 :- test current_op_test3
-	+ exception(error(domain_error(operator_specifier, yfy), ImplDep))
+	+ exception(error(domain_error(operator_specifier, yfy), _))
 # "[ISO-sics] current_op/3: expected(error) bug(fail)".
 
 current_op_test3 :- current_op(_, yfy, _).
@@ -5270,7 +4730,7 @@ current_op_test3 :- current_op(_, yfy, _).
 %% REVIEW:PENDING                                           **Label_2**
 %%   [gprolog]: throws error(domain_error(operator_specifier,0),current_op/3)
 %%   [ciao]: no throws
-:- test current_op_test4 + exception(error(type_error(atom, 0), ImplDep))
+:- test current_op_test4 + exception(error(type_error(atom, 0), _))
 # "[ISO-sics] current_op/3: expected(error) bug(fail)".
 
 current_op_test4 :- current_op(_, 0, _).
@@ -5278,7 +4738,7 @@ current_op_test4 :- current_op(_, 0, _).
 %% REVIEW:PENDING                                                             **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 5), _))
 %%   [ciao]: no throws
-:- test current_op_test5 + exception(error(type_error(atom, 5), ImplDep))
+:- test current_op_test5 + exception(error(type_error(atom, 5), _))
 # "[ISO-sics] current_op/3: expected(error) bug(fail)".
 
 current_op_test5 :- current_op(_, _, 5).
@@ -5325,7 +4785,7 @@ char_conversion_test2 :-
 char_conversion_test3 :-
     with_chcvs(['A'-'a'], read('A+c'+a)).
 
-:- test char_conversion_test4(X, Y, Z) : true => (X=(a, a), Y='AAA', Z='a,a')
+:- test char_conversion_test4(X, Y, Z) => (X=(a, a), Y='AAA', Z='a,a')
    + (not_fails,
       setup(txt_in("A&A. 'AAA'. ^A&A^.",Prev)), cleanup(und(Prev)))
 # "[ISO] char_conversion/2: bug(wontfix)".
@@ -5350,7 +4810,7 @@ char_conversion_test5 :-
 char_conversion_test6(X) :-
     with_chcvs(['%'-'+','^'-'\''], (read(X), X = (0'%) + 1)).
 
-:- test char_conversion_test7(X) : true => (X=('%' +1))
+:- test char_conversion_test7(X) => (X=('%' +1))
    + (not_fails,
       setup(txt_in("'%'%1.",Prev)), cleanup(und(Prev)))
    # "[ISO-sics] char_conversion/2: bug(wontfix)".
@@ -5366,7 +4826,7 @@ char_conversion_test7(X) :-
 char_conversion_test8(X) :-
     with_chcvs(['%'-'+','^'-'\''], (read(X), X = "%" + 1)).
 
-:- test char_conversion_test9(X) : true => ( X='.'(1, !))
+:- test char_conversion_test9(X) => ( X='.'(1, !))
    + (not_fails,
       setup(txt_in('1.#.',Prev)), cleanup(und(Prev)))
 # "[ISO-sics] char_conversion/2: bug(wontfix)".
@@ -5374,7 +4834,7 @@ char_conversion_test8(X) :-
 char_conversion_test9(X) :-
     with_ops([op(100, xfx, '.')], with_chcvs(['#'-'!'], read(X))).
 
-:- test char_conversion_test10(X) : true => (X=('aa'+'bb^'))
+:- test char_conversion_test10(X) => (X=('aa'+'bb^'))
    + (not_fails,
       setup(txt_in("^aa'+'bb^'.",Prev)), cleanup(und(Prev)))
 # "[ISO-sics] char_conversion/2: bug(wontfix)".
@@ -5382,7 +4842,7 @@ char_conversion_test9(X) :-
 char_conversion_test10(X) :-
     with_chcvs(['%'-'+','^'-'\''], read(X)).
 
-:- test char_conversion_test11(X, Y) : true => (X=(+), Y=(+))
+:- test char_conversion_test11(X, Y) => (X=(+), Y=(+))
    + (not_fails,
       setup(txt_in("+ .% .",Prev)), cleanup(und(Prev)))
 # "[ISO-sics] char_conversion/2: bug(wontfix)".
@@ -5394,7 +4854,7 @@ char_conversion_test11(X, Y) :-
                  set_prolog_flag(char_conversion, on),
                  read(Y))).
 
-:- test char_conversion_test12(X, Y) : true => (X=('-'('.+')), Y=end_of_file)
+:- test char_conversion_test12(X, Y) => (X=('-'('.+')), Y=end_of_file)
    + (not_fails,
       setup(txt_in("- .% .",Prev)), cleanup(und(Prev)))
 # "[ISO-sics] char_conversion/2: bug(wontfix)".
@@ -5487,12 +4947,12 @@ once_test4 :- once(fail).
 
 once_test5 :- once(X=f(X)).
 
-:- test once_test6 + exception(error(type_error(callable, 3), ImplDep))
+:- test once_test6 + exception(error(type_error(callable, 3), _))
    # "[ISO-eddbali] once/1".
 
 once_test6 :- once(3).
 
-:- test once_test7 + exception(error(instantiation_error, ImplDep))
+:- test once_test7 + exception(error(instantiation_error, _))
    # "[ISO-eddbali] once/1".
 
 once_test7 :- once(_).
@@ -5607,28 +5067,28 @@ atomconcat_test4(Result) :-
 
 atomconcat_test5 :- atom_concat(small, _V2, _V4).
 
-:- test atomconcat_test6 + exception(error(instantiation_error, ImplDep))
+:- test atomconcat_test6 + exception(error(instantiation_error, _))
    # "[ISO-eddbali] atom_concat/2".
 
 atomconcat_test6 :- atom_concat(_T1, 'iso', _S).
 
-:- test atomconcat_test7 + exception(error(instantiation_error, ImplDep))
+:- test atomconcat_test7 + exception(error(instantiation_error, _))
    # "[ISO-eddbali] atom_concat/2".
 
 atomconcat_test7 :- atom_concat('iso', _T2, _S).
 
 :- test atomconcat_test8(X, Y, S) : (X=f(a), Y='iso')
-   + exception(error(type_error(atom, f(a)), ImplDep))
+   + exception(error(type_error(atom, f(a)), _))
    # "[ISO-eddbali] atom_concat/2".
 
 atomconcat_test8(X, Y, S) :- atom_concat(X, Y, S).
 
-:- test atomconcat_test9 + exception(error(type_error(atom, f(a)), ImplDep))
+:- test atomconcat_test9 + exception(error(type_error(atom, f(a)), _))
    # "[ISO-eddbali] atom_concat/2".
 
 atomconcat_test9 :- atom_concat('iso', f(a), _S).
 
-:- test atomconcat_test10 + exception(error(type_error(atom, f(a)), ImplDep))
+:- test atomconcat_test10 + exception(error(type_error(atom, f(a)), _))
    # "[ISO-eddbali] atom_concat/2".
 
 atomconcat_test10 :- atom_concat(_T1, _T2, f(a)).
@@ -5712,62 +5172,62 @@ subatom_test7(Result) :-
     findall([Start, Length, S], sub_atom(ab, Start, Length, _, S), Result).
 
 :- test subatom_test8
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-eddbali] sub_atom/5".
 
 subatom_test8 :- sub_atom(_W, 3, 2, _Z, _S).
 
 :- test subatom_test9
-   + exception(error(type_error(atom, f(a)), ImplDep))
+   + exception(error(type_error(atom, f(a)), _))
    # "[ISO-eddbali] sub_atom/5".
 
 subatom_test9 :- sub_atom(f(a), 2, 2, _Z, _S).
 
 % TODO:[JF] missing type check on 5th argument
 :- test subatom_test10
-   + exception(error(type_error(atom, 2), ImplDep))
+   + exception(error(type_error(atom, 2), _))
    # "[ISO-eddbali] sub_atom/5: bug()".
 
 subatom_test10 :- sub_atom('Banana', 4, 2, _Z, 2).
 
 % TODO:[JF] missing type check on 2nd argument
 :- test subatom_test11
-   + exception(error(type_error(integer, a), ImplDep))
+   + exception(error(type_error(integer, a), _))
    # "[ISO-eddbali] sub_atom/5: bug()".
 
 subatom_test11 :- sub_atom('Banana', a, 2, _Z, _S).
 
 % TODO:[JF] missing type check on 3rd argument
 :- test subatom_test12
-   + exception(error(type_error(integer, n), ImplDep))
+   + exception(error(type_error(integer, n), _))
    # "[ISO-eddbali] sub_atom/5: bug()".
 
 subatom_test12 :- sub_atom('Banana', 4, n, _Z, _S).
 
 % TODO:[JF] missing type check on 4th argument
 :- test subatom_test13
-   + exception(error(type_error(integer, m), ImplDep))
+   + exception(error(type_error(integer, m), _))
    # "[ISO-eddbali] sub_atom/5: bug()".
 
 subatom_test13 :- sub_atom('Banana', 4, _Y, m, _S).
 
 % TODO:[JF] missing type check on 2nd argument
 :- test subatom_test14
-   + exception(error(domain_error(not_less_than_zero, -2), ImplDep))
+   + exception(error(domain_error(not_less_than_zero, -2), _))
    # "[ISO-sics] sub_atom/5: bug()".
 
 subatom_test14 :- sub_atom('Banana', -2, 3, 4, _S).
 
 % TODO:[JF] missing type check on 3rd argument
 :- test subatom_test15
-   + exception(error(domain_error(not_less_than_zero, -3), ImplDep))
+   + exception(error(domain_error(not_less_than_zero, -3), _))
    # "[ISO-sics] sub_atom/5: bug()".
 
 subatom_test15 :- sub_atom('Banana', 2, -3, 4, _S).
 
 % TODO:[JF] missing type check on 4th argument
 :- test subatom_test16
-   + exception(error(domain_error(not_less_than_zero, -4), ImplDep))
+   + exception(error(domain_error(not_less_than_zero, -4), _))
    # "[ISO-sics] sub_atom/5: bug()".
 
 subatom_test16 :- sub_atom('Banana', 2, 3, -4, _S).
@@ -5909,40 +5369,40 @@ atomchars_test7 :- atom_chars('soap', ['s', 'o', 'p']).
 
 % TODO:[JF] missing checks
 :- test atomchars_test8
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] atom_chars/2: bug()".
 
 atomchars_test8 :- atom_chars(_X, _Y).
 
 :- test atomchars_test9
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-eddbali] atom_chars/2".
 
 atomchars_test9 :- atom_chars(_A, [a, _E, c]).
 
 % TODO:[JF] missing checks
 :- test atomchars_test10
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-eddbali] atom_chars/2: bug()".
 
 atomchars_test10 :- atom_chars(_A, [a, b|_L]).
 
 :- test atomchars_test11
-   + exception(error(type_error(atom, f(a)), ImplDep))
+   + exception(error(type_error(atom, f(a)), _))
    # "[ISO-eddbali] atom_chars/2".
 
 atomchars_test11 :- atom_chars(f(a), _L).
 
 % TODO:[JF] wrong checks
 :- test atomchars_test12
-   + exception(error(type_error(list, iso), ImplDep))
+   + exception(error(type_error(list, iso), _))
    # "[ISO-eddbali] atom_chars/2: bug()".
 
 atomchars_test12 :- atom_chars(_A, iso).
 
 % TODO:[JF] wrong checks
 :- test atomchars_test13
-   + exception(error(type_error(character, f(b)), ImplDep))
+   + exception(error(type_error(character, f(b)), _))
    # "[ISO-eddbali] atom_chars/2: bug()".
 
 atomchars_test13 :- atom_chars(_A, [a, f(b)]).
@@ -6004,7 +5464,7 @@ atomcodes_test6(X) :- atom_codes('North', [0'N|X]).
 atomcodes_test7 :- atom_codes('soap', [0's, 0'o, 0'p]).
 
 :- test atomcodes_test8
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] atom_codes/2".
 
 atomcodes_test8 :- atom_codes(_X, _Y).
@@ -6051,19 +5511,19 @@ atomcodes_extra_errortest_5 :- atom_codes(_, [-1]).
 atomcodes_extra_errortest_6 :- atom_codes(1, [0'1]).
 
 :- test atomcodes_test9
-   + exception(error(type_error(atom, f(a)), ImplDep))
+   + exception(error(type_error(atom, f(a)), _))
    # "[ISO-eddbali] atom_codes/2".
 
 atomcodes_test9 :- atom_codes(f(a), _L).
 
 :- test atomcodes_test10
-   + exception(error(type_error(list, 0'x), ImplDep))
+   + exception(error(type_error(list, 0'x), _))
    # "[ISO-eddbali] atom_codes/2".
 
 atomcodes_test10 :- atom_codes(_, 0'x).
 
 :- test atomcodes_test11
-   + exception(error(representation_error(character_code), ImplDep))
+   + exception(error(representation_error(character_code), _))
    # "[ISO-eddbali] atom_codes/2".
 
 atomcodes_test11 :- atom_codes(_X, [0'i, 0's, -1]).
@@ -6085,7 +5545,7 @@ atomcodes_test13(A) :- atom_codes(A,[0'P,0'é,0'c,0's]).
 
 % TODO:[JF] fix type error
 :- test atomcodes_test16
-   + exception(error(representation_error(character_code), ImplDep))
+   + exception(error(representation_error(character_code), _))
    # "[ISO-sics] atom_codes/2: bug()".
 
 atomcodes_test16 :- atom_codes(_A, [a, b, c]).
@@ -6119,23 +5579,23 @@ charcode_test4(X) :- char_code(X, 163).
 charcode_test5 :- char_code('b', 0'b).
 
 % TODO:[JF] missing type check
-:- test charcode_test6 + exception(error(type_error(character, ab), ImplDep))
+:- test charcode_test6 + exception(error(type_error(character, ab), _))
    # "[ISO] char_code/2: bug()".
 
 charcode_test6 :- char_code('ab', _Int).
 
-:- test charcode_test7 + exception(error(instantiation_error, ImplDep))
+:- test charcode_test7 + exception(error(instantiation_error, _))
    # "[ISO] char_code/2".
 
 charcode_test7 :- char_code(_C, _I).
 
-:- test charcode_test8 + exception(error(type_error(integer, x), ImplDep))
+:- test charcode_test8 + exception(error(type_error(integer, x), _))
    # "[ISO-eddbali] char_code/2".
 
 charcode_test8 :- char_code(a, x).
 
 :- test charcode_test9
-	+ exception(error(representation_error(character_code), ImplDep))
+	+ exception(error(representation_error(character_code), _))
    # "[ISO-eddbali] char_code/2".
 
 charcode_test9 :- char_code(_Str, -2).
@@ -6187,7 +5647,7 @@ numberchars_test7(A) :- number_chars(A, ['\n', ' ', '3']).
 
 % TODO:[JF] it should report syntax error
 :- test numberchars_test8
-   + exception(error(syntax_error(_), ImplDep))
+   + exception(error(syntax_error(_), _))
    # "[ISO] number_chars/2: bug()".
 
 numberchars_test8 :- number_chars(_A, ['3', ' ']).
@@ -6216,38 +5676,38 @@ numberchars_test11(A) :- number_chars(A, ['4', '.', '2']).
 
 numberchars_test12(A) :- number_chars(A, ['4', '2', '.', '0', 'e', '-', '1']).
 
-:- test numberchars_test13 + exception(error(instantiation_error, ImplDep))
+:- test numberchars_test13 + exception(error(instantiation_error, _))
    # "[ISO-eddbali] number_chars/2".
 
 numberchars_test13 :- number_chars(_X, _Y).
 
-:- test numberchars_test14 + exception(error(type_error(number, a), ImplDep))
+:- test numberchars_test14 + exception(error(type_error(number, a), _))
    # "[ISO-eddbali] number_chars/2".
 
 numberchars_test14 :- number_chars(a, _Y).
 
 % TODO:[JF] missing type check
 :- test numberchars_test15
-   + exception(error(type_error(list, 4), ImplDep))
+   + exception(error(type_error(list, 4), _))
    # "[ISO-eddbali] number_chars/2: bug()".
 
 numberchars_test15 :- number_chars(_, 4).
 
 % TODO:[JF] fix type check
 :- test numberchars_test16
-   + exception(error(type_error(character, 2), ImplDep))
+   + exception(error(type_error(character, 2), _))
    # "[ISO-eddbali] number_chars/2: bug()".
 
 numberchars_test16 :- number_chars(_A, ['4', 2]).
 
 :- test numberchars_test17
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] number_chars/2".
 
 numberchars_test17 :- number_chars(_A, [a|_]).
 
 :- test numberchars_test18
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-sics] number_chars/2".
 
 numberchars_test18 :- number_chars(_A, [a, _]).
@@ -6275,42 +5735,42 @@ numberchars_test21(A) :- number_chars(A, [' ', '0', 'b', '1', '1']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should report wrong oct numbers
 :- test numberchars_test22
-   + exception(error(syntax_error(_), ImplDep))
+   + exception(error(syntax_error(_), _))
    # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test22 :- number_chars(_A, ['0', 'o', '8']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should report wrong bin numbers
 :- test numberchars_test23
-   + exception(error(syntax_error(_), ImplDep))
+   + exception(error(syntax_error(_), _))
    # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test23 :- number_chars(_A, [' ', 'b', '2']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should report wrong hex numbers
 :- test numberchars_test24
-   + exception(error(syntax_error(_), ImplDep))
+   + exception(error(syntax_error(_), _))
    # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test24 :- number_chars(_A, [' ', 'x', 'g']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should report wrong numbers
 :- test numberchars_test25
-   + exception(error(syntax_error(_), ImplDep))
+   + exception(error(syntax_error(_), _))
    # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test25 :- number_chars(_A, ['á']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should report wrong numbers
 :- test numberchars_test26
-   + exception(error(syntax_error(_), ImplDep))
+   + exception(error(syntax_error(_), _))
    # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test26 :- number_chars(_A, ['a']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should report wrong numbers
 :- test numberchars_test27
-   + exception(error(syntax_error(_), ImplDep))
+   + exception(error(syntax_error(_), _))
    # "[ISO-sics] number_chars/2: bug()".
 
 numberchars_test27 :- number_chars(_A, ['0', 'x', '0', '.', '0']).
@@ -6329,12 +5789,12 @@ numbercodes_test1(L) :- number_codes(33, L).
 numbercodes_test2 :- number_codes(33, [0'3, 0'3]).
 
 :- test numbercodes_test3(Y) => (number_codes(N, Y), N=33.0)
-# "[ISO] number_codes/2: expected(impldep)".
+   # "[ISO] number_codes/2".
 
 numbercodes_test3(Y) :- number_codes(33.0, Y).
 
 :- test numbercodes_test4
-# "[ISO] number_codes/2: expected(impldep)".
+   # "[ISO] number_codes/2".
 
 numbercodes_test4 :- number_codes(33.0, [0'3|_L]).
 
@@ -6410,33 +5870,33 @@ numbercodes_extra_errortest_5 :- number_codes(_, [-1]).
 
 numbercodes_extra_errortest_6 :- number_codes('1', [0'1]).
 
-:- test numbercodes_test11 + exception(error(instantiation_error, ImplDep))
+:- test numbercodes_test11 + exception(error(instantiation_error, _))
 # "[ISO-eddbali] number_codes/2: expected(error)".
 
 numbercodes_test11 :- number_codes(_, _).
 
-:- test numbercodes_test12 + exception(error(type_error(number, a), ImplDep))
+:- test numbercodes_test12 + exception(error(type_error(number, a), _))
 # "[ISO-eddbali] number_codes/2: expected(error)".
 
 numbercodes_test12 :- number_codes(a, _Y).
 
-:- test numbercodes_test13 + exception(error(type_error(list, 4), ImplDep))
+:- test numbercodes_test13 + exception(error(type_error(list, 4), _))
 # "[ISO-eddbali] number_codes/2: expected(error) bug(wrong_error)".
 
 numbercodes_test13 :- number_codes(_X, 4).
 
 :- test numbercodes_test14
-	+ exception(error(representation_error(character_code), ImplDep))
+	+ exception(error(representation_error(character_code), _))
 # "[ISO-eddbali] number_codes/2: expected(error) bug(wrong_error)".
 
 numbercodes_test14 :- number_codes(_X, [0'4, -1]).
 
-:- test numbercodes_test15 + exception(error(instantiation_error, ImplDep))
+:- test numbercodes_test15 + exception(error(instantiation_error, _))
 # "[ISO-sics] number_codes/2: expected(error)".
 
 numbercodes_test15 :- number_codes(_X, [0'a|_]).
 
-:- test numbercodes_test16 + exception(error(instantiation_error, ImplDep))
+:- test numbercodes_test16 + exception(error(instantiation_error, _))
 # "[ISO-sics] number_codes/2: expected(error)".
 
 numbercodes_test16 :- number_codes(_X, [0'a, _]).
@@ -6472,7 +5932,7 @@ numbercodes_test19(A, S) :-
 %%   [gprolog]: throws FOO
 %%   [ciao]: no throws
 :- test numbercodes_test20
-	+ exception(error(syntax_error(_), ImplDep))
+	+ exception(error(syntax_error(_), _))
 # "[ISO-sics] number_codes/2: expected(error) bug(succeed)".
 
 numbercodes_test20 :- number_codes(_X, "ä").
@@ -6481,7 +5941,7 @@ numbercodes_test20 :- number_codes(_X, "ä").
 %%   [gprolog]: throws exception(error(syntax_error(_), _))
 %%   [ciao]: no throws
 :- test numbercodes_test21
-	+ exception(error(syntax_error(_), ImplDep))
+	+ exception(error(syntax_error(_), _))
 # "[ISO-sics] number_codes/2: expected(error) bug(fail)".
 
 numbercodes_test21 :- number_codes(_A, [0'0, 0'x, 0'0, 0'., 0'0]).
@@ -6498,7 +5958,7 @@ setflag_test1 :- set_prolog_flag(unknown, fail).
 %% REVIEW:PENDING                                                        **Label_2**
 %%   [gprolog]: throws exception(error(instantiation_error, _))
 %%   [ciao]: no throws
-:- test setflag_test2 + exception(error(instantiation_error, ImplDep))
+:- test setflag_test2 + exception(error(instantiation_error, _))
 # "[ISO] set_flag/2: expected(error) bug(fail)".
 
 setflag_test2 :- set_prolog_flag(_X, off).
@@ -6506,7 +5966,7 @@ setflag_test2 :- set_prolog_flag(_X, off).
 %% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 5), _))
 %%   [ciao]: no throws
-:- test setflag_test3 + exception(error(type_error(atom, 5), ImplDep))
+:- test setflag_test3 + exception(error(type_error(atom, 5), _))
 # "[ISO] set_flag/2: expected(error) bug(fail)".
 
 setflag_test3 :- set_prolog_flag(5, decimals).
@@ -6514,7 +5974,7 @@ setflag_test3 :- set_prolog_flag(5, decimals).
 %% REVIEW:PENDING                                                    **Label_2**
 %%   [gprolog]: throws exception(error(domain_error(flag, date), _))
 %%   [ciao]: no throws
-:- test setflag_test4 + exception(error(domain_error(flag, date), ImplDep))
+:- test setflag_test4 + exception(error(domain_error(flag, date), _))
 # "[ISO] set_flag/2: expected(error) bug(fail)".
 
 setflag_test4 :- set_prolog_flag(date, 'July 1988').
@@ -6523,7 +5983,7 @@ setflag_test4 :- set_prolog_flag(date, 'July 1988').
 %%   [gprolog]: throws exception(error(domain_error(flag_value, debug+trace), _))
 %%   [ciao]: no throws
 :- test setflag_test5
-	+ exception(error(domain_error(flag_value, debug+trace), ImplDep))
+	+ exception(error(domain_error(flag_value, debug+trace), _))
 # "[ISO] set_flag/2: expected(error) bug(fail)".
 
 setflag_test5 :- set_prolog_flag(debug, trace).
@@ -6532,7 +5992,7 @@ setflag_test5 :- set_prolog_flag(debug, trace).
 %%   [gprolog]: throws exception(error(permission_error(modify, flag, max_arity), _))
 %%   [ciao]: no throws
 :- test setflag_test6
-	+ exception(error(permission_error(modify, flag, max_arity), ImplDep))
+	+ exception(error(permission_error(modify, flag, max_arity), _))
 # "[ISO-eddbali] set_flag/2: expected(error) bug(fail)".
 
 setflag_test6 :- set_prolog_flag(max_arity, 40).
@@ -6560,7 +6020,7 @@ currentflag_test2(Result) :-
 %% REVIEW:PENDING                                                      **Label_2**
 %%   [gprolog]: throws exception(error(type_error(atom, 5), _))
 %%   [ciao]: no throws
-:- test currentflag_test3 + exception(error(type_error(atom, 5), ImplDep))
+:- test currentflag_test3 + exception(error(type_error(atom, 5), _))
 # "[ISO] current_prolog_flag/2: expected(error) bug(fail)".
 
 currentflag_test3 :- current_prolog_flag(5, _Y).
@@ -6593,7 +6053,7 @@ currentflag_test6 :- current_prolog_flag(debug, off).
 %%   [gprolog]: throws exception(error(domain_error(prolog_flag, warning), _))
 %%   [ciao]: no throws
 :- test currentflag_test7
-	+ exception(error(domain_error(prolog_flag, warning), ImplDep))
+	+ exception(error(domain_error(prolog_flag, warning), _))
 # "[ISO-eddbali] current_prolog_flag/2: expected(error) bug(fail)".
 
 currentflag_test7 :- current_prolog_flag(warning, _Y).
@@ -6602,7 +6062,7 @@ currentflag_test7 :- current_prolog_flag(warning, _Y).
 %%   [gprolog]: throws exception(error(type_error(atom, 1 + 2), _))
 %%   [ciao]: no throws
 :- test currentflag_test8
-	+ exception(error(type_error(atom, 1 + 2), ImplDep))
+	+ exception(error(type_error(atom, 1 + 2), _))
 # "[ISO-eddbali] current_prolog_flag/2: expected(error) bug(fail)".
 
 currentflag_test8 :- current_prolog_flag(1 + 2, flag).
@@ -6629,13 +6089,13 @@ halt_test2 :- halt(1).
 :- endif.
 
 :- test halt_test3
-   + exception(error(type_error(integer, a), ImplDep))
+   + exception(error(type_error(integer, a), _))
    # "[ISO] halt/1".
 
 halt_test3 :- halt(a).
 
 :- test halt_test4
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO-eddbali] halt/1".
 
 halt_test4 :- halt(_).
@@ -6676,14 +6136,14 @@ eval_test2(S) :- S is '+'(0, 3 +11).
 
 eval_test3(S) :- S is '+'(0, 3.2 +11).
 
-:- test eval_test4(S) + exception(error(instantiation_error, ImplDep))
+:- test eval_test4(S) + exception(error(instantiation_error, _))
    # "[ISO] arith '+'/2".
 
 eval_test4(S) :- S is '+'(77, _N).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test eval_test5(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith '+'/2: bug()".
 
 eval_test5(S) :- S is '+'(foo, 77).
@@ -6703,14 +6163,14 @@ eval_test7(S) :- S is '-'(3 -11).
 
 eval_test8(S) :- S is '-'(3.2 -11).
 
-:- test eval_test9(S) + exception(error(instantiation_error, ImplDep))
+:- test eval_test9(S) + exception(error(instantiation_error, _))
    # "[ISO] arith '-'/2".
 
 eval_test9(S) :- S is '-'(_N).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test eval_test10(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith '-'/2: bug()".
 
 eval_test10(S) :- S is '-'(foo).
@@ -6730,14 +6190,14 @@ eval_test12(S) :- S is '-'(20, 3 +11).
 
 eval_test13(S) :- S is '-'(0, 3.2 +11).
 
-:- test eval_test14(S) + exception(error(instantiation_error, ImplDep))
+:- test eval_test14(S) + exception(error(instantiation_error, _))
    # "[ISO] arith '-'/2".
 
 eval_test14(S) :- S is '-'(77, _N).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test eval_test15(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith '-'/2: bug()".
 
 eval_test15(S) :- S is '-'(foo, 77).
@@ -6757,14 +6217,14 @@ eval_test17(S) :- S is '*'(0, 3 +11).
 
 eval_test18(S) :- S is '*'(1.5, 3.2 +11).
 
-:- test eval_test19(S) + exception(error(instantiation_error, ImplDep))
+:- test eval_test19(S) + exception(error(instantiation_error, _))
    # "[ISO] arith '*'/2".
 
 eval_test19(S) :- S is '*'(77, _N).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test eval_test20(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith '*'/2: bug()".
 
 eval_test20(S) :- S is '*'(foo, 77).
@@ -6799,28 +6259,28 @@ eval_test25(S) :- S is '//'(7, -3).
 
 eval_test26(S) :- S is '//'(-7, 3).
 
-:- test eval_test27(S) + exception(error(instantiation_error, ImplDep))
+:- test eval_test27(S) + exception(error(instantiation_error, _))
    # "[ISO] arith '/'/2".
 
 eval_test27(S) :- S is '/'(77, _N).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test eval_test28(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith '/'/2: bug()".
 
 eval_test28(S) :- S is '/'(foo, 77).
 
 % TODO:[JF] we support dividing 0.Inf
 :- test eval_test29(S)
-   + exception(error(evaluation_error(zero_divisor), ImplDep))
+   + exception(error(evaluation_error(zero_divisor), _))
    # "[ISO-sics] arith '/'/2: bug(wontfix)".
 
 eval_test29(S) :- S is '/'(3, 0).
 
 % TODO:[JF] we support dividing 0.Inf
 :- test eval_test29b(S)
-   + exception(error(evaluation_error(zero_divisor), ImplDep))
+   + exception(error(evaluation_error(zero_divisor), _))
    # "[ISO-ciao] arith '//'/2".
 
 eval_test29b(S) :- S is '//'(3, 0).
@@ -6841,25 +6301,25 @@ eval_test31(S) :- S is mod(0, 3 +11).
 eval_test32(S) :- S is mod(7, -2).
 
 :- test eval_test33(S)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith 'mod'/2".
 
 eval_test33(S) :- S is mod(77, _N).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test eval_test34(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith 'mod'/2: bug()".
 
 eval_test34(S) :- S is mod(foo, 77).
 
-:- test eval_test35(S) + exception(error(type_error(integer, 7.5), ImplDep))
+:- test eval_test35(S) + exception(error(type_error(integer, 7.5), _))
    # "[ISO] arith mod/2".
 
 eval_test35(S) :- S is mod(7.5, 2).
 
 :- test eval_test36(S)
-	+ exception(error(evaluation_error(zero_divisor), ImplDep))
+	+ exception(error(evaluation_error(zero_divisor), _))
    # "[ISO] arith mod/2".
 
 eval_test36(S) :- S is mod(7, 0).
@@ -6889,7 +6349,7 @@ eval_test40(S) :- S is round(7.6).
 
 eval_test41(S) :- S is round(-0.6).
 
-:- test eval_test42(S) + exception(error(instantiation_error, ImplDep))
+:- test eval_test42(S) + exception(error(instantiation_error, _))
    # "[ISO] arith round/2".
 
 eval_test42(S) :- S is round(_X).
@@ -6906,7 +6366,7 @@ eval_test44(S) :- S is truncate(-0.5).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test eval_test45(S) 
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith truncate/1: bug()".
 
 eval_test45(S) :- S is truncate(foo).
@@ -6927,14 +6387,14 @@ eval_test47(S) :- S is float(7.3).
 eval_test48(S) :- S is float(5//3).
 
 :- test eval_test49(S)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith float/1".
 
 eval_test49(S) :- S is float(_X).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test eval_test50(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith float/1: bug()".
 
 eval_test50(S) :- S is float(foo).
@@ -6954,14 +6414,14 @@ eval_test52(S) :- S is abs(3 -11).
 
 eval_test53(S) :- S is abs(3.2 -11.0).
 
-:- test eval_test54(S) + exception(error(instantiation_error, ImplDep))
+:- test eval_test54(S) + exception(error(instantiation_error, _))
    # "[ISO] arith abs/1".
 
 eval_test54(S) :- S is abs(_N).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test eval_test55(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith abs/1: bug()".
 
 eval_test55(S) :- S is abs(foo).
@@ -7020,14 +6480,14 @@ power_test2(S) :- S is '**'(-5.0, 3).
 
 power_test3(S) :- S is '**'(5, -1).
 
-:- test power_test4(S) + exception(error(instantiation_error, ImplDep))
+:- test power_test4(S) + exception(error(instantiation_error, _))
    # "[ISO] arith '**'/2".
 
 power_test4(S) :- S is '**'(77, _N).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test power_test5(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith '**'/2: bug()".
 
 power_test5(S) :- S is '**'(foo, 2).
@@ -7050,7 +6510,7 @@ power_test7(S) :- S is '**'(0.0, 0).
 
 sin_test1(S) :- S is sin(0.0).
 
-:- test sin_test2(S) + exception(error(instantiation_error, ImplDep))
+:- test sin_test2(S) + exception(error(instantiation_error, _))
    # "[ISO] arith sin/1".
 
 sin_test2(S) :- S is sin(_N).
@@ -7062,7 +6522,7 @@ sin_test3(S) :- S is sin(0).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test sin_test4(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith sin/1: bug()".
 
 sin_test4(S) :- S is sin(foo).
@@ -7082,7 +6542,7 @@ sin_test5(PI, S) :- S is sin(PI/2.0).
 cos_test1(S) :- S is cos(0.0).
 
 :- test cos_test2(S)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith cos/1".
 
 cos_test2(S) :- S is cos(_N).
@@ -7094,7 +6554,7 @@ cos_test3(S) :- S is cos(0).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test cos_test4(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith cos/1: bug()".
 
 cos_test4(S) :- S is cos(foo).
@@ -7118,7 +6578,7 @@ atan_test1(S) :- S is atan(0.0).
 
 atan_test2(PI) :- PI is atan(1.0) *4.
 
-:- test atan_test3(S) + exception(error(instantiation_error, ImplDep))
+:- test atan_test3(S) + exception(error(instantiation_error, _))
    # "[ISO] arith atan/1".
 
 atan_test3(S) :- S is atan(_N).
@@ -7130,7 +6590,7 @@ atan_test4(S) :- S is atan(0.0).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test atan_test5(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith atan/1: bug()".
 
 atan_test5(S) :- S is atan(foo).
@@ -7148,7 +6608,7 @@ exp_test1(S) :- S is exp(0.0).
 
 exp_test2(S) :- S is exp(1.0).
 
-:- test exp_test3(S) + exception(error(instantiation_error, ImplDep))
+:- test exp_test3(S) + exception(error(instantiation_error, _))
    # "[ISO] arith exp/1".
 
 exp_test3(S) :- S is exp(_N).
@@ -7160,7 +6620,7 @@ exp_test4(S) :- S is exp(0).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test exp_test5(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith exp/1: bug()".
 
 exp_test5(S) :- S is exp(foo).
@@ -7179,7 +6639,7 @@ log_test1(S) :- S is log(1.0).
 log_test2(S) :- S is log(2.71828).
 
 :- test log_test3(S)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith log/1".
 
 log_test3(S) :- S is log(_N).
@@ -7191,21 +6651,21 @@ log_test3(S) :- S is log(_N).
 %   S = -inf (gprolog)
 %   S = -0.Inf (ciao)
 :- test log_test4(S)
-   + exception(error(evaluation_error(undefined), ImplDep))
+   + exception(error(evaluation_error(undefined), _))
    # "[ISO] arith log/2: bug(wontfix)".
 
 log_test4(S) :- S is log(0).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test log_test5(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith log/1: bug()".
 
 log_test5(S) :- S is log(foo).
 
 % TODO:[JF] same as log_test4
 :- test log_test6(S)
-   + exception(error(evaluation_error(undefined), ImplDep))
+   + exception(error(evaluation_error(undefined), _))
    # "[ISO] arith log/1: bug(wontfix)".
 
 log_test6(S) :- S is log(0.0).
@@ -7229,7 +6689,7 @@ sqrt_test2(S) :- S is sqrt(1).
 sqrt_test3(X, S) :- S is sqrt(X).
 
 :- test sqrt_test4(S)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith sqrt/1".
 
 sqrt_test4(S) :- S is sqrt(_N).
@@ -7240,14 +6700,14 @@ sqrt_test4(S) :- S is sqrt(_N).
 %   S = nan (gprolog)
 %   S = 0.Nan (ciao)
 :- test sqrt_test5(S)
-   + exception(error(evaluation_error(undefined), ImplDep))
+   + exception(error(evaluation_error(undefined), _))
    # "[ISO] arith sqrt/1: bug(wontfix)".
 
 sqrt_test5(S) :- S is sqrt(-1.0).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test sqrt_test6(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith sqrt/1: bug()".
 
 sqrt_test6(S) :- S is sqrt(foo).
@@ -7267,14 +6727,14 @@ sqrt_test6(S) :- S is sqrt(foo).
 eval_test63(S) :- S is max(2, 3).
 
 % TODO:[JF] implement max/2
-:- test eval_test64(S) + exception(error(instantiation_error, ImplDep))
+:- test eval_test64(S) + exception(error(instantiation_error, _))
    # "[ISO-cor2] arith max/2: bug()".
 
 eval_test64(S) :- S is max(_N,3).
 
 % TODO:[JF] implement max/2
 :- test eval_test65(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-ciao] arith max/2: bug()".
 
 eval_test65(S) :- S is max(3,foo).
@@ -7295,14 +6755,14 @@ eval_test66(S) :- S is min(2, 3).
 
 % TODO:[JF] implement min/2
 :- test eval_test67(S)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith min/2: bug()".
 
 eval_test67(S) :- S is min(_N,3).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test eval_test68(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-ciao] arith min/2: bug()".
 
 eval_test68(S) :- S is min(3,foo).
@@ -7410,19 +6870,19 @@ bit_rl_test2(S) :- S is '>>'(19, 2).
 
 bit_rl_test3(S) :- S is '>>'(-16, 2).
 
-:- test bit_rl_test4(S) + exception(error(instantiation_error, ImplDep))
+:- test bit_rl_test4(S) + exception(error(instantiation_error, _))
    # "[ISO] arith '>>'/2".
 
 bit_rl_test4(S) :- S is '>>'(77, _N).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test bit_rl_test5(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith '>>'/2: bug()".
 
 bit_rl_test5(S) :- S is '>>'(foo, 2).
 
-:- test bit_rl_test6(S) + exception(error(type_error(integer, 1.0), ImplDep))
+:- test bit_rl_test6(S) + exception(error(type_error(integer, 1.0), _))
    # "[ISO-sics] arith '>>'/2".
 
 bit_rl_test6(S) :- S is '>>'(1.0, 2).
@@ -7445,19 +6905,19 @@ bit_lr_test2(S) :- S is '<<'(19, 2).
 
 bit_lr_test3(S) :- S is '<<'(-16, 2).
 
-:- test bit_lr_test4(S) + exception(error(instantiation_error, ImplDep))
+:- test bit_lr_test4(S) + exception(error(instantiation_error, _))
    # "[ISO] arith '<<'/2".
 
 bit_lr_test4(S) :- S is '<<'(77, _N).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test bit_lr_test5(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith '<<'/2: bug()".
 
 bit_lr_test5(S) :- S is '<<'(foo, 2).
 
-:- test bit_lr_test6(S) + exception(error(type_error(integer, 1.0), ImplDep))
+:- test bit_lr_test6(S) + exception(error(type_error(integer, 1.0), _))
    # "[ISO-sics] arith '<<'/2".
 
 bit_lr_test6(S) :- S is '<<'(1.0, 2).
@@ -7485,19 +6945,19 @@ bit_and_test3(S) :- S is '/\\'(17*256 +125, 255).
 
 bit_and_test4(S) :- S is /\(-10, 12).
 
-:- test bit_and_test5(S) + exception(error(instantiation_error, ImplDep))
+:- test bit_and_test5(S) + exception(error(instantiation_error, _))
    # "[ISO] arith '/\\'/2".
 
 bit_and_test5(S) :- S is '/\\'(77, _N).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test bit_and_test6(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith '/\\'/2: bug()".
 
 bit_and_test6(S) :- S is '/\\'(foo, 2).
 
-:- test bit_and_test7(S) + exception(error(type_error(integer, 1.0), ImplDep))
+:- test bit_and_test7(S) + exception(error(type_error(integer, 1.0), _))
    # "[ISO-sics] arith '/\\'/2".
 
 bit_and_test7(S) :- S is '/\\'(1.0, 2).
@@ -7526,20 +6986,20 @@ bit_or_test3(S) :- S is '\\/'(125, 255).
 bit_or_test4(S) :- S is \/(-10, 12).
 
 :- test bit_or_test5(S)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith '\\/'/2".
 
 bit_or_test5(S) :- S is '\\/'(77, _N).
 
 % TODO:[JF] fix internals:error_term for type_error(evaluable)
 :- test bit_or_test6(S)
-   + exception(error(type_error(evaluable, foo/0), ImplDep))
+   + exception(error(type_error(evaluable, foo/0), _))
    # "[ISO-cor1] arith '\\/'/2: bug()".
 
 bit_or_test6(S) :- S is '\\/'(foo, 2).
 
 :- test bit_or_test7(S)
-   + exception(error(type_error(integer, 1.0), ImplDep))
+   + exception(error(type_error(integer, 1.0), _))
    # "[ISO-sics] arith '\\/'/2".
 
 bit_or_test7(S) :- S is '\\/'(1.0, 2).
@@ -7564,19 +7024,19 @@ bit_not_test2(S) :- S is \(\(10)).
 bit_not_test3(S) :- S is \(10).
 
 :- test bit_not_test4(S)
-   + exception(error(instantiation_error, ImplDep))
+   + exception(error(instantiation_error, _))
    # "[ISO] arith '\\'/2".
 
 bit_not_test4(S) :- S is '\\'(_N).
 
 :- test bit_not_test5(S)
-   + exception(error(type_error(integer, 2.5), ImplDep))
+   + exception(error(type_error(integer, 2.5), _))
    # "[ISO] arith '\\'/2".
 
 bit_not_test5(S) :- S is '\\'(2.5).
 
 :- test bit_not_test6(S)
-   + exception(error(type_error(integer, 2.5), ImplDep))
+   + exception(error(type_error(integer, 2.5), _))
    # "[ISO-sics] arith '\\'/2".
 
 bit_not_test6(S) :- S is '\\'(2.5).

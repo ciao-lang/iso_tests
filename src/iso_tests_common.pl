@@ -1,53 +1,32 @@
-:- module(iso_tests_common, _, [iso_strict]).
+:- module(iso_tests_common, [], [iso_strict]).
 
-%:- use_module(library(streams)).
-%:- use_module(library(write)).
+:- use_module(library(lists), [member/2]).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% These predicates check if one element a list is included in other list
+% ---------------------------------------------------------------------------
+% TODO: copy of lists:sublist/2
 
-find_on_list([],     _CP).
-find_on_list([P|Ps], CP) :-
-    look(P, CP),
-    find_on_list(Ps, CP).
+% @var{List2} contains all the elements of @var{List1}
+:- export(sublist/2).
+sublist([], _).
+sublist([Element|Residue], List) :-
+    member(Element, List),
+    sublist(Residue, List).
 
-look(_P, []) :- fail.
-look(P,  [CP|CPs]) :-
-    ;(->(P=CP, true), look(P, CPs)).
+% ---------------------------------------------------------------------------
+% TODO: duplicated stream_utils:read_string_to_end/2; remove once stream aliases are integrated
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO: this duplicates stream_utils:read_string_to_end/2 because that
-% module does not use iso_strict; remove once aliases, etc. are
-% integrated into the Ciao standard libraries.
+:- export(read_string_to_end/2).
+read_string_to_end(S, L) :-
+    get_code(S, C),
+    ( C = -1 -> L = []
+    ; L = [C|L0],
+      read_string_to_end(S, L0)
+    ).
 
-% TODO: simplify
-read_string_to_end(Stream, String) :-
-    current_input(OldIn),
-    set_input(Stream),
-    read_string_to_end_(String),
-    set_input(OldIn).
-
-read_string_to_end_(L) :-
-    get_code(C),
-    read_string_to_end__(C, L).
-
-read_string_to_end__(-1, []) :- !.
-read_string_to_end__(C, [C|L]) :-
-    read_string_to_end_(L).
-
-% TODO: simplify
-read_bytes_to_end(Stream, String) :-
-    current_input(OldIn),
-    set_input(Stream),
-    read_bytes_to_end_(String),
-    set_input(OldIn).
-
-read_bytes_to_end_(L) :-
-    get_byte(C),
-    read_bytes_to_end__(C, L).
-
-read_bytes_to_end__(-1, []) :- !.
-read_bytes_to_end__(C, [C|L]) :-
-    read_bytes_to_end_(L).
-
-
+:- export(read_bytes_to_end/2).
+read_bytes_to_end(S, L) :-
+    get_byte(S, C),
+    ( C = -1 -> L = []
+    ; L = [C|L0],
+      read_bytes_to_end(S, L0)
+    ).
