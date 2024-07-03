@@ -1,4 +1,4 @@
-:- module(iso_tests, _, [assertions, nativeprops, unittestdecls, iso_strict, dynamic]).
+:- module(iso_tests, _, [assertions, nativeprops, unittestdecls, iso_strict]).
 
 :- doc(title, "ISO Prolog tests for Ciao").
 :- doc(author, "The Ciao Development Team").
@@ -77,14 +77,20 @@ as follows:
 % TODO: 
 %  - review and remove all REVIEW
 %  - [X] operators (current: op_test11)
-%  - [ ] clause/2
+%
+%  8.8 and 8.9 (using dynamic_clause):
+%  - [ ] clause/2 (+5 with dynamic_clause)
 %  - [ ] current_predicate/2
-%  - [ ] asserta/1
+%  - [ ] asserta/1 (+4 with dynamic_clause)
 %  - [ ] assertz/1
-%  - [ ] retract/1
+%  - [ ] retract/1 (problem: 'retract_test3' depends on 'assertz_test2')
+%  - [ ] abolish/1
+%      
+%  8.10:
 %  - [ ] findall/3
 %  - [ ] bagof/3
-%  - [ ] number_codes/2
+%
+%  - [ ] number_codes/2 (based on number_chars/2)
 
 % ---------------------------------------------------------------------------
 
@@ -2288,14 +2294,13 @@ retract_test1 :- retract(legs(octopus, 8)).
 
 retract_test2 :- retract(legs(spider, 6)).
 
-
 %% REVIEW:PENDING
+% TODO:[JF] this one depends on executing test 'assertz_test2'
 :- test retract_test3(X, T) => (T=bird(X))
    + not_fails
    # "[ISO] retract/1: expected(succeed) bug(fail)".
 
 retract_test3(X, T) :- retract((legs(X, 2) :-T)).
-
 
 %% REVIEW:PENDING
 %%   [gprolog]: does not return what was expected
@@ -2358,7 +2363,7 @@ retract_test10(X) :- retract((4 :- X)).
 :- test retract_test11(X)
 	+ exception(error(permission_error(modify, static_procedure, atom/1),
 		ImplDep))
-# "[ISO] retract/2: expected(error) bug(wrong_error)".
+# "[ISO] retract/1: expected(error) bug(wrong_error)".
 
 retract_test11(X) :- retract((atom(X) :- X == '[]')).
 
