@@ -76,7 +76,7 @@ as follows:
 % ---------------------------------------------------------------------------
 % TODO: 
 %  - review and remove all REVIEW
-%  - [ ] operators (current: op_test11)
+%  - [X] operators (current: op_test11)
 %  - [ ] clause/2
 %  - [ ] current_predicate/2
 %  - [ ] asserta/1
@@ -4500,125 +4500,79 @@ op_test9 :-
 % define two operators with the same name, one infix and the other
 % postfix.
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(permission_error(create, operator, ++), _))
-%%   [ciao]: no throws
-%:- test op_test10
-%	+ exception(error(permission_error(create, operator, ++), _))
-%# "[ISO] op/3: expected(error) bug(succeed)".
-%
-%op_test10 :- iso_incomplete:op(30, xfy, ++), iso_incomplete:op(50, yf, ++).
+% TODO:[JF] at least Ciao and SWI allow it
+:- test op_test10
+   + exception(error(permission_error(create, operator, ++), _))
+   # "[ISO] op/3: bug(wontfix)".
+op_test10 :-
+    with_ops([op(30, xfy, ++)], with_ops([op(50, yf, ++)], true)).
 
 :- test op_test11 + exception(error(instantiation_error, _))
-   # "[ISO-sics] op/3: expected(error)".
-
+   # "[ISO-sics] op/3".
 op_test11 :- op(_, xfx, ++).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(instantiation_error,_))
-%%   [ciao]: throws exception(error(permission_error(modify,operator,','),op/3))
 :- test op_test12 + exception(error(instantiation_error, _))
-   # "[ISO-sics] op/3: expected(error) bug(succeed)".
-
+   # "[ISO-sics] op/3".
 op_test12 :- op(100, xfx, _).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(instantiation_error,_))
-%%   [ciao]: no throws
 :- test op_test13 + exception(error(instantiation_error, _))
-   # "[ISO-sics] op/3: expected(error) bug(succeed)".
-
+   # "[ISO-sics] op/3".
 op_test13 :- op(100, xfx, [a|_]).
 
 :- test op_test14 + exception(error(instantiation_error, _))
-   # "[ISO-sics] op/3: expected(error)".
-
+   # "[ISO-sics] op/3".
 op_test14 :- op(100, xfx, [a, _]).
 
-% TODO:[JF] fixed
 :- test op_test15
    + exception(error(type_error(atom, 200), _))
-   # "[ISO-sics] op/3: expected(error)".
-% :- test op_test15
-% 	+ exception(error(domain_error(operator_specifier, Op_specifier),
-% 		ImplDep))
-% # "[ISO-sics] op/3: expected(error)".
-
+   # "[ISO-sics] op/3".
 op_test15 :- op(100, 200, [a]).
 
 :- test op_test16
    + exception(error(type_error(atom, f(1)), _))
-   # "[ISO-sics] op/3: expected(error)".
-% :- test op_test16
-% 	+ exception(error(domain_error(operator_specifier, Op_specifier),
-% 		ImplDep))
-% # "[ISO-sics] op/3: expected(error)".
-
+   # "[ISO-sics] op/3".
 op_test16 :- op(100, f(1), [a]).
 
 :- test op_test17 + exception(error(type_error(atom, a+b), _))
-   # "[ISO-sics] op/3: expected(error)".
-
+   # "[ISO-sics] op/3".
 op_test17 :- op(100, xfx, [a, a+b]).
 
 :- test op_test18
    + exception(error(permission_error(modify, operator, ','), _))
    # "[ISO-sics] op/3: expected(error) bug(succeed)".
-
 op_test18 :- op(100, xfx, ',').
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(permission_error(modify, operator, ','), _))
-%%   [ciao]: no throws
 :- test op_test19
    + exception(error(permission_error(modify, operator, ','), _))
    # "[ISO-sics] op/3: expected(error) bug(succeed)".
-
 op_test19 :- op(100, xfx, [a, ',']).
 
 % ---------------------------------------------------------------------------
-%! ## 8.14.4 ISOcore#p103
+%! ## 8.14.4 current_op/3 ISOcore#p103
 
-%%   [gprolog]: Result = [[1050,*->],[740,#==>],[1000,','],[600,:],[1100,;],[200,^],[1105,'|'],[740,#\==>],[730,##],[1050,->],[750,#\<=>],[750,#<=>]]
-%%   [ciao]: Result = [[1100,;],[1050,->],[200,^],[30,++]]
 :- test current_op_test1(Result)
    => ( sublist([[1100, ';'], [1050, '->'], [1000, ','], [200, '^']], Result) )
-# "[ISO] current_op/3: expected(succeed) bug(fail)".
-
+   # "[ISO] current_op/3".
 current_op_test1(Result) :- findall([P, OP], current_op(P, xfy, OP), Result).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(domain_error(operator_priority, 1201),_))
-%%   [ciao]: no throws
 :- test current_op_test2
-	+ exception(error(domain_error(operator_priority, 1201), _))
-# "[ISO-sics] current_op/3: expected(error) bug(fail)".
-
+   + exception(error(domain_error(operator_priority, 1201), _))
+   # "[ISO-sics] current_op/3".
 current_op_test2 :- current_op(1201, _, _).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(domain_error(operator_specifier, yfy), _))
-%%   [ciao]: no throws
 :- test current_op_test3
-	+ exception(error(domain_error(operator_specifier, yfy), _))
-# "[ISO-sics] current_op/3: expected(error) bug(fail)".
-
+   + exception(error(domain_error(operator_specifier, yfy), _))
+   # "[ISO-sics] current_op/3".
 current_op_test3 :- current_op(_, yfy, _).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws error(domain_error(operator_specifier,0),current_op/3)
-%%   [ciao]: no throws
-:- test current_op_test4 + exception(error(type_error(atom, 0), _))
-# "[ISO-sics] current_op/3: expected(error) bug(fail)".
-
+:- test current_op_test4
+   + exception(error(type_error(atom, 0), _))
+   # "[ISO-sics] current_op/3".
 current_op_test4 :- current_op(_, 0, _).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(atom, 5), _))
-%%   [ciao]: no throws
-:- test current_op_test5 + exception(error(type_error(atom, 5), _))
-# "[ISO-sics] current_op/3: expected(error) bug(fail)".
-
+:- test current_op_test5
+   + exception(error(type_error(atom, 5), _))
+   # "[ISO-sics] current_op/3".
 current_op_test5 :- current_op(_, _, 5).
 
 % ---------------------------------------------------------------------------
