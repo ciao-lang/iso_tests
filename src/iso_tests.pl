@@ -97,15 +97,12 @@ as follows:
 % TODO:[JF] fix, requires setting dynamic program, otherwise dyn
 %   clause tests make no sense
 
-moose(_) :- fail.
-x :- fail.
-f(_) :- fail.
-animal(_) :- fail.
+:- dynamic(foo/1).
+
 :- push_prolog_flag(multi_arity_warnings, off).
 foo :- fail.
 foo(_, _) :- fail.
 :- pop_prolog_flag(multi_arity_warnings).
-bird(_) :- fail.
 
 % ---------------------------------------------------------------------------
 
@@ -970,12 +967,16 @@ ifthenelse_test9 :- throw(bug).
 :- test catch_test1(Y) => (Y=10)
    # "[ISO] catch/3".
 
-catch_test1(Y) :- catch(foo(5), test(Y), true).
+catch_test1(Y) :- catch(p_catch__foo(5), test(Y), true).
+
+p_catch__foo(X) :- Y is X*2, throw(test(Y)).
 
 :- test catch_test2(Z) : (Z=3)
    # "[ISO] catch/3".
 
-catch_test2(Z) :- catch(bar(3), Z, true).
+catch_test2(Z) :- catch(p_catch__bar(3), Z, true).
+
+p_catch__bar(X) :- X = Y, throw(Y).
 
 :- test catch_test3
    # "[ISO] catch/3".
@@ -991,7 +992,9 @@ catch_test3 :- catch(true, _, 3).
 :- test catch_test5(Y) => (Y=1)
    # "[ISO] catch/3".
 
-catch_test5(Y) :- catch(car(_X), Y, true).
+catch_test5(Y) :- catch(p_catch__car(_X), Y, true).
+
+p_catch__car(X) :- X=1, throw(X).
 
 :- test catch_test6 + fails
    # "[ISO] catch/3".
@@ -1002,39 +1005,21 @@ catch_test6 :-
 :- test catch_test7(Result) => (Result=[c]) + (user_output("h1"))
    # "[ISO] catch/3".
 
-catch_test7(Result) :- findall(C, catch(g, C, write(h1)), Result).
+catch_test7(Result) :- findall(C, catch(p_catch__g, C, write(h1)), Result).
+
+p_catch__g :- catch(p_catch__p, _B, write(h2)), p_catch__coo(c).
+
+p_catch__p.
+p_catch__p :- throw(b).
+
+p_catch__coo(X) :- throw(X).
 
 :- test catch_test8(Y) => (Y=error(instantiation_error, Imp_def))
    # "[ISO] catch/3".
 
-catch_test8(Y) :- catch(coo(_X), Y, true).
+catch_test8(Y) :- catch(p_catch__coo8(_X), Y, true).
 
-% ---------------------------------------------------------------------------
-% (these predicates are used in the following tests)
-
-% TODO:[JF] review the use of those predicates, rename them if needed
-
-:- push_prolog_flag(multi_arity_warnings, off).
-:- dynamic(foo/1).
-foo(X) :- Y is X*2, throw(test(Y)).
-:- pop_prolog_flag(multi_arity_warnings).
-
-:- dynamic(bar/1).
-bar(X) :- X = Y, throw(Y).
-
-:- dynamic(coo/1).
-coo(X) :- throw(X).
-
-:- dynamic(car/1).
-car(X) :- X=1, throw(X).
-
-:- dynamic(g/0).
-g :- catch(p, _B, write(h2)), coo(c).
-
-:- dynamic(p/0).
-p.
-
-p :- throw(b).
+p_catch__coo8(X) :- throw(X).
 
 % ---------------------------------------------------------------------------
 %! ## 7.8.10 throw/1 ISOcore#p53
@@ -1998,11 +1983,13 @@ dog :- true.
 
 elk(X) :- moose(X).
 
+moose(_) :- fail.
+
 :- dynamic(legs/2).
 legs(A, 6) :- insect(A).
 legs(A, 7) :- A, call(A).
 
-:- dynamic (insect/1).
+:- dynamic(insect/1).
 insect(ant).
 insect(bee).
 
@@ -2053,6 +2040,8 @@ clause_test5(Result) :- findall([I, T], clause(insect(I), T), Result).
    # "[ISO] clause/2: expected(fail)".
 
 clause_test6(Body) :- clause(x, Body).
+% TODO:[JF] failure if x is not defined
+% x :- fail.
 
 %% REVIEW:PENDING
 %%   [gprolog]: throws exception(error(instantation_error, _))
@@ -2102,6 +2091,8 @@ clause_test11 :- clause(legs(A, 6), insect(f(A))).
    # "[ISO-eddbali] clause/2: expected(error) bug(fail)".
 
 clause_test12 :- clause(f(_), 5).
+
+f(_) :- fail. % TODO:[JF] it should not be needed (for this error)
 
 % ---------------------------------------------------------------------------
 %! ## 8.8.2 ISOcore#p78
@@ -2171,6 +2162,13 @@ currentpredicate_test9(X, Result) :- findall(X, current_predicate(X), Result).
 
 % ===========================================================================
 %! # 8.9 Clause creation and destruction
+
+% TODO:[JF] Ciao will complain when asserting clauses with animal/1 or
+%   bird/1 in its body, if those predicates are not defined. Is this
+%   behaviour compatible with ISO?
+animal(_) :- fail.
+bird(_) :- fail.
+
 %! ## 8.9.1 ISOcore#p79
 
 :- test asserta_test1
@@ -2227,18 +2225,15 @@ asserta_test7 :- asserta((atom(_) :- true)).
 % ---------------------------------------------------------------------------
 %! ## 8.9.2 ISOcore#p80
 
-
 :- test assertz_test1
 # "[ISO] assertz/2: expected(succeed)".
 
 assertz_test1 :- assertz(legs(spider, 8)).
 
-
 :- test assertz_test2
 # "[ISO] assertz/2: expected(succeed)".
 
 assertz_test2 :- assertz((legs(B, 2) :- bird(B))).
-
 
 :- test assertz_test3
 # "[ISO] assertz/2: expected(succeed)".
@@ -2368,127 +2363,119 @@ retract_test10(X) :- retract((4 :- X)).
 retract_test11(X) :- retract((atom(X) :- X == '[]')).
 
 % ---------------------------------------------------------------------------
-%! ## 8.9.4 ISOcore#p82
+%! ## 8.9.4 abolish/1 ISOcore#p82
 
+% TODO:[JF] Tests marked with "dynamic program change" modify the
+%   dynamic database as a side-effect. The result should be correct
+%   fine as long as tests are executed only once per use_module.
+
+% NOTE: using 'undef__' for predicates undefined on purpose
+
+% TODO:[JF] make sure that it works (see '$meta_exp'(spec, undef__foo/2, X)).
 :- test abolish_test1
-# "[ISO] abolish/1: expected(succeed)".
+   + not_fails
+   # "[ISO] abolish/1: bug()".
+abolish_test1 :- G=abolish(undef__foo1/2), call(G), throw(iso_requires_no_warning). % TODO:[JF] it should succeed, silently, even if the predicate do not exists
 
-abolish_test1 :- abolish(foo/2).
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(instantiation_error, _))
-%%   [ciao]: no throws
+% TODO:[JF] fix
 :- test abolish_test2
-	+ exception(error(instantiation_error, _))
-# "[ISO] abolish/1: expected(error) bug(fail)".
+   + exception(error(instantiation_error, _))
+   # "[ISO] abolish/1: bug()".
+abolish_test2 :- abolish(undef__foo2/_).
 
-abolish_test2 :- abolish(foo/_).
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(predicate_indicator, foo),_))
-%%   [ciao]: no throws
+% TODO:[JF] fix
 :- test abolish_test3
-	+ exception(error(type_error(predicate_indicator, foo), _))
-# "[ISO] abolish/1: expected(error) bug(fail)".
+   + exception(error(type_error(predicate_indicator, undef__foo3), _))
+   # "[ISO] abolish/1: bug()".
+abolish_test3 :- abolish(undef__foo3).
 
-abolish_test3 :- abolish(foo).
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(predicate_indicator, foo(_)),_))
-%%   [ciao]: no throws
+% TODO:[JF] fix
 :- test abolish_test4
-	+ exception(error(type_error(predicate_indicator, foo(_)), _))
-# "[ISO] abolish/1: expected(error) bug(fail)".
+   + exception(error(type_error(predicate_indicator, undef__foo4(_)), _))
+   # "[ISO] abolish/1: bug()".
+abolish_test4 :- abolish(undef__foo4(_)).
 
-abolish_test4 :- abolish(foo(_)).
+% TODO:[JF] abolish_test5 is dangerous, the same is tested with abolish_test9
+% :- test abolish_test5
+%    + exception(error(permission_error(modify,static_procedure,abolish/1), _))
+%    # "[ISO] abolish/1: bug()".
+% abolish_test5 :- X=abolish/1, abolish(X).
 
-% :- test abolish_test5(X) : 
-%        (X=abolish/1) 
-% 	+ exception(error(permission_error(modify,static_procedure,abolish/1), _))
-% # "[ISO] abolish/1: expected(error) bug(succeed)".
-%
-% abolish_test5(X) :- abolish(X).
-
-%%%%%%%%%% THESE PREDICATES ARE NECESARIES FOR THE NEXT TESTS %%%%%%%%%%%%%%%%
-:- dynamic(foo/1).
-
-% ---------------------------------------------------------------------------
-
+% TODO:[JF] dynamic program change
 :- test abolish_test6
-# "[ISO-eddbali] abolish/1: expected(succeed)".
+   + not_fails
+   # "[ISO-eddbali] abolish/1".
+abolish_test6 :- abolish(p_abolish__foo/1).
 
-abolish_test6 :- abolish(foo/1).
+:- dynamic(p_abolish__foo/1).
+p_abolish__foo(X) :- call(X), call(X).
+p_abolish__foo(X) :- call(X) -> call(X).
 
+% TODO:[JF] dynamic program change
+% (retrieve all solutions even if predicate is abolished)
 :- test abolish_test7(Result)
-	=> (Result=[ant, bee])
-# "[ISO-eddbali] abolish/1: expected(succeed)".
-
+   => (Result=[ant, bee])
+   # "[ISO-eddbali] abolish/1".
 abolish_test7(Result) :-
-	asserta(insect(bee)), asserta(insect(ant)),
-	findall(X, (insect(X), abolish(insect/1)), Result).
+    findall(X, (p_abolish__insect(X), abolish(p_abolish__insect/1)), Result).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(instantiation_error, _))
-%%   [ciao]: no throws
+:- dynamic(p_abolish__insect/1).
+p_abolish__insect(ant).
+p_abolish__insect(bee).
+
+% TODO:[JF] fix
 :- test abolish_test8 + exception(error(instantiation_error, _))
-# "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
+   # "[ISO-eddbali] abolish/1: bug()".
+abolish_test8 :- abolish(p_abolish__foo/_).
 
-abolish_test8 :- abolish(foo/_).
-
-%% REVIEW:PENDING
-%%   [gprolog]: no throws
-%%   [ciao]: no throws
+% TODO:[JF] some systems allow abolishing static procedures and some
+%   of our code need it. Add another mechanism if needed? Marked as
+%   'wontfix' at this moment.
 :- test abolish_test9
-   + exception(error(permission_error(modify, static_procedure, bar/1), _))
-# "[ISO-eddbali] abolish/1: expected(error) bug(succeed)".
+   + exception(error(permission_error(modify, static_procedure, p_abolish__bar/1), _))
+   # "[ISO-eddbali] abolish/1: bug(wontfix)".
 
-abolish_test9 :- abolish(bar/1).
+abolish_test9 :- abolish(p_abolish__bar/1).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(integer, a), _))
-%%   [ciao]: no throws
+% Some static pred
+p_abolish__bar(_) :- true.
+
+% TODO:[JF] fix
 :- test abolish_test10
-	+ exception(error(type_error(integer, a), _))
-# "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
+   + exception(error(type_error(integer, a), _))
+   # "[ISO-eddbali] abolish/1: bug()".
+abolish_test10 :- abolish(p_abolish__foo/a).
 
-abolish_test10 :- abolish(foo/a).
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(domain_error(not_less_than_zero, -1),_))
-%%   [ciao]: no throws
+% TODO:[JF] fix
 :- test abolish_test11
-	+ exception(error(domain_error(not_less_than_zero, -1), _))
-# "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
+   + exception(error(domain_error(not_less_than_zero, -1), _))
+   # "[ISO-eddbali] abolish/1: bug()".
+abolish_test11 :- abolish(p_abolish__foo /(-1)).
 
-abolish_test11 :- abolish(foo /(-1)).
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(representation_error(max_arity), _))
-%%   [ciao]: no throws
+% TODO:[JF] fix
 :- test abolish_test12
    + exception(error(representation_error(max_arity), _))
-# "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
-
+   # "[ISO-eddbali] abolish/1: bug()".
 abolish_test12 :-
     current_prolog_flag(max_arity, A), A1 is A + 1,
-    abolish(foo/A1).
+    abolish(p_abolish__foo/A1).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(atom, 5), _))
-%%   [ciao]: no throws
-:- test abolish_test13 + exception(error(type_error(atom, 5), _))
-# "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
-
+% TODO:[JF] fix
+:- test abolish_test13
+   + exception(error(type_error(atom, 5), _))
+   # "[ISO-eddbali] abolish/1: bug()".
 abolish_test13 :- abolish(5/a).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(predicate_indicator, insect), _))
-%%   [ciao]: no throws
+% TODO:[JF] fix
+% (similar to abolish_test3, but functor name exists)
 :- test abolish_test14            
-	+ exception(error(type_error(predicate_indicator, insect), _))
-# "[ISO-eddbali] abolish/1: expected(error) bug(fail)".
+   + exception(error(type_error(predicate_indicator, p_abolish__insect2), _))
+   # "[ISO-eddbali] abolish/1: bug()".
+abolish_test14 :- abolish(p_abolish__insect2).
 
-abolish_test14 :- abolish(insect).
+:- dynamic(p_abolish__insect2/1).
+p_abolish__insect2(ant).
+p_abolish__insect2(bee).
 
 % ===========================================================================
 %! # 8.10 All solutions
