@@ -84,13 +84,11 @@ as follows:
 %  - [ ] asserta/1 (+4 with dynamic_clause)
 %  - [ ] assertz/1
 %  - [ ] retract/1 (problem: 'retract_test3' depends on 'assertz_test2')
-%  - [ ] abolish/1
+%  - [X] abolish/1
 %      
 %  8.10:
 %  - [ ] findall/3
 %  - [ ] bagof/3
-%
-%  - [ ] number_codes/2 (based on number_chars/2)
 
 % ---------------------------------------------------------------------------
 
@@ -5434,341 +5432,291 @@ charcode_test9 :- char_code(_Str, -2).
 
 :- test numberchars_test1(L) => (L=['3', '3'])
    # "[ISO] number_chars/2".
-
 numberchars_test1(L) :- number_chars(33, L).
 
 :- test numberchars_test2
    # "[ISO] number_chars/2".
-
 numberchars_test2 :- number_chars(33, ['3', '3']).
 
 :- test numberchars_test3(N) => (N=33.0)
    # "[ISO] number_chars/2".
-
 numberchars_test3(N) :- number_chars(33.0, Y), number_chars(N, Y).
 
 :- test numberchars_test4(X) => (near(X, 3.3, 0.02))
    # "[ISO] number_chars/2".
-
 numberchars_test4(X) :- number_chars(X, ['3', '.', '3', 'E', +, '0']).
 
 :- test numberchars_test5 + fails
    # "[ISO] number_chars/2".
-
 numberchars_test5 :- number_chars(3.3, ['3', '.', '3', 'E', +, '0']).
 
 :- test numberchars_test6(A) => (A=(-25))
    # "[ISO] number_chars/2".
-
 numberchars_test6(A) :- number_chars(A, [-, '2', '5']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks
 :- test numberchars_test7(A) => (A=3)
    + not_fails
    # "[ISO] number_chars/2: bug()".
-
 numberchars_test7(A) :- number_chars(A, ['\n', ' ', '3']).
 
 % TODO:[JF] it should report syntax error
 :- test numberchars_test8
    + exception(error(syntax_error(_), _))
    # "[ISO] number_chars/2: bug()".
-
 numberchars_test8 :- number_chars(_A, ['3', ' ']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should accept hex numbers
 :- test numberchars_test9(A) => (A=15)
    + not_fails
    # "[ISO] number_chars/2: bug()".
-
 numberchars_test9(A) :- number_chars(A, ['0', x, f]).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should accept codes
 :- test numberchars_test10(A) => (A=0'a)
    + not_fails
    # "[ISO] number_chars/2: bug()".
-
 numberchars_test10(A) :- number_chars(A, ['0', '''', a]).
 
 :- test numberchars_test11(A) => (A=4.2)
    # "[ISO] number_chars/2".
-
 numberchars_test11(A) :- number_chars(A, ['4', '.', '2']).
 
 :- test numberchars_test12(A) => (A=4.2)
    # "[ISO] number_chars/2".
-
 numberchars_test12(A) :- number_chars(A, ['4', '2', '.', '0', 'e', '-', '1']).
 
 :- test numberchars_test13 + exception(error(instantiation_error, _))
    # "[ISO-eddbali] number_chars/2".
-
 numberchars_test13 :- number_chars(_X, _Y).
 
 :- test numberchars_test14 + exception(error(type_error(number, a), _))
    # "[ISO-eddbali] number_chars/2".
-
 numberchars_test14 :- number_chars(a, _Y).
 
 % TODO:[JF] missing type check
 :- test numberchars_test15
    + exception(error(type_error(list, 4), _))
    # "[ISO-eddbali] number_chars/2: bug()".
-
 numberchars_test15 :- number_chars(_, 4).
 
 % TODO:[JF] fix type check
 :- test numberchars_test16
    + exception(error(type_error(character, 2), _))
    # "[ISO-eddbali] number_chars/2: bug()".
-
 numberchars_test16 :- number_chars(_A, ['4', 2]).
 
 :- test numberchars_test17
    + exception(error(instantiation_error, _))
    # "[ISO-sics] number_chars/2".
-
 numberchars_test17 :- number_chars(_A, [a|_]).
 
 :- test numberchars_test18
    + exception(error(instantiation_error, _))
    # "[ISO-sics] number_chars/2".
-
 numberchars_test18 :- number_chars(_A, [a, _]).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and oct numbers
 :- test numberchars_test19(A) => (A=9)
    + not_fails
    # "[ISO-sics] number_chars/2: bug()".
-
 numberchars_test19(A) :- number_chars(A, [' ', '0', 'o', '1', '1']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and hex numbers
 :- test numberchars_test20(A) => (A=17)
    + not_fails
    # "[ISO-sics] number_chars/2: bug()".
-
 numberchars_test20(A) :- number_chars(A, [' ', '0', 'x', '1', '1']).               
 
 % TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and bin numbers
 :- test numberchars_test21(A) => (A=3)
    + not_fails
    # "[ISO-sics] number_chars/2: bug()".
-
 numberchars_test21(A) :- number_chars(A, [' ', '0', 'b', '1', '1']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should report wrong oct numbers
 :- test numberchars_test22
    + exception(error(syntax_error(_), _))
    # "[ISO-sics] number_chars/2: bug()".
-
 numberchars_test22 :- number_chars(_A, ['0', 'o', '8']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should report wrong bin numbers
 :- test numberchars_test23
    + exception(error(syntax_error(_), _))
    # "[ISO-sics] number_chars/2: bug()".
-
 numberchars_test23 :- number_chars(_A, [' ', 'b', '2']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should report wrong hex numbers
 :- test numberchars_test24
    + exception(error(syntax_error(_), _))
    # "[ISO-sics] number_chars/2: bug()".
-
 numberchars_test24 :- number_chars(_A, [' ', 'x', 'g']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should report wrong numbers
 :- test numberchars_test25
    + exception(error(syntax_error(_), _))
    # "[ISO-sics] number_chars/2: bug()".
-
 numberchars_test25 :- number_chars(_A, ['á']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should report wrong numbers
 :- test numberchars_test26
    + exception(error(syntax_error(_), _))
    # "[ISO-sics] number_chars/2: bug()".
-
 numberchars_test26 :- number_chars(_A, ['a']).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should report wrong numbers
 :- test numberchars_test27
    + exception(error(syntax_error(_), _))
    # "[ISO-sics] number_chars/2: bug()".
-
 numberchars_test27 :- number_chars(_A, ['0', 'x', '0', '.', '0']).
 
 % ---------------------------------------------------------------------------
 %! ## 8.16.8 number_codes/2 ISOcore#p112
 
-:- test numbercodes_test1(L) => (L=[0'3, 0'3])
-# "[ISO] number_codes/2: expected(succeed)".
+% NOTE: see issues in number_chars/2
 
+:- test numbercodes_test1(L) => (L=[0'3, 0'3])
+   # "[ISO] number_codes/2".
 numbercodes_test1(L) :- number_codes(33, L).
 
 :- test numbercodes_test2
-# "[ISO] number_codes/2: expected(succeed)".
-
+   # "[ISO] number_codes/2".
 numbercodes_test2 :- number_codes(33, [0'3, 0'3]).
 
 :- test numbercodes_test3(Y) => (number_codes(N, Y), N=33.0)
    # "[ISO] number_codes/2".
-
 numbercodes_test3(Y) :- number_codes(33.0, Y).
 
 :- test numbercodes_test4
    # "[ISO] number_codes/2".
-
 numbercodes_test4 :- number_codes(33.0, [0'3|_L]).
 
 :- test numbercodes_test5(A) => (A=(-25))
-# "[ISO] number_codes/2: expected(succeed)".
-
+   # "[ISO] number_codes/2".
 numbercodes_test5(A) :- number_codes(A, [0'-, 0'2, 0'5]).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and bin numbers
 :- test numbercodes_test6(A) => (A=3)
    + not_fails
    # "[ISO] number_codes/2: bug()".
-
 numbercodes_test6(A) :- number_codes(A, [0' , 0'3]).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should accept hex numbers
 :- test numbercodes_test7(A) => (A=15)
    + not_fails
    # "[ISO] number_codes/2: bug()".
-
 numbercodes_test7(A) :- number_codes(A, [0'0, 0'x, 0'f]).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should accept char code numbers
 :- test numbercodes_test8(A) => (A=0'a)
    + not_fails
    # "[ISO] number_codes/2: bug()".
-
 numbercodes_test8(A) :- number_codes(A, [0'0, 0''', 0'a]).
 
 :- test numbercodes_test9(A) => (A=4.2)
-# "[ISO] number_codes/2: expected(succeed)".
-
+   # "[ISO] number_codes/2".
 numbercodes_test9(A) :- number_codes(A, [0'4, 0'., 0'2]).
 
 :- test numbercodes_test10(A) => (A=4.2)
-# "[ISO] number_codes/2: expected(succeed)".
-
+   # "[ISO] number_codes/2".
 numbercodes_test10(A) :- number_codes(A, [0'4, 0'2, 0'., 0'0, 0'e, 0'-, 0'1]).
 
-:- test numbercodes_extra_errortest_1
-	+ exception(error(instantiation_error, _ImplDep))
-# "[ISO] number_codes/2: Extra test for exception.".
-
-numbercodes_extra_errortest_1 :- number_codes(_, [1|_]).
-
-:- test numbercodes_extra_errortest_2
-	+ exception(error(type_error(list, a), _ImplDep))
-# "[ISO] number_codes/2: Extra test for exception.".
-
-numbercodes_extra_errortest_2 :- number_codes(_, a).
-
-:- test numbercodes_extra_errortest_3
-	+ exception(error(instantiation_error, _ImplDep))
-# "[ISO] number_codes/2: Extra test for exception.".
-
-numbercodes_extra_errortest_3 :- number_codes(_, [1,_]).
-
-:- test numbercodes_extra_errortest_4
-	+ exception(error(type_error(integer, a), _ImplDep))
-# "[ISO] number_codes/2: Extra test for exception.".
-
-numbercodes_extra_errortest_4 :- number_codes(_, [1,a]).
-
-:- test numbercodes_extra_errortest_5
-	+ exception(error(representation_error(character_code), _ImplDep))
-# "[ISO] number_codes/2: Extra test for exception.".
-
-numbercodes_extra_errortest_5 :- number_codes(_, [-1]).
-
-:- test numbercodes_extra_errortest_6
-	+ exception(error(type_error(number, '1'), _ImplDep))
-# "[ISO] number_codes/2: Extra test for exception.".
-
-numbercodes_extra_errortest_6 :- number_codes('1', [0'1]).
-
 :- test numbercodes_test11 + exception(error(instantiation_error, _))
-# "[ISO-eddbali] number_codes/2: expected(error)".
-
+   # "[ISO-eddbali] number_codes/2".
 numbercodes_test11 :- number_codes(_, _).
 
 :- test numbercodes_test12 + exception(error(type_error(number, a), _))
-# "[ISO-eddbali] number_codes/2: expected(error)".
-
+   # "[ISO-eddbali] number_codes/2".
 numbercodes_test12 :- number_codes(a, _Y).
 
 :- test numbercodes_test13 + exception(error(type_error(list, 4), _))
-# "[ISO-eddbali] number_codes/2: expected(error) bug(wrong_error)".
-
+   # "[ISO-eddbali] number_codes/2".
 numbercodes_test13 :- number_codes(_X, 4).
 
 :- test numbercodes_test14
-	+ exception(error(representation_error(character_code), _))
-# "[ISO-eddbali] number_codes/2: expected(error) bug(wrong_error)".
-
+   + exception(error(representation_error(character_code), _))
+   # "[ISO-eddbali] number_codes/2".
 numbercodes_test14 :- number_codes(_X, [0'4, -1]).
 
 :- test numbercodes_test15 + exception(error(instantiation_error, _))
-# "[ISO-sics] number_codes/2: expected(error)".
-
+   # "[ISO-sics] number_codes/2".
 numbercodes_test15 :- number_codes(_X, [0'a|_]).
 
 :- test numbercodes_test16 + exception(error(instantiation_error, _))
-# "[ISO-sics] number_codes/2: expected(error)".
-
+   # "[ISO-sics] number_codes/2".
 numbercodes_test16 :- number_codes(_X, [0'a, _]).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and bin numbers
 :- test numbercodes_test17(A, S) => (A=273, S=[50, 55, 51])
    + not_fails
-   # "[ISO-sics] number_codes/2: expected(succeed) bug(fail)".
-
+   # "[ISO-sics] number_codes/2: bug()".
 numbercodes_test17(A, S) :-
-    number_chars(A, [' ', '0', 'x', '1', '1', '1']),
+    number_chars(A, [' ', '0', 'x', '1', '1', '1']), % TODO:[JF] fixme
     number_codes(A, S).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and oct numbers
 :- test numbercodes_test18(A, S) => (A=73, S=[55, 51])
    + not_fails
-   # "[ISO-sics] number_codes/2: expected(succeed) bug(fail)".
-
+   # "[ISO-sics] number_codes/2: bug()".
 numbercodes_test18(A, S) :-
-    number_chars(A, [' ', '0', 'o', '1', '1', '1']),
+    number_chars(A, [' ', '0', 'o', '1', '1', '1']), % TODO:[JF] fixme
     number_codes(A, S).
 
 % TODO:[JF] number_chars/2 and number_codes/2 should accept leading blanks and bin numbers
 :- test numbercodes_test19(A, S) => (A=7, S=[55])
    + not_fails
-   # "[ISO-sics] number_codes/2: expected(succeed) bug(fail)".
-
+   # "[ISO-sics] number_codes/2: bug()".
 numbercodes_test19(A, S) :-
-    number_chars(A, [' ', '0', 'b', '1', '1', '1']),
+    number_chars(A, [' ', '0', 'b', '1', '1', '1']), % TODO:[JF] fixme
     number_codes(A, S).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws syntax error
-%%   [ciao]: no throws
-:- test numbercodes_test20
-	+ exception(error(syntax_error(_), _))
-# "[ISO-sics] number_codes/2: expected(error) bug(succeed)".
+% TODO:[JF] fix
+:- test numbercodes_test20(A) => (A=10)
+   + not_fails
+   # "[ISO-sics] number_codes/2: bug()".
+numbercodes_test20(A) :- number_codes(A, "0'\\n").
 
-numbercodes_test20 :- number_codes(_X, "ä").
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(syntax_error(_), _))
-%%   [ciao]: no throws
+% TODO:[JF] fix
 :- test numbercodes_test21
-	+ exception(error(syntax_error(_), _))
-# "[ISO-sics] number_codes/2: expected(error) bug(fail)".
+   + exception(error(syntax_error(_), _))
+   # "[ISO-sics] number_codes/2: bug()".
+numbercodes_test21 :- number_codes(_X, "ä").
 
-numbercodes_test21 :- number_codes(_A, [0'0, 0'x, 0'0, 0'., 0'0]).
+% TODO:[JF] fix
+:- test numbercodes_test22
+   + exception(error(syntax_error(_), _))
+   # "[ISO-sics] number_codes/2: bug()".
+numbercodes_test22 :- number_codes(_A, [0'0, 0'x, 0'0, 0'., 0'0]).
+
+:- test numbercodes_extratest_1
+   + exception(error(instantiation_error, _))
+   # "[ISO-ciao] number_codes/2".
+numbercodes_extratest_1 :- number_codes(_, [1|_]).
+
+:- test numbercodes_extratest_2
+   + exception(error(type_error(list, a), _))
+   # "[ISO-ciao] number_codes/2".
+numbercodes_extratest_2 :- number_codes(_, a).
+
+:- test numbercodes_extratest_3
+   + exception(error(instantiation_error, _))
+   # "[ISO-ciao] number_codes/2".
+numbercodes_extratest_3 :- number_codes(_, [1,_]).
+
+:- test numbercodes_extratest_4
+   + exception(error(type_error(integer, a), _))
+   # "[ISO-ciao] number_codes/2".
+numbercodes_extratest_4 :- number_codes(_, [1,a]).
+
+:- test numbercodes_extratest_5
+   + exception(error(representation_error(character_code), _))
+   # "[ISO-ciao] number_codes/2".
+numbercodes_extratest_5 :- number_codes(_, [-1]).
+
+:- test numbercodes_extratest_6
+   + exception(error(type_error(number, '1'), _))
+   # "[ISO-ciao] number_codes/2".
+numbercodes_extratest_6 :- number_codes('1', [0'1]).
 
 % ===========================================================================
 %! # 8.17 Implementation defined hooks
