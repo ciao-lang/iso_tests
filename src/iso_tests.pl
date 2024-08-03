@@ -2,10 +2,10 @@
 
 :- doc(title, "ISO Prolog tests for Ciao").
 :- doc(author, "The Ciao Development Team").
-:- doc(author, "Lorea Galech (first version)").
+:- doc(author, "Lorea Galech (first port)").
 :- doc(author, "R@'{e}my Haemmerl@'{e}").
 :- doc(author, "Jos@'{e} Luis Bueno").
-:- doc(author, "Jose F. Morales (rewrite)").
+:- doc(author, "Jose F. Morales (fixes, rewrite)").
 
 :- doc(module, "This module contains a collection of test assertions
 for checking compliance of Ciao with the ISO Prolog standard using the
@@ -20,27 +20,12 @@ for checking compliance of Ciao with the ISO Prolog standard using the
    - `[ISO-eddbali]` other tests based on A Ed-Dbali's tests
    - `[ISO-ciao]` other ISO tests unique to this test suite
    - `[ISO-lg]` tests based on Logtalk test suite
-
  - the predicate or feature to be tested (e.g., a predicate, syntax, etc.)
-
-For some tests the description also includes some notes about the
-expected behavior:
-
- - (nothing): the test assertion fully describes the expected behaviour
- - `expected(...)`: TODO (to be reviewed)
-
-and the current status in Ciao:
-
- - `bug()`: The test fails but fixing it is feasible in Ciao.
- - `bug(wontfix)`: The test fails but we are not considering fixing it
+ - and the current status in Ciao:
+   - nothing else: works as expected
+   - `bug()`: The test fails but fixing it is feasible in Ciao.
+   - `bug(wontfix)`: The test fails but we are not considering fixing it
      (without breaking some useful Ciao feature).
-
- - `bug(succeed)`: The predicate succeeds, but it should not.
- - `bug(fail)`: The predicate fails, but it should not.
- - `bug(error)`: The predicate raises an exception (error), but it should not.
- - `bug(not_implemented)`: The predicate is not implemented in Ciao.
- - `bug(wrong_error)`: The predicate raises an exception (error), but
-   it is not the expected.
 
 The tests follow (when possible) the order specified in the ISO/IEC
 13211-1 document. Additionally, it contain references to the documents
@@ -52,67 +37,23 @@ as follows:
  - `ISOcor3#pNNN` means *ISO/IEC 13211-1:1995 TECHNICAL CORRIGENDUM 3* page NNN
 ").
 
-% ===========================================================================
-% Some useful filters:
-%
-% - tests for arithmetic:
-%   ?- run_tests(iso_tests(iso_tests), [filter(regexp(".* arith .*"))], [check, show_results]).
-%
-% - tests for a predicate:
-%   ?- run_tests(iso_tests(iso_tests), [filter(regexp(".* open/4 .*"))], [check, show_results]).
-
-% ===========================================================================
-% Current state:
-%   Note: {Total:
-%   Passed: 856 (81.91%) Failed: 189 (18.09%) Precond Failed: 0 (0.00%) Aborted: 0 (0.00%) Timeouts: 0 (0.00%) Total: 1045 Run-Time Errors: 189
-%   }
-% ===========================================================================
-
 % TODO:[JF] wrong utf8 support sends corrupted data, which breaks unit
 %   tests runnersending, uncomment the following line when fixed:
 
 % :- compilation_fact(fixed_utf8).
 
 % ---------------------------------------------------------------------------
-% TODO: 
-%  - review and remove all REVIEW
-%  - [X] operators (current: op_test11)
-%
-%  8.8 and 8.9 (using dynamic_clause):
-%  - [ ] clause/2 (+5 with dynamic_clause)
-%  - [ ] current_predicate/2
-%  - [ ] asserta/1 (+4 with dynamic_clause)
-%  - [ ] assertz/1
-%  - [ ] retract/1 (problem: 'retract_test3' depends on 'assertz_test2')
-%  - [X] abolish/1
-%      
-%  8.10:
-%  - [ ] findall/3
-%  - [ ] bagof/3
+%! # Auxiliary predicates (mostly for IO)
 
-% ---------------------------------------------------------------------------
-
-% TODO:[JF] fix, requires setting dynamic program, otherwise dyn
-%   clause tests make no sense
-
-:- dynamic(foo/1).
-
-:- push_prolog_flag(multi_arity_warnings, off).
-foo :- fail.
-foo(_, _) :- fail.
-:- pop_prolog_flag(multi_arity_warnings).
-
-% ---------------------------------------------------------------------------
-
-:- load_test_module(iso_tests(iso_tests_common)).
-:- use_module(iso_tests_common). % TODO: review this module
-
-% ---------------------------------------------------------------------------
-%! # Auxiliary predicates for IO
+% TODO: copy of lists:sublist/2
+% @var{List2} contains all the elements of @var{List1}
+%:- export(sublist/2).
+sublist([], _).
+sublist([Element|Residue], List) :-
+    member(Element, List),
+    sublist(Residue, List).
 
 % NOTE: default is type(text), eof_action(error)
-
-read_bytes_to_end(X) :- current_input(S), read_bytes_to_end(S, X).
 
 :- discontiguous text_def/2.
 
@@ -233,6 +174,29 @@ with_def_ops(Goal) :-
            op(100, xf,  xf),
            op(100, yf,  yf)],
     with_ops(Ops, Goal).
+
+% ---------------------------------------------------------------------------
+% TODO: duplicated stream_utils:read_string_to_end/2; remove once stream aliases are integrated
+
+%:- export(read_string_to_end/2).
+read_string_to_end(S, L) :-
+    get_code(S, C),
+    ( C = -1 -> L = []
+    ; L = [C|L0],
+      read_string_to_end(S, L0)
+    ).
+
+read_bytes_to_end_ci(X) :-
+    current_input(S),
+    read_bytes_to_end(S, X).
+
+%:- export(read_bytes_to_end/2).
+read_bytes_to_end(S, L) :-
+    get_byte(S, C),
+    ( C = -1 -> L = []
+    ; L = [C|L0],
+      read_bytes_to_end(S, L0)
+    ).
 
 % ---------------------------------------------------------------------------
 
@@ -983,7 +947,7 @@ catch_test3 :- catch(true, _, 3).
 
 % TODO:[JF] this ISO tests seems to be wrong (according to all Prolog systems and Logtalk)
 % :- test catch_test4 + exception(error(system_error, _))
-% # "[ISO] catch/3: expected(error) bug(wrong_error)".
+%    # "[ISO] catch/3".
 % 
 % catch_test4 :- catch(true, _C, write(demoen)), throw(bla).
 
@@ -1971,195 +1935,146 @@ arithcomp_test24(X) :- '=<'(X, 5).
 
 % ===========================================================================
 %! # 8.8 Clause retrieval and information
-%! ## 8.8.1 ISOcore#p77
+%! ## 8.8.1 clause/2 ISOcore#p77
 
-:- dynamic(cat/0).
-cat.
+% (clauses for clause tests and current_predicate)
 
-:- dynamic(dog/0).
-dog :- true.
+:- dynamic(p_clause__cat/0).
+p_clause__cat.
 
-elk(X) :- moose(X).
+:- dynamic(p_clause__dog/0).
+p_clause__dog :- true.
+
+p_clause__elk(X) :- moose(X).
 
 moose(_) :- fail.
 
-:- dynamic(legs/2).
-legs(A, 6) :- insect(A).
-legs(A, 7) :- A, call(A).
+:- dynamic(p_clause__legs/2).
+p_clause__legs(A, 6) :- p_clause__insect(A).
+p_clause__legs(A, 7) :- A, call(A).
 
-:- dynamic(insect/1).
-insect(ant).
-insect(bee).
+:- dynamic(p_clause__insect/1).
+p_clause__insect(ant).
+p_clause__insect(bee).
 
-% ---------------------------------------------------------------------------
-
-%% REVIEW:PENDING
 :- test clause_test1
    + not_fails
-   # "[ISO] clause/2: expected(succeed) bug(fail)".
+   # "[ISO] clause/2".
+clause_test1 :- clause(p_clause__cat, true).
 
-clause_test1 :- clause(cat, true).
-
-%% REVIEW:PENDING
 :- test clause_test2
    + not_fails
-   # "[ISO] clause/2: expected(succeed) bug(fail)".
+   # "[ISO] clause/2".
+clause_test2 :- clause(p_clause__dog, true).
 
-clause_test2:- clause(dog, true).
+:- test clause_test3(I, Body) => (Body=p_clause__insect(I))
+   # "[ISO] clause/2".
+clause_test3(I, Body) :- clause(p_clause__legs(I, 6), Body).
 
-%% REVIEW:PENDING
-%%   [gprolog]: it is correct
-%%   [ciao]: return a different result
-:- test clause_test3(I, Body) => (Body=insect(I))
-# "[ISO] clause/2: expected(succeed) bug(fail)".
-
-clause_test3(I, Body) :- clause(legs(I, 6), Body).
-
-%% REVIEW:PENDING
-%%   [gprolog]: it is correct
-%%   [ciao]: return a different result
 :- test clause_test4(C, Body) => (Body=(call(C), call(C)))
-# "[ISO] clause/2: expected(succeed) bug(fail)".
+   # "[ISO] clause/2".
+clause_test4(C, Body) :- clause(p_clause__legs(C, 7), Body).
 
-clause_test4(C, Body) :- clause(legs(C, 7), Body).
-
-%% REVIEW:PENDING
-%%   [gprolog]: it is correct
-%%   [ciao]: return a different result
 :- test clause_test5(Result) => (Result=[[ant, true], [bee, true]])
-# "[ISO] clause/2: expected(succeed) bug(fail)".
+   # "[ISO] clause/2".
+clause_test5(Result) :- findall([I, T], clause(p_clause__insect(I), T), Result).
 
-clause_test5(Result) :- findall([I, T], clause(insect(I), T), Result).
-
-%% REVIEW:PENDING
 :- test clause_test6(Body)
    + (fails,
       no_exception)
-   # "[ISO] clause/2: expected(fail)".
+   # "[ISO] clause/2".
+clause_test6(Body) :- clause(x, Body). % TODO:[JF] note that 'x' is not defined
 
-clause_test6(Body) :- clause(x, Body).
-% TODO:[JF] failure if x is not defined
-% x :- fail.
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(instantation_error, _))
-%%   [ciao]: no throws
+% TODO:[JF] fix, clause/2 should throw exception
 :- test clause_test7(B) + exception(error(instantation_error, _))
-# "[ISO] clause/2: expected(error) bug(fail)".
-
+   # "[ISO] clause/2: bug()".
 clause_test7(B) :- clause(_, B).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(callable, 4), _))
-%%   [ciao]: no throws
+% TODO:[JF] fix, clause/2 should throw exception
 :- test clause_test8(X) + exception(error(type_error(callable, 4), _))
-# "[ISO] clause/2: expected(error) bug(fail)".
-
+   # "[ISO] clause/2: bug()".
 clause_test8(X) :- clause(4, X).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(permission_error(access, private_procedure, elk/1),_))
-%%   [ciao]: throw exception(error(permission_error(modify,static_procedure,'iso_tests:elk'/1),clause/2))
+% TODO:[JF] fix, clause/2 should throw exception
 :- test clause_test9(N, Body)
-	+ exception(error(permission_error(access, private_procedure, elk/1),
-		ImplDep))
-# "[ISO] clause/2: expected(error) bug(wrong_error)".
+   + exception(error(permission_error(access, private_procedure, p_clause__elk/1), _))
+   # "[ISO] clause/2: bug()".
+clause_test9(N, Body) :- clause(p_clause__elk(N), Body).
 
-clause_test9(N, Body) :- clause(elk(N), Body).
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws  exception(error(permission_error(access, private_procedure, atom/1),_))
-%%   [ciao]: throw exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),clause/2))
+% TODO:[JF] fix, clause/2 should throw exception
 :- test clause_test10(Body)
    + exception(error(permission_error(access, private_procedure, atom/1), _))
-   # "[ISO] clause/2: expected(error) bug(wrong_error)".
-
+   # "[ISO] clause/2: bug()".
 clause_test10(Body) :- clause(atom(_), Body).
 
-:- test clause_test11 + fails
-   # "[ISO] clause/2: expected(fail)".
+% TODO:[JF] creates cyclic term; missing check
+:- test clause_test11 + not_fails
+   # "[ISO] clause/2".
+clause_test11 :- clause(p_clause__legs(A, 6), p_clause__insect(f(A))).
 
-clause_test11 :- clause(legs(A, 6), insect(f(A))).
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(callable, 5), _))
-%%   [ciao]: throw exception(error(permission_error(modify,static_procedure,'iso_tests:f'/1),clause/2))
+% TODO:[JF] fix, clause/2 should throw exception
 :- test clause_test12
    + exception(error(type_error(callable, 5), _))
-   # "[ISO-eddbali] clause/2: expected(error) bug(fail)".
-
+   # "[ISO-eddbali] clause/2: bug()".
 clause_test12 :- clause(f(_), 5).
 
-f(_) :- fail. % TODO:[JF] it should not be needed (for this error)
+% f(_) :- fail. % TODO:[JF] it should not be needed (for this error)
 
 % ---------------------------------------------------------------------------
-%! ## 8.8.2 ISOcore#p78
+%! ## 8.8.2 current_predicate/1 ISOcore#p78
 
 :- test currentpredicate_test1
-   # "[ISO] current_predicate/2: expected(succeed)".
-
-currentpredicate_test1 :- current_predicate(dog/0).
+   # "[ISO] current_predicate/1".
+currentpredicate_test1 :- current_predicate(p_clause__dog/0).
 
 :- test currentpredicate_test2 + fails
-   # "[ISO] current_predicate/2: expected(fail)".
-
+   # "[ISO] current_predicate/1".
 currentpredicate_test2 :- current_predicate(current_predicate/0).
 
 :- test currentpredicate_test3(Arity) => (Arity=1)
-# "[ISO] current_predicate/2: expected(succeed)".
+   # "[ISO] current_predicate/1".
+currentpredicate_test3(Arity) :- current_predicate(p_clause__elk/Arity).
 
-currentpredicate_test3(Arity) :- current_predicate(elk/Arity).
-
-%% REVIEW:PENDING
-%%   [gprolog]: nondet
-%%   [ciao]: nondet
 :- test currentpredicate_test4(A) + fails
-   # "[ISO] current_predicate/2: expected(fail)".
+   # "[ISO] current_predicate/1".
+currentpredicate_test4(A) :- current_predicate(p_current__foo/A).
 
-currentpredicate_test4(A) :- current_predicate(foo/A).
+% (this predicate must be missing for this test)
+% p_current__foo.
 
 :- test currentpredicate_test5(Result)
-	=> (sublist([elk], Result), sublist([insect], Result))
-# "[ISO] current_predicate/2: expected(succeed)".
-
+   => (sublist([p_clause__elk], Result), sublist([p_clause__insect], Result))
+   # "[ISO] current_predicate/1".
 currentpredicate_test5(Result) :-
-	findall(Name, current_predicate(Name/1), Result).
+    findall(Name, current_predicate(Name/1), Result).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(predicate_indicator, 4),_))
-%%   [ciao]: no throw 
+% TODO:[JF] throw exception
 :- test currentpredicate_test6
-	+ exception(error(type_error(predicate_indicator, 4), _))
-# "[ISO] current_predicate/2: expected(error) bug(fail)".
-
+   + exception(error(type_error(predicate_indicator, 4), _))
+   # "[ISO] current_predicate/1: bug()".
 currentpredicate_test6 :- current_predicate(4).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throw exception(error(type_error(predicate_indicator, 0/dog), _))
-%%   [ciao]: no throw 
-:- test currentpredicate_test7(X) : (X=dog)
-   + exception(error(type_error(predicate_indicator, 0/dog), _))
-   # "[ISO-eddbali] current_predicate/2: expected(error) bug(fail)".
-
+% TODO:[JF] throw exception
+:- test currentpredicate_test7(X) : (X=p_clause__dog)
+   + exception(error(type_error(predicate_indicator, p_clause__dog), _))
+   # "[ISO-eddbali] current_predicate/1: bug()".
 currentpredicate_test7(X) :- current_predicate(X).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception: error(type_error(atom,0),current_predicate/1)
-%%   [ciao]: no throw 
-:- test currentpredicate_test8(X) : (X=0/dog)
-   + exception(error(type_error(predicate_indicator, 0/dog), _))
-   # "[ISO-eddbali] current_predicate/2: expected(error) bug(fail)".
-
+% TODO:[JF] throw exception
+:- test currentpredicate_test8(X) : (X=0/p_clause__dog)
+   + exception(error(type_error(predicate_indicator, 0/p_clause__dog), _))
+   # "[ISO-eddbali] current_predicate/1: bug()".
 currentpredicate_test8(X) :- current_predicate(X).
 
 :- test currentpredicate_test9(X, Result)
-   => (sublist([cat/0, dog/0, elk/1, insect/1, legs/2], Result))
-   # "[ISO-eddbali] current_predicate/2: expected(succeed)".
-
+   => (sublist([p_clause__cat/0, p_clause__dog/0, p_clause__elk/1, p_clause__insect/1, p_clause__legs/2], Result))
+   # "[ISO-eddbali] current_predicate/1".
 currentpredicate_test9(X, Result) :- findall(X, current_predicate(X), Result).
 
 % ===========================================================================
 %! # 8.9 Clause creation and destruction
+
+%! ## 8.9.1 asserta/1 ISOcore#p79
 
 % TODO:[JF] Ciao will complain when asserting clauses with animal/1 or
 %   bird/1 in its body, if those predicates are not defined. Is this
@@ -2167,197 +2082,209 @@ currentpredicate_test9(X, Result) :- findall(X, current_predicate(X), Result).
 animal(_) :- fail.
 bird(_) :- fail.
 
-%! ## 8.9.1 ISOcore#p79
+:- dynamic(p_asserta1__legs/2).
+p_asserta1__legs(A, 6) :- p_asserta__insect(A).
 
+:- dynamic(p_asserta2__legs/2).
+p_asserta2__legs(A, 6) :- p_asserta__insect(A).
+
+:- dynamic(p_asserta__insect/1).
+p_asserta__insect(ant).
+p_asserta__insect(bee).
+
+% TODO:[JF] missing check that predicate is modified
 :- test asserta_test1
-   # "[ISO] asserta/2: expected(succeed)".
+   # "[ISO] asserta/1".
+asserta_test1 :- asserta(p_asserta1__legs(octopus, 8)).
 
-asserta_test1 :- asserta(legs(octopus, 8)).
-
+% TODO:[JF] missing check that predicate is modified
 :- test asserta_test2
-   # "[ISO] asserta/2: expected(succeed)".
+   # "[ISO] asserta/1".
+asserta_test2 :- asserta((p_asserta2__legs(A, 4) :- animal(A))).
 
-asserta_test2 :- asserta((legs(A, 4) :- animal(A))).
-
+% TODO:[JF] since predicate does not exist, it is made dynamic
 :- test asserta_test3
-   # "[ISO] asserta/2: expected(succeed)".
+   # "[ISO] asserta/1: bug()".
+asserta_test3 :- C = (p_asserta3__foo(A) :- A, call(A)), asserta(C). % TODO:[JF] tmp var to avoid static error
 
-asserta_test3 :- asserta((foo(A) :- A, call(A))).
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(instantiation_error,_))
-%%   [ciao]: throws exception(error(type_error(clause,_),asserta/1-1)) 
 :- test asserta_test4 + exception(error(instantiation_error, _))
-# "[ISO] asserta/2: expected(error) bug(wrong_error)".
-
+   # "[ISO] asserta/1".
 asserta_test4 :- asserta(_).
 
-%% REVIEW:PENDING
-%%   [gprolog]: exception(error(type_error(callable, 4), _))
-%%   [ciao]: throws exception(error(type_error(clause,4),asserta/1-1))
 :- test asserta_test5 + exception(error(type_error(callable, 4), _))
-# "[ISO] asserta/2: expected(error) bug(wrong_error)".
-
+   # "[ISO] asserta/1".
 asserta_test5 :- asserta(4).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(callable, 4), _))
-%%   [ciao]: throws exception(error(type_error(clause,('iso_tests:foo':-4)),asserta/1-1))
 :- test asserta_test6 + exception(error(type_error(callable, 4), _))
-# "[ISO] asserta/2: expected(error) bug(wrong_error)".
+   # "[ISO] asserta/1: bug()".
+asserta_test6 :- C = (p_asserta6__foo(_) :- 4), asserta(C). % TODO:[JF] tmp var to avoid static error
 
-asserta_test6 :- asserta((foo :- 4)).
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(permission_error(modify, static_procedure, atom/1), _))
-%%   [ciao]: throws exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),asserta/1))
 :- test asserta_test7
-	+ exception(error(permission_error(modify, static_procedure, atom/1),
-		ImplDep))
-# "[ISO] asserta/2: expected(error) bug(wrong_error)".
-
+   + exception(error(permission_error(modify, static_procedure, _), _))
+   # "[ISO] asserta/1".
 asserta_test7 :- asserta((atom(_) :- true)).
 
-% TODO:[JF] missing test8
+% TODO:[JF] missing asserta_test8
 
 % ---------------------------------------------------------------------------
-%! ## 8.9.2 ISOcore#p80
+%! ## 8.9.2 assertz/1 ISOcore#p80
 
+:- dynamic(p_assertz1__legs/2).
+p_assertz1__legs(A, 4) :- animal(A).
+p_assertz1__legs(octopus, 8).
+p_assertz1__legs(A, 6) :- p_assertz__insect(A).
+
+:- dynamic(p_assertz2__legs/2).
+p_assertz2__legs(A, 4) :- animal(A).
+p_assertz2__legs(octopus, 8).
+p_assertz2__legs(A, 6) :- p_assertz__insect(A).
+
+:- dynamic(p_assertz__insect/1).
+p_assertz__insect(ant).
+p_assertz__insect(bee).
+
+% TODO:[JF] missing check that predicate is modified
 :- test assertz_test1
-# "[ISO] assertz/2: expected(succeed)".
+   # "[ISO] assertz/1".
+assertz_test1 :- assertz(p_assertz1__legs(spider, 8)).
 
-assertz_test1 :- assertz(legs(spider, 8)).
-
+% TODO:[JF] missing check that predicate is modified
 :- test assertz_test2
-# "[ISO] assertz/2: expected(succeed)".
+   # "[ISO] assertz/1".
+assertz_test2 :- assertz((p_assertz2__legs(B, 2) :- bird(B))).
 
-assertz_test2 :- assertz((legs(B, 2) :- bird(B))).
-
+% TODO:[JF] missing check that predicate is modified
 :- test assertz_test3
-# "[ISO] assertz/2: expected(succeed)".
+   # "[ISO] assertz/1: bug()".
+assertz_test3 :- C = (p_assertz3__foo(X) :- X -> call(X)), assertz(C). % TODO:[JF] tmp var to avoid static error
 
-assertz_test3 :- assertz((foo(X) :- X -> call(X))).
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(instantiation_error,_))
-%%   [ciao]: throws exception(error(type_error(clause,_),assertz/1-1))
 :- test assertz_test4 + exception(error(instantiation_error, _))
-# "[ISO] assertz/2: expected(error) bug(wrong_error)".
-
+   # "[ISO] assertz/1".
 assertz_test4 :- assertz(_).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(callable, 4), _))
-%%   [ciao]: throws exception(error(type_error(clause,4),assertz/1-1))
 :- test assertz_test5 + exception(error(type_error(callable, 4), _))
-# "[ISO] assertz/2: expected(error) bug(wrong_error)".
-
+   # "[ISO] assertz/1".
 assertz_test5 :- assertz(4).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(callable, 4), _))
-%%   [ciao]: throws exception(error(type_error(clause,('iso_tests:foo':-4)),assertz/1-1))
 :- test assertz_test6 + exception(error(type_error(callable, 4), _))
-# "[ISO] assertz/2: expected(error) bug(wrong_error)".
+   # "[ISO] assertz/1: bug()".
+assertz_test6 :- C = (p_assertz6__foo(_) :- 4), assertz(C). % TODO:[JF] tmp var to avoid static error
 
-assertz_test6 :- assertz((foo :- 4)).
-
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws  exception(error(permission_error(modify, static_procedure, atom/1),_))
-%%   [ciao]: throws  exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),assertz/1))
 :- test assertz_test7
-	+ exception(error(permission_error(modify, static_procedure, atom/1),
-		ImplDep))
-# "[ISO] assertz/2: expected(error) bug(wrong_error)".
-
+   + exception(error(permission_error(modify, static_procedure, _), _))
+   # "[ISO] assertz/1".
 assertz_test7 :- assertz((atom(_) :- true)).
 
-
 % ---------------------------------------------------------------------------
-%! ## 8.9.3 ISOcore#p81
+%! ## 8.9.3 retract/1 ISOcore#p81
 
+:- dynamic(p_retract1__legs/2).
+p_retract1__legs(A, 4) :- animal(A).
+p_retract1__legs(octopus, 8).
+p_retract1__legs(A, 6) :- p_retract__insect(A).
+p_retract1__legs(spider, 8).
+p_retract1__legs(B, 2) :- bird(B).
+
+:- dynamic(p_retract2__legs/2).
+p_retract2__legs(A, 4) :- animal(A).
+p_retract2__legs(A, 6) :- p_retract__insect(A).
+p_retract2__legs(spider, 8).
+p_retract2__legs(B, 2) :- bird(B).
+
+:- dynamic(p_retract3__legs/2).
+p_retract3__legs(A, 4) :- animal(A).
+p_retract3__legs(A, 6) :- p_retract__insect(A).
+p_retract3__legs(spider, 8).
+p_retract3__legs(B, 2) :- bird(B).
+
+:- dynamic(p_retract4__legs/2).
+p_retract4__legs(A, 4) :- animal(A).
+p_retract4__legs(A, 6) :- p_retract__insect(A).
+p_retract4__legs(spider, 8).
+
+:- dynamic(p_retract5__legs/2).
+% p_retract5__legs(_, _) :- fail.
+
+:- dynamic(p_retract__insect/1).
+p_retract__insect(ant).
+p_retract__insect(bee).
+
+:- dynamic(p_retract6__insect/1).
+p_retract6__insect(ant).
+p_retract6__insect(bee).
+
+:- dynamic(p_retract7__foo/1).
+p_retract7__foo(X) :- call(X), call(X).
+p_retract7__foo(X) :- call(X) -> call(X).
+
+:- dynamic(p_retract8__foo/1).
+p_retract8__foo(X) :- call(X), call(X).
+p_retract8__foo(X) :- call(X) -> call(X).
+
+% TODO:[JF] missing check that predicate is modified
 :- test retract_test1
-# "[ISO] retract/1: expected(succeed)".
-
-retract_test1 :- retract(legs(octopus, 8)).
+   # "[ISO] retract/1".
+retract_test1 :- retract(p_retract1__legs(octopus, 8)).
 
 :- test retract_test2 + fails
-# "[ISO] retract/1: expected(fail)".
+   # "[ISO] retract/1".
+retract_test2 :- retract(p_retract2__legs(spider, 6)).
 
-retract_test2 :- retract(legs(spider, 6)).
-
-%% REVIEW:PENDING
-% TODO:[JF] this one depends on executing test 'assertz_test2'
+% TODO:[JF] missing check that predicate is modified
 :- test retract_test3(X, T) => (T=bird(X))
    + not_fails
-   # "[ISO] retract/1: expected(succeed) bug(fail)".
+   # "[ISO] retract/1".
+retract_test3(X, T) :- retract((p_retract3__legs(X, 2) :-T)).
 
-retract_test3(X, T) :- retract((legs(X, 2) :-T)).
-
-%% REVIEW:PENDING
-%%   [gprolog]: does not return what was expected
-%%   [ciao]: does not return what was expected
+% TODO:[JF] missing check that predicate is modified
 :- test retract_test4(Result)
-	=> (Result=[[_, 4, animal(A)], [_, 6, insect(A)], [spider, 8, true]])
-# "[ISO] retract/1: expected(succeed) bug(fail)".
-
+   => (Result=[[_, 4, animal(_)],
+               [_, 6, p_retract__insect(_)],
+               [spider, 8, true]])
+   # "[ISO] retract/1".
 retract_test4(Result) :-
-	findall([X, Y, Z], retract((legs(X, Y) :- Z)), Result).
+    findall([X, Y, Z], retract((p_retract4__legs(X, Y) :- Z)), Result).
 
 :- test retract_test5(X, Y, Z) + fails
-# "[ISO] retract/1: expected(fail)".
+   # "[ISO] retract/1".
+retract_test5(X, Y, Z) :- retract((p_retract5__legs(X, Y) :- Z)).
 
-retract_test5(X, Y, Z) :- retract((legs(X, Y) :- Z)).
-
+% TODO:[JF] missing check that predicate is modified
+% TODO:[JF] dynamic_clause has problems with "logical update view"
 :- test retract_test6(Result) => (Result=[ant])
-	+ user_output("antbee")
-# "[ISO] retract/1: expected(succeed)".
+   + user_output("antbee")
+   # "[ISO] retract/1: bug()".
 
 retract_test6(Result) :-
-	findall(I, (retract(insect(I)), write(I), retract(insect(bee))),
+    findall(I, (retract(p_retract6__insect(I)),
+                write(I),
+                retract(p_retract6__insect(bee))),
 	    Result).
 
-%% REVIEW:PENDING
-% UNDEFINED but is a bit strange, sometimes succeeds and sometimes fails
-%       Added times(50) to increase the chance the test fails
-%:- test retract_test7(A) + times(50).
-% TODO:[JF] removed times/1, requires setting dynamic program
-:- test retract_test7(A) # "[ISO] retract/1: ...".
-retract_test7(A) :- retract((foo(A) :- A, call(A))).
+% TODO:[JF] missing check that predicate is modified
+:- test retract_test7(A)
+   # "[ISO] retract/1: bug()".
+retract_test7(A) :- retract((p_retract7__foo(A) :- A, call(A))). % TODO:[JF] this creates a cyclic term! A=call(A)
 
-%% REVIEW:PENDING
+% TODO:[JF] missing check that predicate is modified
 :- test retract_test8(A, B, C) => (A=call(C), B=call(C))
    + not_fails
-   # "[ISO] retract/1: expected(succeed) bug(fail)".
+   # "[ISO] retract/1".
+retract_test8(A, B, C) :- retract((p_retract8__foo(C) :- A -> B)).
 
-retract_test8(A, B, C) :- retract((foo(C) :- A -> B)).
-
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(instantiation_error, _))
-%%   [ciao]: no throws
+% TODO:[JF] see "check_head(V, _, Spec, _) :- var(V), !," in dynamic_clauses_rt
 :- test retract_test9(X, Y) + exception(error(instantiation_error, _))
-# "[ISO] retract/1: expected(error) bug(fail)".
-
+   # "[ISO] retract/1: bug()".
 retract_test9(X, Y) :- retract((X :- in_eec(Y))).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(callable, 4), _))
-%%   [ciao]: no throws
 :- test retract_test10(X)
-	+ exception(error(type_error(callable, 4), _))
-# "[ISO] retract/1: expected(error) bug(fail)".
-
+   + exception(error(type_error(callable, 4), _))
+   # "[ISO] retract/1".
 retract_test10(X) :- retract((4 :- X)).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(permission_error(modify, static_procedure, atom/1),_))
-%%   [ciao]:  throws exception(error(permission_error(modify,static_procedure,'term_typing:atom'/1),retract/1))
 :- test retract_test11(X)
-	+ exception(error(permission_error(modify, static_procedure, atom/1),
-		ImplDep))
-# "[ISO] retract/1: expected(error) bug(wrong_error)".
-
+   + exception(error(permission_error(modify, static_procedure, _), _))
+   # "[ISO] retract/1".
 retract_test11(X) :- retract((atom(X) :- X == '[]')).
 
 % ---------------------------------------------------------------------------
@@ -2477,68 +2404,50 @@ p_abolish__insect2(bee).
 
 % ===========================================================================
 %! # 8.10 All solutions
-%! ## 8.10.1 ISOcore#p83
+%! ## 8.10.1 findall/3 ISOcore#p83
 
 :- test findall_test1(Result) => (Result=[1, 2])
-# "[ISO] findall/3: expected(succeed)".
-
+   # "[ISO] findall/3".
 findall_test1(Result) :- findall(X, (X=1;X=2), Result).
 
-
 :- test findall_test2(Result, Y) => (Result=[1+_])
-# "[ISO] findall/3: expected(succeed)".
-
+   # "[ISO] findall/3".
 findall_test2(Result, Y) :- findall(X+Y, (X=1), Result).
 
-
 :- test findall_test3(Result, X) => (Result=[])
-# "[ISO] findall/3: expected(succeed)".
-
+   # "[ISO] findall/3".
 findall_test3(Result, X) :- findall(X, fail, Result).
 
-
 :- test findall_test4(Result) => (Result=[1, 1])
-# "[ISO] findall/3: expected(succeed)".
-
+   # "[ISO] findall/3".
 findall_test4(Result) :- findall(X, (X=1;X=1), Result).
 
-
 :- test findall_test5 + fails
-# "[ISO] findall/3: expected(fail)".
-
+   # "[ISO] findall/3".
 findall_test5 :- findall(X, (X=2;X=1), [1, 2]).
 
 :- test findall_test6(X, Y) => (X=1, Y=2)
-# "[ISO] findall/3: expected(succeed)".
-
+   # "[ISO] findall/3".
 findall_test6(X, Y) :- findall(X, (X=1;X=2), [X, Y]).
 
 :- test findall_test7(X, Goal, Result)
-	+ exception(error(instantiation_error, _))
-# "[ISO] findall/3: expected(error)".
-
+   + exception(error(instantiation_error, _))
+   # "[ISO] findall/3".
 findall_test7(X, Goal, Result) :- findall(X, Goal, Result).
 
 :- test findall_test8(X, Result)
-	+ exception(error(type_error(callable, 4), _))
-# "[ISO] findall/3: expected(error)".
-
+   + exception(error(type_error(callable, 4), _))
+   # "[ISO] findall/3".
 findall_test8(X, Result) :- findall(X, 4, Result).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(list, [A|1]), _))
-%%   [ciao]: no throws
-
 % TODO:[JF] typecheck list in findall/3 (only in iso compat)
-
 :- test findall_test9
-	+ exception(error(type_error(list, [A|1]), _))
-# "[ISO-sics] findall/3: expected(error) bug(fail)".
-
+   + exception(error(type_error(list, [A|1]), _))
+   # "[ISO-sics] findall/3: bug()".
 findall_test9 :- findall(X, (X=1), [_|1]).
 
 % ---------------------------------------------------------------------------
-%! ## 8.10.2 ISOcore#p84
+%! ## 8.10.2 bagof/3 ISOcore#p84
 
 :- dynamic(a/2).
 a(1, f(_)).
@@ -2552,64 +2461,51 @@ b(2, 1).
 b(2, 2).
 b(2, 2).
 
-% ---------------------------------------------------------------------------
-
 :- test bagof_test1(Result) => (Result=[1, 2])
-# "[ISO] bagof/3: expected(succeed)".
-
+   # "[ISO] bagof/3".
 bagof_test1(Result) :- bagof(X, (X=1;X=2), Result).
 
 :- test bagof_test2(X) => (X=[1, 2])
-# "[ISO] bagof/3: expected(succeed)".
-
+   # "[ISO] bagof/3".
 bagof_test2(X) :- bagof(X, (X=1;X=2), X).
 
 :- test bagof_test3(Result, Y, Z) => (Result=[Y, Z])
-# "[ISO] bagof/3: expected(succeed)".
-
+   # "[ISO] bagof/3".
 bagof_test3(Result, Y, Z) :- bagof(X, (X=Y;X=Z), Result).
 
 :- test bagof_test4(Result, X) + fails
-# "[ISO] bagof/3: expected(fail)".
-
+   # "[ISO] bagof/3".
 bagof_test4(Result, X) :- bagof(X, fail, Result).
 
 :- test bagof_test5(Result) => (Result=[[[1], 1], [[1], 2]])
-# "[ISO] bagof/3: expected(succeed)".
-
+   # "[ISO] bagof/3".
 bagof_test5(Result) :- findall([L, Y], bagof(1, (Y=1;Y=2), L), Result).
 
 :- test bagof_test6(Result) => (Result=[f(a, _), f(_, b)])
-# "[ISO] bagof/3: expected(succeed)".
-
+   # "[ISO] bagof/3".
 bagof_test6(Result) :- bagof(f(X, Y), (X=a;Y=b), Result).
 
 :- test bagof_test7(Result) => (Result=[1, 2])
-# "[ISO] bagof/3: expected(succeed)".
-
+   # "[ISO] bagof/3".
 bagof_test7(Result) :- bagof(X, Y^((X=1, Y=1);(X=2, Y=2)), Result).
 
 :- test bagof_test8(Result)
-	=> (Result=[1, _, 2])
-# "[ISO] bagof/3: expected(succeed)".
-
+   => (Result=[1, _, 2])
+   # "[ISO] bagof/3".
 bagof_test8(Result) :- bagof(X, Y^((X=1;Y=1);(X=2, Y=2)), Result).
 
 :- test bagof_test9(Result)
-	=> (Result=[1, _, 3])
-# "[ISO] bagof/3: expected(succeed)".
-
+   => (Result=[1, _, 3])
+   # "[ISO] bagof/3".
 bagof_test9(Result) :- bagof(X, (Y^(X=1;Y=2) ;X=3), Result).
 
-%% REVIEW:DONE
 % Note: results of this test are represented as list of sol/? terms,
 %   capturing both the solution and relevant bindings, so that we can
 %   check the results consistently (due to variable renamings)
 :- test bagof_test10(Sols) =>
     ( Result=[sol(1,_,[_]), sol(Y2,Z2,[Y2,Z2])]
     ; Result=[sol(Y1,Z1,[Y1,Z1]), sol(1,_,[_])]
-    ) # "[ISO] bagof/3: expected(succeed)".
-
+    ) # "[ISO] bagof/3".
 bagof_test10(Sols) :-
     findall(sol(Y,Z,L), bagof_test10_(Y,Z,L), Sols).
 
@@ -2617,40 +2513,26 @@ bagof_test10_(Y,Z,L) :-
     bagof(X, (X=Y;X=Z;Y=1), L).
 
 :- test bagof_test11(Result, Y) => (Result=[1, 2], Y=f(_))
-# "[ISO] bagof/3: expected(succeed)".
-
+   # "[ISO] bagof/3".
 bagof_test11(Result, Y) :- bagof(X, a(X, Y), Result).
 
 :- test bagof_test12(Result, Y) => (Result=[[[1, 1, 2], 1], [[1, 2, 2], 2]])
-# "[ISO] bagof/3: expected(succeed)".
-
+   # "[ISO] bagof/3".
 bagof_test12(Result, Y) :- findall([L, Y], bagof(X, b(X, Y), L), Result).
 
 :- test bagof_test13(Result, X, Y, Z)
-	+ exception(error(instantiation_error, _))
-# "[ISO] bagof/3: expected(error)".
-
+   + exception(error(instantiation_error, _))
+   # "[ISO] bagof/3".
 bagof_test13(Result, X, Y, Z) :- bagof(X, Y^Z, Result).
 
 :- test bagof_test14(Result, X)
-	+ exception(error(type_error(callable, 1), _))
-# "[ISO] bagof/3: expected(error)".
-
+   + exception(error(type_error(callable, 1), _))
+   # "[ISO] bagof/3".
 bagof_test14(Result, X) :- bagof(X, 1, Result).
 
-
-
 % ---------------------------------------------------------------------------
-%! ## 8.10.3 ISOcore#p85
+%! ## 8.10.3 setof/3 ISOcore#p85
 
-% NOTE: member whas renamed to member_ to avoid clashes with member/2
-% in basic_props -- EMM
-
-:-dynamic (member_/2).
-member_(X, [X|_]).
-member_(X, [_|L]) :- member_(X, L).
-
-:- dynamic(d/3).
 d(1, 1).
 d(1, 2).
 d(1, 1).
@@ -2658,75 +2540,57 @@ d(2, 2).
 d(2, 1).
 d(2, 2).
 
-% ---------------------------------------------------------------------------
-
 :- test setof_test1(Result) => (Result=[1, 2])
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test1(Result) :- setof(X, (X=1;X=2), Result).
 
 :- test setof_test2(X) => (X=[1, 2])
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test2(X) :- setof(X, (X=1;X=2), X).
 
 :- test setof_test3(Result) => (Result=[1, 2])
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test3(Result) :- setof(X, (X=2;X=1), Result).
 
 :- test setof_test4(Result) => (Result=[2])
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test4(Result) :- setof(X, (X=2;X=2), Result).
 
 :- test setof_test5(Result, Y, Z) => (Result=[Y, Z];Result=[Z, Y])
    # "[ISO] setof/3".
-
 setof_test5(Result, Y, Z) :- setof(X, (X=Y;X=Z), Result).
 
 :- test setof_test6(Result, X) + fails
-# "[ISO] setof/3: expected(fail)".
-
+   # "[ISO] setof/3".
 setof_test6(Result, X) :- setof(X, fail, Result).
 
 :- test setof_test7(Result) => (Result=[[[1], 1], [[1], 2]])
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test7(Result) :- findall([L, Y], setof(1, (Y=2;Y=1), L), Result).
 
 :- test setof_test8(Result) => (Result=[f(_, b), f(a, _)])
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test8(Result) :- setof(f(X, Y), (X=a;Y=b), Result).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception: error(existence_error(procedure,(^)/2),setof/3)
-%%   [ciao]:   _1=[1]
 :- test setof_test9(Result) => (Result=[1, 2])
-# "[ISO] setof/3: expected(succeed)".
-
-setof_test9(Result) :- setof(X, (Y^(X=1, Y=1);(X=2, Y=2)), Result).
+   # "[ISO] setof/3".
+setof_test9(Result) :- setof(X, Y^((X=1, Y=1);(X=2, Y=2)), Result).
 
 :- test setof_test10(Result) => (Result=[_, 1, 2])
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test10(Result) :- setof(X, Y^((X=1;Y=1);(X=2, Y=2)), Result).
 
 :- test setof_test11(Result, Y) => (Result=[_, 1, 3])
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test11(Result, Y) :- setof(X, (Y^(X=1;Y=2) ;X=3), Result).
 
-%% REVIEW:DONE                   
 % Note: results of this test are represented as list of sol/? terms,
 %   capturing both the solution and relevant bindings, so that we can
 %   check the results consistently (due to variable renamings)
 :- test setof_test12(Sols) =>
    ( Result = [sol(1,_,[_]),sol(Y2,Z2,[Y2,Z2])]
    ; Result = [sol(Y1,Z1,[Y1,Z1]),sol(1,_,[_])]
-   ) # "[ISO] setof/3: expected(succeed)".
-
+   ) # "[ISO] setof/3".
 setof_test12(Sols) :-
     findall(sol(Y,Z,S), setof_test12_(Y,Z,S), Sols).
 
@@ -2734,106 +2598,83 @@ setof_test12_(Y, Z, S) :-
     setof(X, (X=Y;X=Z;Y=1), S).
 
 :- test setof_test13(Result, Y) => (Result=[1, 2], Y=f(_))
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test13(Result, Y) :- setof(X, a(X, Y), Result).
 
 :- test setof_test14(Y, Z, Result)
    => (Result=[f(Y, b), f(Z, c)];Result=[f(Z, c), f(Y, b)])
    # "[ISO] setof/3".
-
-setof_test14(Y, Z, Result) :- setof(X, member_(X, [f(Y, b), f(Z, c)]), Result).
+setof_test14(Y, Z, Result) :- setof(X, member(X, [f(Y, b), f(Z, c)]), Result).
 
 :- test setof_test15(Y, Z) + fails
-# "[ISO] setof/3: expected(fail)".
+   # "[ISO] setof/3".
+setof_test15(Y, Z) :-
+    setof(X, member(X, [f(Y, b), f(Z, c)]), [f(a, c), f(a, b)]).
 
-setof_test15(Y, Z) :- setof(X, member_(X, [f(Y, b), f(Z, c)]),
-	    [f(a, c), f(a, b)]).
-
-%% REVIEW:PENDING
-%%   [gprolog]:  _1=Y
-%%   [ciao]:  _1=Y
-:- test setof_test16(Result, Y, Z) => (Y=a, Z=a)
-# "[ISO] setof/3: expected(succeed)".
-
-setof_test16(Result, Y, Z) :- setof(X, member_(X, [f(b, Y), f(c, Z), [f(b, a),
-			f(c, a)]]), Result).
+:- test setof_test16(Y, Z) => (Y=a, Z=a)
+   # "[ISO] setof/3".
+setof_test16(Y, Z) :-
+    setof(X, member(X, [f(b, Y), f(c, Z)]), [f(b, a), f(c, a)]).
 
 :- test setof_test17(Y, Z, Result)
-	=> (Result=[Y, Z, f(Y), f(Z)] ;Result=[Z, Y, f(Z), f(Y)])
-# "[ISO] setof/3: expected(succeed)".
-
-setof_test17(Y, Z, Result) :- setof(X, member_(X, [Z, Y, f(Y), f(Z)]), Result).
+   => (Result=[Y, Z, f(Y), f(Z)] ; Result=[Z, Y, f(Z), f(Y)])
+   # "[ISO] setof/3".
+setof_test17(Y, Z, Result) :- setof(X, member(X, [Z, Y, f(Y), f(Z)]), Result).
 
 :- test setof_test18(Y, Z) => ((Y=a, Z=b);(Y=b, Z=a))
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test18(Y, Z) :-
-	setof(X, member_(X, [Z, Y, f(Y), f(Z)]), [a, b, f(a), f(b)]).
+    setof(X, member(X, [Z, Y, f(Y), f(Z)]), [a, b, f(a), f(b)]).
 
 :- test setof_test19(Y, Z) + fails
-# "[ISO] setof/3: expected(fail)".
-
+   # "[ISO] setof/3".
 setof_test19(Y, Z) :-
-	setof(X, member_(X, [Z, Y, f(Y), f(Z)]), [a, b, f(b), f(a)]).
+    setof(X, member(X, [Z, Y, f(Y), f(Z)]), [a, b, f(b), f(a)]).
 
 :- test setof_test20(Y, Z)
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test20(Y, Z) :-
-	setof(X, (exists(Y, Z) ^member_(X, [Z, Y, f(Y), f(Z)])),
-	    [a, b, f(b), f(a)]).
+    setof(X, (exists(Y, Z) ^member(X, [Z, Y, f(Y), f(Z)])), [a, b, f(b), f(a)]).
 
 :- test setof_test21(Y, Result)
-	=> (Result=[[[1, 2], 1], [[1, 2], 2]])
-# "[ISO] setof/3: expected(succeed)".
-
+   => (Result=[[[1, 2], 1], [[1, 2], 2]])
+   # "[ISO] setof/3".
 setof_test21(Y, Result) :- findall([L, Y], setof(X, b(X, Y), L), Result).
 
 :- test setof_test22(Y, Result) => (Result=[1-[1, 2], 2-[1, 2]])
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test22(Y, Result) :- setof(X-Z, Y^setof(Y, b(X, Y), Z), Result).
 
 :- test setof_test23(Y, Result) => (Result=[1-[1, 2], 2-[1, 2]], Y=_)
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test23(Y, Result) :- setof(X-Z, setof(Y, b(X, Y), Z), Result).
 
 :- test setof_test24(Y, Result) => (Result=[1-[1, 2, 1], 2-[2, 1, 2]], Y=_)
-# "[ISO] setof/3: expected(succeed)".
-
+   # "[ISO] setof/3".
 setof_test24(Y, Result) :- setof(X-Z, bagof(Y, d(X, Y), Z), Result).
 
 :- test setof_test25(Result) : (Result=[f(g(Z), Z)])
-# "[ISO-eddbali] setof/3: expected(succeed)".
-
+   # "[ISO-eddbali] setof/3".
 setof_test25(Result) :- setof(f(X, Y), X=Y, Result).
 
 :- test setof_test26(Result)
-	+ exception(error(type_error(callable, 4), _))
-# "[ISO-eddbali] setof/3: expected(error)".
-
+   + exception(error(type_error(callable, 4), _))
+   # "[ISO-eddbali] setof/3".
 setof_test26(Result) :- setof(X, X^(true;4), Result).
 
 :- test setof_test27(Result)
-	+ exception(error(type_error(callable, 1), _))
-# "[ISO-sics] setof/3: expected(error)".
-
+   + exception(error(type_error(callable, 1), _))
+   # "[ISO-sics] setof/3".
 setof_test27(Result) :- setof(_X, Y^Y^1, Result).
 
 :- test setof_test28(A) => (A=[])
-# "[ISO-sics] setof/3: expected(succeed)".
-
+   # "[ISO-sics] setof/3".
 setof_test28(A) :- setof(X, X=1, [1|A]).
 
-%% REVIEW:PENDING
-%%   [gprolog]: throws exception(error(type_error(list, [A|1]), _))
-%%   [ciao]: no throws
+% TODO:[JF] typecheck list in setof/3 (only in iso compat)
 :- test setof_test29
-	+ exception(error(type_error(list, [A|1]), _))
-# "[ISO-sics] setof/3: expected(error) bug(fail)".
-
+   + exception(error(type_error(list, [A|1]), _))
+   # "[ISO-sics] setof/3: bug()".
 setof_test29 :- setof(X, X=1, [_|1]).
 
 %! # 8.11 Stream selection and control
@@ -2847,20 +2688,17 @@ setof_test29 :- setof(X, X=1, [_|1]).
 
 :- test currentinput_test1(S)
    # "[ISO-sics] current_input/1".
-
 currentinput_test1(S) :- current_input(S).
 
 :- test currentinput_test2
    + exception(error(domain_error(stream, foo), _))
    # "[ISO-sics] current_input/1".
-
 currentinput_test2 :- current_input(foo).
 
 :- test currentinput_test3(S) + 
    (setup(curr_out(S)),
     fails)
    # "[ISO-sics] current_input/1".
-
 currentinput_test3(S) :- current_input(S).
 
 % TODO:[JF] check behaviour of other Prologs (gprolog, ciao, scryer: no exception;
@@ -2869,34 +2707,29 @@ currentinput_test3(S) :- current_input(S).
    + (setup(closed_instream(S2)),
       exception(error(domain_error(stream, S2), _)))
    # "[ISO-sics] current_input/1: bug()".
-
 currentinput_test4(S2) :- current_input(S2).
 
 :- test currentinput_test5(S)
    + (not_fails,
       setup(curr_in(S)))
    # "[ISO-sics] current_input/1".
-
 currentinput_test5(S) :- current_input(S).
 
 %! ## 8.11.2 current_output/1 ISOcore#p86
 
 :- test currentoutput_test1(S)
    # "[ISO-sics] current_output/1".
-
 currentoutput_test1(S) :- current_output(S).
 
 :- test currentoutput_test2
    + exception(error(domain_error(stream, foo), _))
    # "[ISO-sics] current_output/1".
-
 currentoutput_test2 :- current_output(foo).
 
 :- test currentoutput_test3(S)
    + (fails,
       setup(curr_in(S)))
    # "[ISO-sics] current_output/1".
-
 currentoutput_test3(S) :- current_output(S).
 
 % TODO:[JF] check behaviour of other Prologs (gprolog, ciao, scryer: no exception;
@@ -2905,14 +2738,12 @@ currentoutput_test3(S) :- current_output(S).
    + (setup(closed_outstream(S)),
       exception(error(domain_error(stream, S), _)))
    # "[ISO-sics] current_output/1: bug()".
-
 currentoutput_test4(S) :- current_output(S).
 
 :- test currentoutput_test5(S)
    + (not_fails,
       setup(curr_out(S)))
    # "[ISO-sics] current_output/1".
-
 currentoutput_test5(S) :- current_output(S).
 
 %! ## 8.11.3 set_input/1 ISOcore#p87
@@ -2921,13 +2752,11 @@ currentoutput_test5(S) :- current_output(S).
    + (not_fails,
       setup(curr_in(S)))
    # "[ISO-sics] set_input/1".
-
 setinput_test1(S) :- set_input(S).
 
 :- test setinput_test2
    + exception(error(instantiation_error, _))
    # "[ISO-sics] set_input/1".
-
 setinput_test2 :- set_input(_).
 
 % TODO:[JF] both acceptable in ISO % TODO: unittest do not allow alternative here, fix
@@ -2935,21 +2764,18 @@ setinput_test2 :- set_input(_).
    % + exception(error(domain_error(stream_or_alias, foo), _))
    + exception(error(existence_error(stream, foo), _))
    # "[ISO-sics] set_input/1".
-
 setinput_test3 :- set_input(foo).
 
 :- test setinput_test4(S1)
    + (setup(closed_instream(S1)),
       exception(error(existence_error(stream, S1), _)))
    # "[ISO-sics] set_input/1".
-
 setinput_test4(S1) :- set_input(S1).
 
 :- test setinput_test5(S)
    + (setup(curr_out(S)),
       exception(error(permission_error(input, stream, S), _)))
    # "[ISO-sics] set_input/1".
-
 setinput_test5(S) :- set_input(S).
 
 % ---------------------------------------------------------------------------
@@ -2962,13 +2788,11 @@ setinput_test5(S) :- set_input(S).
 :- test setoutput_test1(S)
    + setup(curr_out(S))
    # "[ISO-sics] set_output/1".
-
 setoutput_test1(S) :- set_output(S).
 
 :- test setoutput_test2
    + exception(error(instantiation_error, _))
    # "[ISO-sics] set_output/1".
-
 setoutput_test2 :- set_output(_).
 
 % TODO:[JF] both acceptable in ISO % TODO: unittest do not allow alternative here, fix
@@ -2976,21 +2800,18 @@ setoutput_test2 :- set_output(_).
    + exception(error(existence_error(stream, foo), _))
    % + exception(error(domain_error(stream_or_alias, foo), _))
    # "[ISO-sics] set_output/1".
-
 setoutput_test3 :- set_output(foo).
 
 :- test setoutput_test4(S)
    + (setup(closed_outstream(S)),
       exception(error(existence_error(stream, S_or_a), _)))
    # "[ISO-sics] set_output/1".
-
 setoutput_test4(S) :- set_output(S).
 
 :- test setoutput_test5(S)
    + (setup(curr_in(S)),
       exception(error(permission_error(output, stream, S), _)))
    # "[ISO-sics] set_output/1".
-
 setoutput_test5(S) :- set_output(S).
 
 %! ## 8.11.5 open/3, open/4 ISOcore#p88
@@ -3937,7 +3758,7 @@ putcode_test24 :- put_code(foo, -1).
 :- test getbyte_test1(Byte, X) => ( Byte=113, X=[119, 101, 114] )
    + (setup(w_in(bin([113, 119, 101, 114]), Prev)), cleanup(und(Prev)))
    # "[ISO] get_byte/1".
-getbyte_test1(Byte, X) :- get_byte(Byte), read_bytes_to_end(X).
+getbyte_test1(Byte, X) :- get_byte(Byte), read_bytes_to_end_ci(X).
 
 :- test getbyte_test2(Byte, X) => ( Byte=113, X=[119, 101, 114] )
    + (setup(w_in_a(bin([113, 119, 101, 114]), Prev)), cleanup(und(Prev)))
@@ -4018,7 +3839,7 @@ getbyte_test13 :- get_byte(_), get_byte(_).
 :- test peekbyte_test1(Byte, X) => ( Byte=113, X=[113, 119, 101, 114] )
    + (setup(w_in(bin([113, 119, 101, 114]), Prev)), cleanup(und(Prev)))
    # "[ISO] peek_byte/1".
-peekbyte_test1(Byte, X) :- peek_byte(Byte), read_bytes_to_end(X).
+peekbyte_test1(Byte, X) :- peek_byte(Byte), read_bytes_to_end_ci(X).
 
 :- test peekbyte_test2(Byte, X) => ( Byte=113, X=[113, 119, 101, 114] )
    + (setup(w_in_a(bin([113, 119, 101, 114]), Prev)), cleanup(und(Prev)))
@@ -4529,12 +4350,12 @@ op_test17 :- op(100, xfx, [a, a+b]).
 
 :- test op_test18
    + exception(error(permission_error(modify, operator, ','), _))
-   # "[ISO-sics] op/3: expected(error) bug(succeed)".
+   # "[ISO-sics] op/3".
 op_test18 :- op(100, xfx, ',').
 
 :- test op_test19
    + exception(error(permission_error(modify, operator, ','), _))
-   # "[ISO-sics] op/3: expected(error) bug(succeed)".
+   # "[ISO-sics] op/3".
 op_test19 :- op(100, xfx, [a, ',']).
 
 % ---------------------------------------------------------------------------
@@ -5116,26 +4937,26 @@ subatom_test28 :- sub_atom('Banana', 0, 0, 7, _S).
 
 % TODO:[JF] fix utf8 support
 :- test subatom_test31(Z, S) => (Z=5, S='ók')
-   # "[ISO-sics] sub_atom/5: expected(succeed)".
+   # "[ISO-sics] sub_atom/5: bug()".
 
 subatom_test31(Z, S) :- sub_atom('Bartók Béla', 4, 2, Z, S).
 
 % TODO:[JF] fix utf8 support
 :- test subatom_test32(Y, S) => (Y=2, S='ók')
-   # "[ISO-sics] sub_atom/5: expected(succeed)".
+   # "[ISO-sics] sub_atom/5: bug()".
 
 subatom_test32(Y, S) :- sub_atom('Bartók Béla', 4, Y, 5, S).
 
 % TODO:[JF] fix utf8 support
 :- test subatom_test33(X, S) => (X=4, S='ók')
-   # "[ISO-sics] sub_atom/5: expected(succeed)".
+   # "[ISO-sics] sub_atom/5: bug()".
 
 subatom_test33(X, S) :- sub_atom('Bartók Béla', X, 2, 5, S).
 
 :- test subatom_test34(Result)
    => (Result=[[0, 2, 'Pé'], [1, 1, 'éc'], [2, 0, 'cs']])
    + not_fails
-   # "[ISO-sics] sub_atom/5: expected(succeed)".
+   # "[ISO-sics] sub_atom/5: bug()".
 
 :- if(defined(fixed_utf8)).
 subatom_test34(Result) :-
