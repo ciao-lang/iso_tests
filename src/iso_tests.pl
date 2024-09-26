@@ -1504,37 +1504,37 @@ functor_test11 :- functor([], [], 0).
 
 :- test functor_test12(X, Y)
     + exception(error(instantiation_error, _))
-   # "[ISO] functor/3: bug()".
+   # "[ISO] functor/3".
 
 functor_test12(X, Y) :- functor(X, Y, 3).
 
 :- test functor_test13(X, N)
     + exception(error(instantiation_error, _))
-   # "[ISO] functor/3: bug()".
+   # "[ISO] functor/3".
 
 functor_test13(X, N) :- functor(X, foo, N).
 
 :- test functor_test14(X)
     + exception(error(type_error(integer, a), _))
-   # "[ISO] functor/3: bug()".
+   # "[ISO] functor/3".
 
 functor_test14(X) :- functor(X, foo, a).
 
 :- test functor_test15(X)
     + exception(error(type_error(atom, 1.5), _))
-   # "[ISO] functor/3: bug()".
+   # "[ISO] functor/3".
 
 functor_test15(X) :- functor(X, 1.5, 1).
 
 :- test functor_test16(X)
     + exception(error(type_error(atomic, foo(a)), _))
-   # "[ISO] functor/3: bug()".
+   # "[ISO] functor/3".
 
 functor_test16(X) :- functor(X, foo(a), 1).
 
 :- test functor_test17(T)
    + exception(error(representation_error(max_arity), _))
-   # "[ISO] functor/3: bug()".
+   # "[ISO] functor/3".
 
 functor_test17(T) :-
     current_prolog_flag(max_arity, A), A1 is A + 1,
@@ -1542,7 +1542,7 @@ functor_test17(T) :-
 
 :- test functor_test18(F)
    + exception(error(domain_error(not_less_than_zero, -1), _))
-   # "[ISO] functor/3: bug()".
+   # "[ISO] functor/3".
 
 functor_test18(T) :- functor(T, foo, -1).
 
@@ -1571,23 +1571,23 @@ arg_test6 :- arg(0, foo(a, b), foo).
 arg_test7(N) :- arg(3, foo(3, 4), N).
 
 :- test arg_test8(X) + exception(error(instantiation_error, _))
-   # "[ISO] arg/3: bug()".
+   # "[ISO] arg/3".
 
 arg_test8(X) :- arg(X, foo(a, b), a).
 
 :- test arg_test9(X) + exception(error(instantiation_error, _))
-   # "[ISO] arg/3: bug()".
+   # "[ISO] arg/3".
 
 arg_test9(X) :- arg(1, X, a).
 
 :- test arg_test10(A)
     + exception(error(type_error(compound, atom), _))
-   # "[ISO] arg/3: bug()".
+   # "[ISO] arg/3".
 
 arg_test10(A) :- arg(0, atom, A).
 
 :- test arg_test11(A) + exception(error(type_error(compound, 3), _))
-   # "[ISO] arg/3: bug()".
+   # "[ISO] arg/3".
 
 arg_test11(A) :- arg(0, 3, A).
 
@@ -1597,13 +1597,13 @@ arg_test12(X) :- arg(1, foo(X), u(X)).
 
 :- test arg_test13
    + exception(error(domain_error(not_less_than_zero, -3), _))
-   # "[ISO-eddbali] arg/3: bug()".
+   # "[ISO-eddbali] arg/3".
 
 arg_test13 :- arg(-3, foo(a, b), _).
 
 :- test arg_test14(X)
     + exception(error(type_error(integer, a), _))
-   # "[ISO-eddbali] arg/3: bug()".
+   # "[ISO-eddbali] arg/3".
 
 arg_test14(X) :- arg(a, foo(a, b), X).
 
@@ -1613,7 +1613,7 @@ arg_test14(X) :- arg(a, foo(a, b), X).
 arg_test15(X, Y) :- arg(2, foo(a, f(X, b), c), f(a, Y)).
 
 :- test arg_test16 + exception(error(type_error(compound, 3), _))
-   # "[ISO-sics] arg/3: bug()".
+   # "[ISO-sics] arg/3".
 
 arg_test16 :- arg(1, 3, _).
 

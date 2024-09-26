@@ -32,7 +32,7 @@ To run specific tests you can use test filters. For example:
 This is the current status of running the test suite:
 ```
 Note: {Total:
-Passed: 874 (83.48%) Failed: 173 (16.52%) Precond Failed: 0 (0.00%) Aborted: 0 (0.00%) Timeouts: 0 (0.00%) Total: 1047 Run-Time Errors: 173
+Passed: 889 (84.91%) Failed: 158 (15.09%) Precond Failed: 0 (0.00%) Aborted: 0 (0.00%) Timeouts: 0 (0.00%) Total: 1047 Run-Time Errors: 158
 }
 ```
 
