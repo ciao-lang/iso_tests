@@ -1,6 +1,6 @@
 :- bundle(iso_tests).
 % An ISO Prolog test suite for Ciao
-version('1.23.0'). % (same as 'core')
+version('1.24.0'). % (same as 'core')
 depends([
   core
 ]).
